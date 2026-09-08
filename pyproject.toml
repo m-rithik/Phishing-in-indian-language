@@ -1,0 +1,48 @@
+[build-system]
+requires = ["hatchling>=1.26,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "fisher-baselines"
+version = "0.2.0"
+description = "NLP baselines and pilot-readiness tooling for Fisher"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "numpy>=1.26,<3",
+  "openpyxl>=3.1,<4",
+  "pandas>=2.2,<3",
+  "scikit-learn>=1.5,<2",
+]
+
+[project.urls]
+Repository = "https://github.com/m-rithik/Phishing-in-indian-language"
+
+[project.scripts]
+fisher-baselines = "fisher_baselines.cli:main"
+fisher-pilot = "fisher_pilot.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["fisher_baselines", "fisher_pilot"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "/browser_extension",
+  "/docs/**/*.md",
+  "/examples",
+  "/fisher_audit",
+  "/fisher_baselines",
+  "/fisher_data",
+  "/fisher_engine",
+  "/fisher_governance",
+  "/fisher_pilot",
+  "/tests",
+  "/fisher.mjs",
+  "/fisher_extension_package.py",
+  "/package.json",
+  "/package-lock.json",
+  "/playwright.config.mjs",
+  "/README.md",
+  "/pyproject.toml",
+  "/uv.lock",
+]

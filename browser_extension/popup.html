@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Fisher — local scam pattern checks</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <header class="masthead">
+        <div class="brand-lockup">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <div>
+            <h1>Fisher</h1>
+            <p class="tagline">Spot the pressure. Check the pattern.</p>
+          </div>
+        </div>
+        <span class="local-badge"><span aria-hidden="true"></span>Local only</span>
+      </header>
+
+      <section class="workspace" aria-labelledby="input-heading">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Check content</p>
+            <h2 id="input-heading">What do you want to inspect?</h2>
+          </div>
+          <span id="counter" class="counter" aria-label="0 of 20,000 characters">0 / 20,000</span>
+        </div>
+
+        <div class="mode-switch" role="group" aria-label="Content type">
+          <button id="mode-message" class="mode-button active" type="button" aria-pressed="true">Message</button>
+          <button id="mode-link" class="mode-button" type="button" aria-pressed="false">Link check</button>
+        </div>
+
+        <label id="message-label" for="message">Paste a message</label>
+        <textarea
+          id="message"
+          rows="4"
+          placeholder="Paste a suspicious text, email, or chat message…"
+          aria-describedby="input-hint counter"
+          spellcheck="false"
+        ></textarea>
+        <div class="input-meta">
+          <p id="input-hint" class="hint">Nothing is sent or saved. Press Ctrl/⌘ + Enter to analyze.</p>
+        </div>
+
+        <div id="examples" class="examples" aria-label="Try a synthetic example">
+          <span>Try an example</span>
+          <button id="example-urgent" type="button" data-example="urgent">Urgent delivery</button>
+          <button id="example-account" type="button" data-example="account">Account alert</button>
+        </div>
+
+        <div class="primary-actions">
+          <button id="analyze" type="button" class="primary-button">
+            <span>Analyze locally</span><span aria-hidden="true">→</span>
+          </button>
+          <button id="clear" type="button" class="quiet-button">Clear</button>
+        </div>
+        <button id="selection" type="button" class="selection-button" aria-busy="false">
+          <span aria-hidden="true">⌁</span> Analyze selected text on this page
+        </button>
+        <p class="disclaimer" role="note">Pattern checks can miss scams. Independently verify important requests.</p>
+      </section>
+
+      <p id="status" class="status" role="status" aria-live="polite" aria-atomic="true"></p>
+
+      <section id="empty-state" class="empty-state" aria-labelledby="empty-heading">
+        <span class="empty-icon" aria-hidden="true">⌕</span>
+        <div>
+          <h2 id="empty-heading">A second look, in seconds</h2>
+          <p>Fisher checks for pressure tactics, sensitive requests, suspicious links, and other explainable patterns.</p>
+        </div>
+      </section>
+
+      <section id="result" class="result" role="region" aria-labelledby="risk" tabindex="-1" hidden>
+        <div class="result-banner">
+          <p class="eyebrow">Pattern check</p>
+          <h2 id="risk"></h2>
+          <p id="summary"></p>
+        </div>
+        <div id="link-summary" class="link-summary" hidden></div>
+        <div class="result-group">
+          <h3>Evidence noticed</h3>
+          <ul id="reasons" class="evidence-list"></ul>
+        </div>
+        <div id="checks-group" class="result-group">
+          <h3>Checks performed</h3>
+          <ul id="checks" class="check-list"></ul>
+        </div>
+        <div id="next-steps-group" class="result-group next-steps">
+          <h3>What to do next</h3>
+          <ul id="next-steps"></ul>
+        </div>
+      </section>
+
+      <details class="about">
+        <summary>About, limitations &amp; privacy</summary>
+        <div>
+          <p><strong>Local by design.</strong> Fisher analyzes only content you paste or page text you explicitly select. It does not use network requests or store your input.</p>
+          <p><strong>Know the limits.</strong> This is a deterministic pattern checker—not a reputation service, live blocklist, or machine-learning model. A quiet result does not mean content is safe.</p>
+        </div>
+      </details>
+    </main>
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

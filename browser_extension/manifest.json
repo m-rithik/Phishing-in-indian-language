@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "Fisher Scam Signal Prototype",
+  "version": "0.4.0",
+  "description": "Locally checks pasted messages, links, and explicitly selected text for scam signals.",
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ],
+  "action": {
+    "default_title": "Analyze text with Fisher",
+    "default_popup": "popup.html"
+  },
+  "content_security_policy": {
+    "extension_pages": "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"
+  }
+}

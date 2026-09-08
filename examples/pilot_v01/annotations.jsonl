@@ -1,0 +1,4 @@
+{"schema_version":"0.1.0","annotation_id":"ann-synthetic-001-a","item_id":"item-synthetic-001","annotator_id":"annotator-a","kind":"blind","primary_label":"phishing","language_stratum":"hindi","confidence":"high"}
+{"schema_version":"0.1.0","annotation_id":"ann-synthetic-001-b","item_id":"item-synthetic-001","annotator_id":"annotator-b","kind":"blind","primary_label":"phishing","language_stratum":"hindi","confidence":"high"}
+{"schema_version":"0.1.0","annotation_id":"ann-synthetic-002-a","item_id":"item-synthetic-002","annotator_id":"annotator-a","kind":"blind","primary_label":"benign","language_stratum":"english_indic_code_mixed","confidence":"high"}
+{"schema_version":"0.1.0","annotation_id":"ann-synthetic-002-b","item_id":"item-synthetic-002","annotator_id":"annotator-b","kind":"blind","primary_label":"benign","language_stratum":"english_indic_code_mixed","confidence":"high"}
