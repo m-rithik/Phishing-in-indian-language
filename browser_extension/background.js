@@ -205,10 +205,10 @@ function updateBadgeAndNotify(tabId, analysis) {
 function showNotificationPopup(tabId, config, analysis) {
   try {
     const reason = analysis.reasons?.[0] || 'Click the icon for details';
-    const notificationId = 'fisher-' + tabId + '-' + Date.now();
 
     console.log('Fisher: Showing notification -', config.title);
 
+    // Try Chrome native notification first
     chrome.notifications.create({
       type: 'basic',
       iconUrl: 'icon-128.png',
@@ -216,13 +216,29 @@ function showNotificationPopup(tabId, config, analysis) {
       message: reason,
       priority: config.priority
     }).then(id => {
-      console.log('Fisher: Notification created -', id);
+      console.log('Fisher: Native notification created -', id);
     }).catch(error => {
-      console.error('Fisher: Notification error -', error);
+      console.error('Fisher: Native notification failed -', error.message);
+      // Fallback: inject alert into the page
+      fallbackAlert(tabId, config, reason);
     });
   } catch (error) {
     console.error('Fisher: Notification error -', error);
+    fallbackAlert(tabId, config, analysis.reasons?.[0]);
   }
+}
+
+// Fallback: Inject alert into the page
+function fallbackAlert(tabId, config, reason) {
+  chrome.scripting.executeScript({
+    target: { tabId },
+    func: (title, message) => {
+      alert(`🚨 FISHER ALERT\n\n${title}\n\n${message}\n\nClick the Fisher icon for full analysis.`);
+    },
+    args: [config.title, reason]
+  }).catch(err => {
+    console.error('Fisher: Fallback alert failed -', err.message);
+  });
 }
 
 // Clean up
