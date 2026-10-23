@@ -2,40 +2,73 @@
 
 const cachedResults = new Map();
 
-// Import the analyzer (simplified version for background)
-async function importAnalyzer() {
-  // We'll communicate with popup for analysis, but can also do basic analysis here
-  return null;
-}
+// Listen for direct messages from content script (faster path)
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === 'pageContentExtracted' && sender?.tab?.id) {
+    const tabId = sender.tab.id;
+    const text = request.text;
 
-// Listen for tab updates
+    // Cache the result
+    cachedResults.set(tabId, {
+      text,
+      url: sender.tab.url,
+      title: sender.tab.title,
+      timestamp: Date.now(),
+    });
+
+    // Analyze immediately and show notification
+    analyzeAndNotify(tabId, text);
+  }
+
+  // Handle getCachedPageContent requests
+  if (request.action === 'getCachedPageContent') {
+    const tabId = sender.tab?.id;
+    if (tabId && cachedResults.has(tabId)) {
+      sendResponse({ found: true, data: cachedResults.get(tabId) });
+    } else {
+      sendResponse({ found: false });
+    }
+  }
+});
+
+// Also listen for tab updates as fallback
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status === 'complete' && tab.url && !tab.url.startsWith('chrome://')) {
-    // Page fully loaded - trigger auto-analysis
-    chrome.tabs.sendMessage(
-      tabId,
-      { action: 'extractPageText', maxCodePoints: 20000 },
-      (response) => {
-        if (response?.success && response?.text) {
-          // Cache the result
-          cachedResults.set(tabId, {
-            text: response.text,
-            url: tab.url,
-            title: tab.title,
-            timestamp: Date.now(),
-          });
+    // Only try if we haven't already got content from the script
+    if (!cachedResults.has(tabId)) {
+      // Page fully loaded - trigger auto-analysis as fallback
+      chrome.tabs.sendMessage(
+        tabId,
+        { action: 'extractPageText', maxCodePoints: 20000 },
+        (response) => {
+          if (response?.success && response?.text && !cachedResults.has(tabId)) {
+            // Cache the result
+            cachedResults.set(tabId, {
+              text: response.text,
+              url: tab.url,
+              title: tab.title,
+              timestamp: Date.now(),
+            });
 
-          // Analyze immediately and show notification
-          analyzeAndNotify(tabId, response.text);
+            // Analyze immediately and show notification
+            analyzeAndNotify(tabId, response.text);
+          }
         }
-      }
-    );
+      );
+    }
   }
 });
 
 // Analyze text and show notification
 async function analyzeAndNotify(tabId, text) {
   try {
+    if (!text || text.length === 0) {
+      // No text to analyze - set neutral badge
+      chrome.action.setBadgeText({ text: '○', tabId });
+      chrome.action.setBadgeBackgroundColor({ color: '#888888', tabId });
+      return;
+    }
+
     // Import and use the analyzer
     const { analyzeText } = await import('./detector.mjs');
     const analysis = analyzeText(text);
@@ -44,9 +77,9 @@ async function analyzeAndNotify(tabId, text) {
       // Update badge
       updateBadge(tabId, analysis.risk);
 
-      // Show notification for high-risk pages
-      if (analysis.risk === 'high') {
-        showNotification(analysis);
+      // Show notification for high-risk and review pages
+      if (analysis.risk === 'high' || analysis.risk === 'review') {
+        showNotification(analysis, analysis.risk);
       }
 
       // Cache the analysis
@@ -54,9 +87,14 @@ async function analyzeAndNotify(tabId, text) {
       if (cached) {
         cached.analysis = analysis;
       }
+    } else {
+      // Failed to analyze - set neutral badge
+      chrome.action.setBadgeText({ text: '○', tabId });
+      chrome.action.setBadgeBackgroundColor({ color: '#888888', tabId });
     }
   } catch (error) {
     // Silently fail if analysis doesn't work in background
+    chrome.action.setBadgeText({ text: '', tabId });
   }
 }
 
@@ -76,38 +114,32 @@ function updateBadge(tabId, risk) {
 }
 
 // Show notification popup
-function showNotification(analysis) {
+function showNotification(analysis, risk) {
   const riskLevels = {
-    high: { emoji: '🚨', title: 'High-Risk Page', color: '#d32f2f' },
-    review: { emoji: '⚠️', title: 'Review Needed', color: '#f57c00' },
-    no_match: { emoji: '✓', title: 'Safe', color: '#388e3c' },
+    high: { emoji: '🚨', title: 'High-Risk Page Detected', color: '#d32f2f' },
+    review: { emoji: '⚠️', title: 'Page Needs Review', color: '#f57c00' },
+    no_match: { emoji: '✓', title: 'Page Safe', color: '#388e3c' },
   };
 
-  const riskConfig = riskLevels[analysis.risk] || riskLevels.no_match;
+  const riskConfig = riskLevels[risk] || riskLevels.no_match;
+  const reason = analysis?.reasons?.[0] || 'Suspicious patterns detected';
 
   // Show Chrome notification
-  chrome.notifications.create({
-    type: 'basic',
-    iconUrl: 'icon-128.png',
-    title: `${riskConfig.emoji} ${riskConfig.title}`,
-    message: `This page has ${analysis.risk === 'high' ? 'suspicious patterns' : 'patterns worth reviewing'}. ${analysis.reasons?.[0] || 'Click the Fisher icon to see details.'}`,
-    priority: analysis.risk === 'high' ? 2 : 1,
-  });
+  try {
+    chrome.notifications.create({
+      type: 'basic',
+      iconUrl: 'icon-128.png',
+      title: `${riskConfig.emoji} ${riskConfig.title}`,
+      message: `${reason}\n\nClick the Fisher icon for full details.`,
+      priority: risk === 'high' ? 2 : 1,
+      silent: false,
+    });
+  } catch (error) {
+    // Notification API might not be available on all sites
+  }
 }
 
 // Clean up cache and badge when tab is closed
 chrome.tabs.onRemoved.addListener((tabId) => {
   cachedResults.delete(tabId);
-});
-
-// Provide API for popup to get cached analysis
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === 'getCachedPageContent') {
-    const tabId = sender.tab?.id;
-    if (tabId && cachedResults.has(tabId)) {
-      sendResponse({ found: true, data: cachedResults.get(tabId) });
-    } else {
-      sendResponse({ found: false });
-    }
-  }
 });
