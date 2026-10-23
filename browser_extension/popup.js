@@ -247,6 +247,7 @@ export function createPopupController({
   const analyzeLabel = documentApi.querySelector("#analyze-label");
   const selectionButton = documentApi.querySelector("#selection");
   const pageContentButton = documentApi.querySelector("#page-content");
+  const nlpReportButton = documentApi.querySelector("#nlp-report");
   const clearButton = documentApi.querySelector("#clear");
   const messageModeButton = documentApi.querySelector("#mode-message");
   const linkModeButton = documentApi.querySelector("#mode-link");
@@ -1109,6 +1110,11 @@ export function createPopupController({
   if (pageContentButton) {
     pageContentButton.addEventListener("click", () => {
       void analyzePageContent();
+    });
+  }
+  if (nlpReportButton) {
+    nlpReportButton.addEventListener("click", () => {
+      chrome.tabs.create({ url: chrome.runtime.getURL('nlp_report.html') });
     });
   }
   clearButton.addEventListener("click", clearResult);

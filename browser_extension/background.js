@@ -2,6 +2,9 @@
 
 console.log('Fisher: Background script loaded');
 
+// Store latest analysis per tab
+const analysisCache = new Map();
+
 // Trigger Point 1: Page load detection
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (!tab.url || isRestrictedUrl(tab.url)) return;
@@ -77,6 +80,9 @@ async function analyzePageAndNotify(tabId, text) {
     const analysis = performQuickAnalysis(text);
     console.log('Fisher: Analysis result -', analysis.risk);
     console.log('Fisher: Analysis details -', analysis);
+
+    // Cache analysis for NLP report
+    analysisCache.set(tabId, analysis);
 
     if (analysis) {
       updateBadgeAndNotify(tabId, analysis);
@@ -350,7 +356,16 @@ function showNotificationPopup(tabId, config, analysis) {
   }
 }
 
+// Handle messages from NLP report
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === 'getCurrentAnalysis') {
+    const analysis = analysisCache.get(request.tabId);
+    sendResponse({ analysis });
+  }
+});
+
 // Clean up
 chrome.tabs.onRemoved.addListener((tabId) => {
   console.log('Fisher: Tab closed -', tabId);
+  analysisCache.delete(tabId);
 });
