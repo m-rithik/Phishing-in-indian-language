@@ -83,7 +83,10 @@
             <button id="clear" type="button" class="quiet-button">Clear</button>
           </div>
           <p id="batch-progress" class="status" role="status" aria-live="polite" aria-atomic="true" hidden></p>
-          <button id="selection" type="button" class="selection-button" aria-busy="false"><span aria-hidden="true">⌁</span> Analyze selected text on this page</button>
+          <div class="page-analysis-buttons">
+            <button id="selection" type="button" class="selection-button" aria-busy="false"><span aria-hidden="true">⌁</span> Analyze selected text on this page</button>
+            <button id="page-content" type="button" class="selection-button" aria-busy="false"><span aria-hidden="true">▦</span> Analyze entire page</button>
+          </div>
           <p class="disclaimer" role="note">Pattern checks can miss scams. Independently verify important requests.</p>
           <p id="status" class="status" role="status" aria-live="polite" aria-atomic="true"></p>
         </section>

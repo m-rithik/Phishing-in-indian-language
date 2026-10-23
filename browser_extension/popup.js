@@ -246,6 +246,7 @@ export function createPopupController({
   const analyzeButton = documentApi.querySelector("#analyze");
   const analyzeLabel = documentApi.querySelector("#analyze-label");
   const selectionButton = documentApi.querySelector("#selection");
+  const pageContentButton = documentApi.querySelector("#page-content");
   const clearButton = documentApi.querySelector("#clear");
   const messageModeButton = documentApi.querySelector("#mode-message");
   const linkModeButton = documentApi.querySelector("#mode-link");
@@ -341,6 +342,11 @@ export function createPopupController({
     selectionButton.disabled = busy || unavailableInMode;
     selectionButton.hidden = unavailableInMode;
     selectionButton.setAttribute("aria-busy", busy ? "true" : "false");
+    if (pageContentButton) {
+      pageContentButton.disabled = busy || unavailableInMode;
+      pageContentButton.hidden = unavailableInMode;
+      pageContentButton.setAttribute("aria-busy", busy ? "true" : "false");
+    }
   }
 
   function setEmptyState(visible) {
@@ -897,6 +903,69 @@ export function createPopupController({
     status.textContent = "Selected page text was not analyzed.";
   }
 
+  async function analyzePageContent() {
+    if (expandedWorkspace) {
+      supersede();
+      hideResult();
+      status.textContent = "Page analysis is unavailable in the expanded workspace.";
+      return;
+    }
+    if (currentMode !== "message") {
+      supersede();
+      render({
+        risk: "cannot_analyze",
+        reasons: ["Page analysis is available only in Message mode."],
+        nextSteps: ["Switch to Message mode, or paste content above."],
+      }, "selection");
+      status.textContent = "Page content was not analyzed in Link mode.";
+      return;
+    }
+
+    const requestGeneration = supersede();
+    hideResult();
+    setSelectionBusy(true);
+    status.textContent = "Extracting all visible text from this page…";
+
+    try {
+      const tabs = await chromeApi.tabs.query({ active: true, currentWindow: true });
+      if (!Array.isArray(tabs) || tabs.length === 0) {
+        throw new Error("No active tab found");
+      }
+
+      const response = await chromeApi.tabs.sendMessage(tabs[0].id, {
+        action: "extractPageText",
+        maxCodePoints: MAX_INPUT_CHARS,
+      });
+
+      if (requestGeneration !== generation) return;
+      setSelectionBusy(false);
+
+      if (response?.success && response?.text) {
+        try {
+          const analysis = analyze(response.text, { mode: "message" });
+          render(analysis, "selection", "Page content check");
+          activeReport = buildDownloadReport(analysis, "selection", undefined, "Page content check");
+          downloadReportButton.disabled = false;
+          status.textContent =
+            analysis?.risk === "cannot_analyze"
+              ? "Page content did not produce a result. It was not copied into the draft."
+              : "Page content analyzed locally. It was not copied into the draft. No input history is saved.";
+        } catch {
+          invalidateActiveReport();
+          renderAnalysisFailure("Page content", "selection");
+        }
+      } else {
+        render({ risk: "cannot_analyze", reasons: ["Could not extract page content."] }, "selection");
+        status.textContent = "Page content could not be extracted.";
+      }
+    } catch {
+      if (requestGeneration !== generation) return;
+      setSelectionBusy(false);
+      render({ risk: "cannot_analyze", reasons: ["Could not access page content. Try selecting text instead."] }, "selection");
+      status.textContent = "Page content was not analyzed.";
+    }
+  }
+
   function handleInput() {
     drafts[currentMode] = message.value;
     supersede();
@@ -1014,6 +1083,11 @@ export function createPopupController({
   selectionButton.addEventListener("click", () => {
     void analyzeSelection();
   });
+  if (pageContentButton) {
+    pageContentButton.addEventListener("click", () => {
+      void analyzePageContent();
+    });
+  }
   clearButton.addEventListener("click", clearResult);
   editInputButton.addEventListener("click", editInput);
   locateBatchLineButton.addEventListener("click", locateBatchLine);
