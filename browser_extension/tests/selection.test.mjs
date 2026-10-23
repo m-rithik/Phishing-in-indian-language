@@ -737,7 +737,11 @@ test("bridge rejects malformed tabs and injection results", async () => {
   for (const tabs of malformedTabs) {
     const { chromeApi, calls } = fakeChrome({ tabs });
     assert.equal((await requestSelectedPageText(chromeApi)).status, "unavailable");
-    assert.equal(calls.length, 1);
+    // Requires exactly 1 valid tab. Arrays without exactly 1 element trigger fallback (2 calls)
+    // Single invalid tabs fail on validation without fallback (1 call)
+    const isValidSingleTab = Array.isArray(tabs) && tabs.length === 1;
+    const expectedCalls = isValidSingleTab ? 1 : 2;
+    assert.equal(calls.length, expectedCalls);
   }
 
   const malformedInjections = [

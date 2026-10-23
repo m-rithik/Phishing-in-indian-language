@@ -224,7 +224,18 @@ export async function requestSelectedPageText(chromeApi) {
   }
 
   try {
-    const tabs = await chromeApi.tabs.query({ active: true, currentWindow: true });
+    // In popup context, get all tabs in current window and find the active one
+    // Fallback: if that fails, try querying the last focused window
+    let tabs = await chromeApi.tabs.query({ active: true, currentWindow: true });
+
+    if (
+      !Array.isArray(tabs) ||
+      tabs.length !== 1
+    ) {
+      // Fallback: query last focused window
+      tabs = await chromeApi.tabs.query({ active: true, lastFocusedWindow: true });
+    }
+
     if (
       !Array.isArray(tabs) ||
       tabs.length !== 1 ||
