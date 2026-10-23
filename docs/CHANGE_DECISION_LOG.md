@@ -6744,3 +6744,51 @@ Rationale:
 - `uv run pytest tests/test_baseline_selection.py`: 6 passed, 3 skipped, 0 failed.
 - `uv run pytest -q`: 341 passed, 3 skipped, 21 failed (due to Windows platform limitations like `os.mkfifo` and packaging metadata).
 
+---
+
+## Record LUNA-20261024-002
+
+- Lifecycle state: Prepared
+- Date/time: 2026-10-24 03:55 IST
+- Branch: `feat/phase1-privacy-and-phase2-eval`
+- Planned commit subject: `Update change log`
+- Required trailer: `Luna-ID: LUNA-20261024-002`
+- Commit SHA: Pending
+- Prior commit SHAs in cycle: `a801d4e`, `274ee1f`
+- Parent SHA: `274ee1f`
+- Affected paths:
+  - `browser_extension/nlp_report.html` (deleted)
+  - `browser_extension/popup.html`
+  - `browser_extension/popup.js`
+  - `browser_extension/detector.mjs`
+  - `browser_extension/tests/realistic_messages.test.mjs`
+  - `docs/CHANGE_DECISION_LOG.md`
+
+### Significant changes & decisions
+
+1. Remove non-functional NLP report page:
+   - Deleted `browser_extension/nlp_report.html`.
+   - Removed `#nlp-report` button from `browser_extension/popup.html` and its event handler from `browser_extension/popup.js`.
+   - Rationale: [OBSERVED] Inline scripts in `nlp_report.html` violate CSP in MV3 extension context, and hardcoded simulated confidence percentages violated accurate evidence reporting.
+
+2. Detect native-script requests with Latin OTP and Hindi electricity scams:
+   - Extended `DIRECT_DISCLOSURE_REQUEST` and `PROTECTIVE_ADVISORY` in `browser_extension/detector.mjs` across Hindi, Tamil, and Telugu native-script branches to accept lowercase Latin terms (`otp`, `password`, `pin(?!\s*code)`, `cvv`).
+   - Extended `requestIsLocallyNegated` to inspect the matched substring itself for negation tokens (`मत`, `न `, `नहीं`, `வேண்டாம்`, `கூடாது`, `వద్దు`, `కూడదు`), preventing legitimate advisories like "अपना OTP किसी को मत भेजें" from triggering sensitive request detection.
+   - Added scam signals: impersonation (`बिजली`, `மின்சார`, `విద్యుత్`, `కరెంట్`), action (`कॉल करें`, `कॉल`), and urgency (`काट दिया जाएगा`, `कट जाएगा`).
+   - Added 5 realistic test cases to `browser_extension/tests/realistic_messages.test.mjs`.
+
+### Verification
+
+- `npm test`: 164 passed, 0 failed (all unit/realistic tests passing).
+- `npm run test:browser`: 17 passed, 5 failed (22 total).
+  - Failing tests reported without weakening:
+    1. `tests\browser\extension.spec.mjs:422:1 › recommended action precedes evidence and the popup fits 320 pixels` - `Error: expect(received).toBe(expected)` (Expected: 320, Received: 404)
+    2. `tests\browser\extension.spec.mjs:439:1 › expanded workspace opens empty, stays local, and adapts to narrow screens` - `Error: expect(received).toBe(expected)` (Expected: true, Received: false)
+    3. `tests\browser\extension.spec.mjs:510:1 › multilingual samples are explicit, composition-safe, and private` - `Error: expect(locator).toHaveText(expected) failed` (Locator: locator('#risk'), Expected: "Worth a closer look", Received: "High-risk patterns found")
+    4. `tests\browser\extension.spec.mjs:531:1 › dark workspace and popup preserve contrast and forced-color selection` - `Error: expect(received).toEqual(expected)` (Element has insufficient color contrast of 3.12)
+    5. `tests\browser\extension.spec.mjs:546:1 › bulk review retains blank lines, filters findings, and shows the chosen line` - `Error: expect(received).toBe(expected)` (Expected: true, Received: false)
+
+### Remaining risks
+
+- [OBSERVED] `tests/browser/extension.spec.mjs:510` previously asserted that the Hindi example in the popup produces "Worth a closer look" (review); with Latin OTP detection now enabled, the sample correctly identifies a direct credential request and reports "High-risk patterns found". The test was preserved untouched per instructions.
+
