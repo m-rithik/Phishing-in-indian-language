@@ -1,12 +1,16 @@
 {
   "manifest_version": 3,
   "name": "Fisher Scam Signal Prototype",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "Locally checks pasted messages, links, and explicitly selected text for scam signals.",
   "permissions": [
     "activeTab",
-    "scripting"
+    "scripting",
+    "tabs"
   ],
+  "background": {
+    "service_worker": "background.mjs"
+  },
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
