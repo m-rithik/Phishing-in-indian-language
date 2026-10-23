@@ -90,10 +90,11 @@ async function analyzePageAndNotify(tabId, text) {
 
 // Quick analysis with better pattern matching
 function performQuickAnalysis(text) {
-  if (!text) return { risk: 'no_match', reasons: [] };
+  if (!text) return { risk: 'no_match', reasons: [], triggered: [] };
 
   let risk = 'no_match';
   const reasons = [];
+  const triggered = [];
   const textLower = text.toLowerCase();
 
   // Expanded urgency patterns
@@ -117,7 +118,7 @@ function performQuickAnalysis(text) {
     'reach out', 'call us', 'dial', 'contact us immediately'
   ];
 
-  // Count matches
+  // Count matches and track which patterns triggered
   let urgencyCount = 0;
   let credentialCount = 0;
   let phoneCount = 0;
@@ -125,19 +126,28 @@ function performQuickAnalysis(text) {
   urgencyPatterns.forEach(pattern => {
     const regex = new RegExp('\\b' + pattern + '\\b', 'gi');
     const matches = textLower.match(regex);
-    if (matches) urgencyCount += matches.length;
+    if (matches) {
+      urgencyCount += matches.length;
+      triggered.push(`⚠️ Urgency: "${pattern}"`);
+    }
   });
 
   credentialPatterns.forEach(pattern => {
     const regex = new RegExp('\\b' + pattern + '\\b', 'gi');
     const matches = textLower.match(regex);
-    if (matches) credentialCount += matches.length;
+    if (matches) {
+      credentialCount += matches.length;
+      triggered.push(`🔐 Credential: "${pattern}"`);
+    }
   });
 
   phonePatterns.forEach(pattern => {
     const regex = new RegExp('\\b' + pattern + '\\b', 'gi');
     const matches = textLower.match(regex);
-    if (matches) phoneCount += matches.length;
+    if (matches) {
+      phoneCount += matches.length;
+      triggered.push(`📞 Phone: "${pattern}"`);
+    }
   });
 
   // Determine risk level
@@ -157,7 +167,8 @@ function performQuickAnalysis(text) {
 
   return {
     risk,
-    reasons: reasons.length > 0 ? reasons : ['No clear threats detected']
+    reasons: reasons.length > 0 ? reasons : ['No clear threats detected'],
+    triggered: triggered.slice(0, 5)
   };
 }
 
@@ -208,6 +219,7 @@ function updateBadgeAndNotify(tabId, analysis) {
 function showNotificationPopup(tabId, config, analysis) {
   try {
     const reason = analysis.reasons?.[0] || 'Click the icon for details';
+    const triggered = analysis.triggered || [];
 
     console.log('Fisher: Injecting banner -', config.title);
 
@@ -215,7 +227,7 @@ function showNotificationPopup(tabId, config, analysis) {
     chrome.scripting.executeScript({
       target: { tabId },
       world: 'MAIN',
-      func: (title, message, color) => {
+      func: (title, message, color, triggeredItems) => {
         // Create banner element
         const banner = document.createElement('div');
         banner.id = 'fisher-alert-banner';
@@ -228,30 +240,41 @@ function showNotificationPopup(tabId, config, analysis) {
           background: ${color};
           color: white;
           padding: 20px;
-          font-size: 18px;
+          font-size: 16px;
           font-weight: bold;
-          text-align: center;
+          text-align: left;
           box-shadow: 0 4px 12px rgba(0,0,0,0.3);
           font-family: Arial, sans-serif;
           line-height: 1.6;
         `;
 
+        let triggeredHTML = '';
+        if (triggeredItems && triggeredItems.length > 0) {
+          triggeredHTML = `
+            <div style="font-size: 13px; margin-top: 12px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 4px; font-weight: normal;">
+              <div style="margin-bottom: 6px;">Detected:</div>
+              ${triggeredItems.map(item => `<div style="margin: 4px 0;">• ${item}</div>`).join('')}
+            </div>
+          `;
+        }
+
         banner.innerHTML = `
           <div>🚨 ${title}</div>
           <div style="font-size: 14px; margin-top: 8px; font-weight: normal;">${message}</div>
-          <div style="font-size: 12px; margin-top: 8px; opacity: 0.9;">Click the Fisher icon for full analysis</div>
+          ${triggeredHTML}
+          <div style="font-size: 12px; margin-top: 10px; opacity: 0.9;">Click the Fisher icon for full analysis</div>
         `;
 
         document.body.insertBefore(banner, document.body.firstChild);
 
-        // Auto-remove after 8 seconds
+        // Auto-remove after 10 seconds
         setTimeout(() => {
           if (banner && banner.parentNode) {
             banner.remove();
           }
-        }, 8000);
+        }, 10000);
       },
-      args: [config.title, reason, config.color || '#d32f2f']
+      args: [config.title, reason, config.color || '#d32f2f', triggered]
     }).then(() => {
       console.log('Fisher: Banner injected successfully');
     }).catch(err => {
