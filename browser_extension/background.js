@@ -76,9 +76,12 @@ async function analyzePageAndNotify(tabId, text) {
   try {
     const analysis = performQuickAnalysis(text);
     console.log('Fisher: Analysis result -', analysis.risk);
+    console.log('Fisher: Analysis details -', analysis);
 
     if (analysis) {
       updateBadgeAndNotify(tabId, analysis);
+    } else {
+      console.log('Fisher: No analysis result');
     }
   } catch (error) {
     console.error('Fisher: Analysis error -', error);
@@ -206,7 +209,9 @@ function showNotificationPopup(tabId, config, analysis) {
   try {
     const reason = analysis.reasons?.[0] || 'Click the icon for details';
 
-    console.log('Fisher: Showing notification -', config.title);
+    console.log('Fisher: showNotificationPopup called -', config.title);
+    console.log('Fisher: Risk level -', config.priority);
+    console.log('Fisher: Reason -', reason);
 
     // Try Chrome native notification first
     chrome.notifications.create({
@@ -220,25 +225,35 @@ function showNotificationPopup(tabId, config, analysis) {
     }).catch(error => {
       console.error('Fisher: Native notification failed -', error.message);
       // Fallback: inject alert into the page
+      console.log('Fisher: Using fallback alert for tabId', tabId);
       fallbackAlert(tabId, config, reason);
     });
   } catch (error) {
-    console.error('Fisher: Notification error -', error);
+    console.error('Fisher: Notification try-catch error -', error);
     fallbackAlert(tabId, config, analysis.reasons?.[0]);
   }
 }
 
 // Fallback: Inject alert into the page
 function fallbackAlert(tabId, config, reason) {
-  chrome.scripting.executeScript({
-    target: { tabId },
-    func: (title, message) => {
-      alert(`🚨 FISHER ALERT\n\n${title}\n\n${message}\n\nClick the Fisher icon for full analysis.`);
-    },
-    args: [config.title, reason]
-  }).catch(err => {
-    console.error('Fisher: Fallback alert failed -', err.message);
-  });
+  console.log('Fisher: fallbackAlert called for tabId', tabId);
+  try {
+    chrome.scripting.executeScript({
+      target: { tabId },
+      world: 'MAIN',
+      func: (title, message) => {
+        console.log('Fisher: Alert executing on page');
+        alert(`🚨 FISHER ALERT\n\n${title}\n\n${message}\n\nClick the Fisher icon for full analysis.`);
+      },
+      args: [config.title, reason]
+    }).then(() => {
+      console.log('Fisher: Alert executed successfully');
+    }).catch(err => {
+      console.error('Fisher: Fallback alert failed -', err.message);
+    });
+  } catch (err) {
+    console.error('Fisher: executeScript error -', err.message);
+  }
 }
 
 // Clean up
