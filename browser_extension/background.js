@@ -88,16 +88,22 @@ async function analyzePageAndNotify(tabId, text) {
   }
 }
 
-// Quick analysis with better pattern matching
+// Quick analysis with Indian language support
 function performQuickAnalysis(text) {
-  if (!text) return { risk: 'no_match', reasons: [], triggered: [] };
+  if (!text) return { risk: 'no_match', reasons: [], triggered: [], language: 'unknown' };
 
   let risk = 'no_match';
   const reasons = [];
   const triggered = [];
   const textLower = text.toLowerCase();
 
-  // Expanded urgency patterns
+  // Detect language
+  let language = 'english';
+  if (/[ऀ-ॿ]/.test(text)) language = 'hindi';
+  else if (/[஀-௿]/.test(text)) language = 'tamil';
+  else if (/[ಀ-೿]/.test(text)) language = 'telugu';
+
+  // English patterns
   const urgencyPatterns = [
     'urgent', 'immediately', 'act now', 'today only', 'suspend', 'suspended',
     'block', 'blocked', 'verify', 'confirm', 'update', 'click here', 'click link',
@@ -105,30 +111,49 @@ function performQuickAnalysis(text) {
     'frozen', 'locked', 'restricted', 'limited', 'confirm now', 'verify now'
   ];
 
-  // Expanded credential patterns
   const credentialPatterns = [
     'otp', 'password', 'pin', 'cvv', 'kyc', 'account number',
     'credit card', 'debit card', 'card number', 'routing number',
     'ssn', 'social security', 'passport', 'drivers license', 'aadhaar'
   ];
 
-  // Phone request patterns
   const phonePatterns = [
     'call now', 'call immediately', 'contact number', 'phone number',
     'reach out', 'call us', 'dial', 'contact us immediately'
   ];
 
-  // Count matches and track which patterns triggered
-  let urgencyCount = 0;
-  let credentialCount = 0;
-  let phoneCount = 0;
+  // Hindi patterns (Devanagari)
+  const hindiUrgency = [
+    'तुरंत', 'जल्दी', 'तुरन्त', 'कार्रवाई', 'तरंत', 'अभी', 'जरूरी',
+    'suspend', 'locked', 'frozen', 'जमा', 'ब्लॉक', 'सीमित'
+  ];
 
+  const hindiCredentials = [
+    'otp', 'पासवर्ड', 'पिन', 'cvv', 'kyc', 'खाता संख्या', 'खाते',
+    'क्रेडिट कार्ड', 'डेबिट कार्ड', 'आधार', 'खाता'
+  ];
+
+  // Tamil patterns
+  const tamilUrgency = [
+    'உடனடி', 'உடனே', 'உடனாக', 'மிக முக்கியம்', 'அவசரம்',
+    'lock', 'block', 'freeze', 'suspend'
+  ];
+
+  const tamilCredentials = [
+    'otp', 'கடவுச்சொல்', 'pin', 'cvv', 'கணக்கு எண்', 'கணக்கு',
+    'கிரெடிட் கார்டு', 'ஆதார்'
+  ];
+
+  // Count matches
+  let urgencyCount = 0, credentialCount = 0, phoneCount = 0;
+
+  // Check English patterns
   urgencyPatterns.forEach(pattern => {
     const regex = new RegExp('\\b' + pattern + '\\b', 'gi');
     const matches = textLower.match(regex);
     if (matches) {
       urgencyCount += matches.length;
-      triggered.push(`⚠️ Urgency: "${pattern}"`);
+      triggered.push(`⚠️ Urgency (EN): "${pattern}"`);
     }
   });
 
@@ -137,7 +162,7 @@ function performQuickAnalysis(text) {
     const matches = textLower.match(regex);
     if (matches) {
       credentialCount += matches.length;
-      triggered.push(`🔐 Credential: "${pattern}"`);
+      triggered.push(`🔐 Credential (EN): "${pattern}"`);
     }
   });
 
@@ -146,7 +171,45 @@ function performQuickAnalysis(text) {
     const matches = textLower.match(regex);
     if (matches) {
       phoneCount += matches.length;
-      triggered.push(`📞 Phone: "${pattern}"`);
+      triggered.push(`📞 Phone (EN): "${pattern}"`);
+    }
+  });
+
+  // Check Hindi patterns
+  hindiUrgency.forEach(pattern => {
+    const regex = new RegExp(pattern, 'gi');
+    const matches = text.match(regex);
+    if (matches) {
+      urgencyCount += matches.length;
+      triggered.push(`⚠️ Urgency (HI): "${pattern}"`);
+    }
+  });
+
+  hindiCredentials.forEach(pattern => {
+    const regex = new RegExp(pattern, 'gi');
+    const matches = text.match(regex);
+    if (matches) {
+      credentialCount += matches.length;
+      triggered.push(`🔐 Credential (HI): "${pattern}"`);
+    }
+  });
+
+  // Check Tamil patterns
+  tamilUrgency.forEach(pattern => {
+    const regex = new RegExp(pattern, 'gi');
+    const matches = text.match(regex);
+    if (matches) {
+      urgencyCount += matches.length;
+      triggered.push(`⚠️ Urgency (TA): "${pattern}"`);
+    }
+  });
+
+  tamilCredentials.forEach(pattern => {
+    const regex = new RegExp(pattern, 'gi');
+    const matches = text.match(regex);
+    if (matches) {
+      credentialCount += matches.length;
+      triggered.push(`🔐 Credential (TA): "${pattern}"`);
     }
   });
 
@@ -168,7 +231,9 @@ function performQuickAnalysis(text) {
   return {
     risk,
     reasons: reasons.length > 0 ? reasons : ['No clear threats detected'],
-    triggered: triggered.slice(0, 5)
+    triggered: triggered.slice(0, 8),
+    language,
+    stats: { urgencyCount, credentialCount, phoneCount }
   };
 }
 
