@@ -145,6 +145,38 @@ test("Unicode obfuscation is normalized and explained", () => {
   );
 });
 
+test("ordinary emoji formatting is not reported as hidden text", () => {
+  for (const input of [
+    "Hello ❤️",
+    "Bank sent ❤️",
+    "Your delivery ❤️",
+    "Family 👨‍👩‍👧‍👦",
+    "Bank क्‍ष",
+  ]) {
+    const result = analyzeText(input);
+    assert.equal(
+      result.reasons.some((reason) => reason.includes("invisible")),
+      false,
+      input,
+    );
+  }
+
+  assert.equal(analyzeText("Bank क्‍ष").risk, "no_match");
+
+  for (const input of [
+    "Send o\ufe0ftp now",
+    "Send o\u200btp now",
+    "Send o\u200b\u200ctp now",
+  ]) {
+    const result = analyzeText(input);
+    assert.ok(result.reasons.some((reason) => reason.includes("invisible")), input);
+    assert.ok(
+      result.reasons.some((reason) => reason.includes("credentials")),
+      input,
+    );
+  }
+});
+
 test("frozen confusable profile is review-only for every configured skeleton", () => {
   assert.equal(CONFUSABLE_PROFILE_VERSION, "FISHER_GC_SENSITIVE_V1");
   for (const input of [
@@ -189,7 +221,24 @@ test("uppercase and default-ignorable lookalikes use the same review floor", () 
   assert.ok(result.reasons.some((reason) => reason.includes("invisible")));
 });
 
-test("sensitive lookalike tokens inside dotted strings still require review", () => {
+test("default-ignorable locator characters preserve link and format evidence", () => {
+  const high = analyzeText("Send OTP through exa\u200bmple.com");
+  assert.equal(high.risk, "high");
+  assert.ok(
+    high.reasons.includes("Contains a locally recognized web address pattern."),
+  );
+  assert.ok(high.reasons.some((reason) => reason.includes("invisible")));
+
+  const locatorOnly = analyzeText("exa\u200bmple.otp");
+  assert.equal(locatorOnly.risk, "review");
+  assert.equal(
+    locatorOnly.reasons.some((reason) => reason.includes("credentials")),
+    false,
+  );
+  assert.ok(locatorOnly.reasons.some((reason) => reason.includes("invisible")));
+});
+
+test("confusable locator spans are masked while standalone tokens remain semantic", () => {
   for (const input of [
     "Please send οtp.test",
     "Please share рin.test",
@@ -200,7 +249,33 @@ test("sensitive lookalike tokens inside dotted strings still require review", ()
   ]) {
     const result = analyzeText(input);
     assert.equal(result.risk, "review", input);
-    assert.ok(result.reasons.includes(CONFUSABLE_REASON), input);
+    assert.equal(result.reasons.includes(CONFUSABLE_REASON), false, input);
+  }
+
+  const standalone = analyzeText("Please send οtp now");
+  assert.equal(standalone.risk, "review");
+  assert.ok(standalone.reasons.includes(CONFUSABLE_REASON));
+});
+
+test("recognized locator and email spans cannot supply semantic scam cues", () => {
+  for (const input of [
+    "https://otp-bank.example/urgent/send/password",
+    "otp-bank@example.dev",
+    "password@example.com",
+  ]) {
+    const result = analyzeText(input);
+    assert.deepEqual(Object.keys(result), ["risk", "reasons"], input);
+    assert.equal(
+      result.reasons.some((reason) => reason.includes("credentials")),
+      false,
+      input,
+    );
+    assert.equal(
+      result.reasons.some((reason) => reason.includes("urgency")),
+      false,
+      input,
+    );
+    assert.equal(result.reasons.includes(CONFUSABLE_REASON), false, input);
   }
 });
 

@@ -5940,3 +5940,765 @@ Alternatives not selected:
 ### Correction history
 
 This record is the dated append-only privacy correction for the account-specific workbook path and the active-header maintenance note. The original historical statement is preserved in the local publication backup; no legacy DOCX change was made.
+
+### Dated revision - 8 September 2026 post-publication verification
+
+[OBSERVED - parent-supplied] The approved publication was executed as commit `4dbf38c9487a7aeb4da1c42efdb91b8fb1b36787` with subject `initial commit`, trailer `Luna-ID: LUNA-20260908-001`, parent `None`, and 114 files. The commit was pushed successfully to `origin/main`; `git ls-remote` matched the same SHA, and the working tree was clean and synchronized immediately after push, before this local revision. Original local `master` remains preserved at `b23359ac89e072691018c3760c445910d93f110b`.
+
+[OBSERVED - parent-supplied] GitHub Actions run `34262467068` succeeded from `2026-09-08T18:20:41Z` through `2026-09-08T18:23:12Z`: npm reported 69 tests/69 passes, browser tests reported 7 passed in 7.2 seconds, Python reported 316 tests in 97.800 seconds with `OK`, and the packager produced 8 members/63,328 bytes with the recorded ZIP SHA-256 `b18f0ba2ccb044c88128793993a43c417f88029ae79e821af6fe9d73e367aa9e`. The run verified the same commit SHA; GitHub API tree `bb1d8241e2fbaef6afe68af9b713873d10a25006` equals the local HEAD tree. Repository default branch is `main` and remains private. These comprise 392 passing tests.
+
+[OBSERVED - parent-supplied] The independent pre-publication audit passed: 114 paths, zero forbidden artifacts, zero user-local paths, zero concrete credentials, and 160 local targets with 97 anchors resolving. Post-publication independent review verified the commit, ref, and trailer. No new technical feature or document-only hash-backfill commit was created.
+
+[OBSERVED - parent-supplied] The workflow currently passes while pinned actions target deprecated Node 20 and GitHub forces Node 24. Maintenance follow-up belongs to the lead owner.
+
+Revision status: `BACKFILLED_COMMITTED_AND_PUBLISHED`; this audit revision is local and uncommitted. It updates the prepared record's pending SHA context without changing published code or creating a document-only commit.
+
+Remaining claim boundary: [UNKNOWN] broad corpus/language accuracy, reputation or legitimacy performance, stock Chrome/Edge behavior, and manual assistive-technology behavior remain unverified. CI success does not establish those claims.
+
+Next owner/action: retain the published commit and remote verification as final evidence; lead owner should track the GitHub Actions Node-runtime maintenance warning. No further commit, amend, or push is authorized by this revision.
+
+## Decision record - LUNA-20260909-001
+
+### Fisher Project Overview v4 presentation checkpoint
+
+- Lifecycle: `ARTIFACT_VERIFIED_LOCAL`; ignored output; no Git action requested
+- Recorded: 9 September 2026; responsible agent: luna; branch: `main`
+- Planned subject: None — user-requested presentation artifact only
+- Commit SHA: Not applicable; no commit or push
+- Affected artifact: `outputs/presentations/Fisher_Project_Overview_v4.pptx`
+
+### Findings and decision
+
+[OBSERVED - parent-supplied] The requested simple, easy-to-understand deck is complete with 7 slides, 2,319,554 bytes, and SHA-256 `006177d564f7d362b91ca22b8b0b3b61ced9340c437957cdcc5fcf13c48a0bfe`. Its flow covers the problem, current v0.4 extension/CLI, a three-step local check, explainable result levels, privacy and test evidence, and honest limits with the responsible pilot/transliteration next step.
+
+#### Decision D-207 - Deliver a simple evidence-bounded overview deck
+
+Decision: Deliver v4 as the sole presentation artifact. Use a custom light 16:9 Arial design with navy, teal, and coral, project screenshots, and two original illustrative generated artworks. Cite project sources in speaker notes and retain the rule-based prototype’s limits; do not imply trained Fisher accuracy, language coverage, or reputation capability.
+
+Rationale: [OBSERVED - parent-supplied] Sources were the current README, extension guide/code/manifest/tests, execution status, pilot, blueprint, and verified GitHub Actions run `34262467068`. [OBSERVED] Final package, layout, font, import, rendering, montage, and overflow checks passed. [DERIVED] A concise visual narrative and explicit claim boundary match the user’s simplicity request while avoiding unsupported model claims.
+
+Alternatives not selected:
+
+- Deliver intermediate v1-v3 decks: rejected because v4 is the final validated artifact; intermediates remain ignored.
+- Use the presentation skill/template picker: rejected because the parent selected and verified a custom design for this deck.
+- Present generated art as photographs or evidence: rejected; speaker notes identify it as illustrative.
+- Add charts/tables or measured accuracy claims: rejected because validation found no charts/tables and no such evidence exists.
+
+### Impacts and claim boundary
+
+- [OBSERVED] Artifact is an ignored output; no source code, configuration, Git state, or legacy DOCX changed for this checkpoint.
+- [OBSERVED] Slide size is 13.3333 × 7.5 inches; Arial policy passed for 78 text scripts; first-party import passed; no charts or tables are present.
+- [DERIVED] The deck explains verified behavior and packaging/tests, not production effectiveness.
+- [UNKNOWN] Broad corpus accuracy, language coverage, reputation/legitimacy performance, and manual assistive-technology behavior remain unverified.
+
+### Verification
+
+- [OBSERVED - parent-supplied] Finalizer package integrity: 7 slides, zero findings; layout: zero findings and zero warnings; `slides_test.py`: pass with no overflow.
+- [OBSERVED - parent-supplied] Every final slide rendered at 1600×900 and was inspected; montage review found no overlap, clipping, or broken crop. Slides 1–6 matched individually inspected v3 renders after unchanged re-export; slide 7 was re-inspected after its wording fix.
+- [OBSERVED - parent-supplied] Speaker notes cite sources. Generated illustrations are documented as illustrative. No charts/tables were introduced.
+- Not run: model training, corpus evaluation, accuracy measurement, language-coverage measurement, reputation validation, or Git commit/push.
+
+### Remaining risks and follow-up
+
+- [UNKNOWN] The rule-based prototype’s real-world accuracy and multilingual coverage remain unknown.
+- [UNKNOWN] Rendered browser screenshots and custom illustrations communicate the workflow but are not empirical evidence.
+- Next owner/action: deliver v4 only; preserve intermediate ignored artifacts and avoid expanding claims beyond the verified prototype, packaging, and test behavior.
+
+### Correction history
+
+None. This is an append-only local artifact checkpoint.
+
+## Decision record - LUNA-20260909-002
+
+### Fisher Project Overview v5 presentation revision
+
+- Lifecycle: `ARTIFACT_VERIFIED_LOCAL`; ignored output; no Git action requested
+- Recorded: 9 September 2026; responsible agent: luna; branch: `main`
+- Planned subject: None — user-requested presentation revision only
+- Commit SHA: Not applicable; no commit or push
+- Affected artifact: `outputs/presentations/Fisher_Project_Overview_v5.pptx`
+
+### Findings and decision
+
+[OBSERVED - parent-supplied] The revised simple project deck is complete with 7 slides, 2,320,146 bytes, and SHA-256 `1b70a9e14ca008f41fe6074ef589037bd3c2e43225b765445803fbe697a52032`. Slide 4 now uses a five-stage editable native diagram titled “Fisher’s local checking pipeline”: choose content, validate input, prepare content, inspect patterns, and explain next step.
+
+#### Decision D-208 - Explain the local checking pipeline with an editable native diagram
+
+Decision: Deliver v5 as the presentation artifact. Replace the generic three-step user journey with the five-stage pipeline and explicitly state that exact checks differ for message versus URL, Fisher never opens web addresses, and no-match does not prove safety.
+
+Rationale: [OBSERVED - parent-supplied] The implementation sources inspected were `browser_extension/analyzer.mjs`, `detector.mjs`, `links.mjs`, `selection.mjs`, `popup.js`, and `README`. [DERIVED] The five stages map the deck more directly to the verified local workflow and make the important safety boundary understandable without claiming a trained model or measured accuracy.
+
+Alternatives not selected:
+
+- Keep the generic three-step user journey: rejected because it omitted important distinctions in Fisher’s actual message and URL paths.
+- Add a chart or measured performance visualization: rejected because no accuracy or evaluation metric was supplied or measured for this revision.
+- Describe Fisher as opening or validating live websites: rejected because the verified safety boundary is that Fisher never opens web addresses.
+
+### Impacts and claim boundary
+
+- [OBSERVED] Only the ignored v5 presentation artifact is the requested output; no commit or push was requested or intended.
+- [OBSERVED] The revised diagram is editable and native to the presentation; no charts or tables were added.
+- [DERIVED] The deck communicates verified prototype behavior and safety boundaries, not production effectiveness.
+- [UNKNOWN] Broad corpus accuracy, multilingual coverage, reputation or legitimacy performance, and manual assistive-technology behavior remain unverified.
+
+### Verification
+
+- [OBSERVED - parent-supplied] Finalizer package integrity passed with zero findings; layout passed with zero findings and zero warnings; Arial font policy passed; first-party import passed.
+- [OBSERVED - parent-supplied] All 7 rendered slides were individually visually inspected at 1600×900; the montage was reviewed; `slides_test.py` passed with no overflow.
+- Not run: PowerPoint application inspection, model training, corpus evaluation, accuracy measurement, language-coverage measurement, reputation validation, or Git commit/push.
+
+### Remaining risks and follow-up
+
+- [UNKNOWN] The rule-based prototype’s real-world accuracy and multilingual coverage remain unknown.
+- [UNKNOWN] Rendered screenshots and generated illustrations communicate workflow but are not empirical evidence.
+- Next owner/action: deliver v5 as the current deck and preserve the explicit no-match and no-live-navigation boundaries in future revisions.
+
+### Correction history
+
+None. This is an append-only local artifact checkpoint.
+
+## Decision record - LUNA-20260911-001
+
+### Fisher Project Overview v8 pipeline presentation checkpoint
+
+- Lifecycle: `ARTIFACT_VERIFIED_LOCAL`; ignored output; no Git action requested
+- Recorded: 11 September 2026, Asia/Kolkata; responsible agent: luna; branch: `main`
+- Planned commit subject: None (local ignored presentation artifact)
+- Required trailer: Not applicable — no commit planned
+- Commit SHA: Not applicable; no commit or push authorized
+- Parent SHA: Not applicable
+- Affected artifact: `outputs/presentations/Fisher_Project_Overview_v8.pptx`
+- Related ignored build source: `outputs/.pptx-build-fisher/build_deck.mjs`
+
+### Findings and decision
+
+[OBSERVED - parent-supplied] The existing v5 deck already showed Fisher’s current local checking pipeline. The v8 deck adds a distinct slide 5 titled “Planned model training pipeline” after that current-checker slide, renumbers later footers, and contains eight slides total.
+
+#### Decision D-209 - Distinguish the current checker from the future training workflow
+
+Decision: Deliver v8 as the simple project deck with five plain-language planned stages: collect with consent; check the data; split related groups; train and compare; test before release. Include a visible callout that the extension still uses transparent rules, not a trained phishing model.
+
+Rationale: [OBSERVED - parent-supplied] The requested change was to add a pipeline to the simple Fisher PPT. [OBSERVED - parent-supplied] Source evidence was `README.md`, `docs/research/PILOT_V01.md`, and `docs/research/FISHER_RESEARCH_BLUEPRINT.md`. [DERIVED] A separate future-training slide prevents viewers from confusing the existing rule-based extension with an uncompleted model-training pipeline while keeping the explanation accessible.
+
+Alternatives not selected:
+
+- Replace the existing runtime pipeline: rejected because the new slide clarifies a different future training workflow and the current checker remains important context.
+- Present training as completed: rejected because no trained phishing model exists in the verified evidence.
+- Add unsupported accuracy or model-performance claims: rejected because no such measurements were supplied or verified for this artifact.
+
+### Impacts and claim boundary
+
+- [OBSERVED] The generator was updated to use the available presentation runtime path and v8 filenames; build and output paths are Git-ignored.
+- [DERIVED] The deck now communicates both the verified current rule-based workflow and a clearly labeled future research workflow.
+- [OBSERVED] No application source, dataset, model, configuration, or runtime behavior changed for this checkpoint.
+- [UNKNOWN] Published v0.4 metrics remain a historical snapshot and are not evidence that a trained model exists or that the planned pipeline has run.
+
+### Verification
+
+- [OBSERVED - parent-supplied] First-party finalizer succeeded; package integrity passed; layout validator reported 0 findings and 0 warnings.
+- [OBSERVED - parent-supplied] The final deck contains 8 slides at 13.3333 × 7.5 inches; Arial was observed in 103 text runs; first-party reimport passed.
+- [OBSERVED - parent-supplied] Final SHA-256: `81d0a86c5c65694916bae2585c6afc4fe622aa2302e6a463426ee8eff98daf17`; byte count: 2,324,739.
+- [OBSERVED - parent-supplied] All 8 slides were rendered to `outputs/.pptx-build-fisher/rendered-v8`, visually inspected at full size and in `montage-v8`, and an initially clipped final-stage design was repaired before final v8.
+- Not run: opening the deck in the PowerPoint application; model training; corpus evaluation; accuracy measurement; language-coverage measurement; reputation validation; Git commit or push.
+
+### Remaining risks and follow-up
+
+- [UNKNOWN] The PowerPoint application itself was not opened; the verified checks used first-party package/import/render tooling.
+- [UNKNOWN] The planned training pipeline has not been executed, so model quality, language coverage, and release readiness remain unverified.
+- Next owner/action: use v8 as the current simple overview deck; keep the planned pipeline visibly separate from the transparent rule-based extension until a trained model and measured evaluation exist.
+
+### Correction history
+
+None. This is an append-only local artifact checkpoint.
+
+## Decision record - LUNA-20260911-002
+
+### Fisher v0.5 extension product checkpoint
+
+- Lifecycle: `PREPARED_LOCAL`; working tree uncommitted; no Git action authorized
+- Recorded: 11 September 2026, Asia/Kolkata; responsible agent: luna; branch: `main`
+- Planned commit subject: `Polish Fisher v0.5 extension` (prospective; requires separate user approval)
+- Required trailer: `Luna-ID: LUNA-20260911-002` if a future commit is approved
+- Commit SHA: Pending — no commit created
+- Parent SHA: `4dbf38c` (current `HEAD`; no commit created for this checkpoint)
+- Affected paths: `README.md`; `browser_extension/README.md`; `browser_extension/analyzer.mjs`; `browser_extension/detector.mjs`; `browser_extension/links.mjs`; `browser_extension/manifest.json`; `browser_extension/popup.html`; `browser_extension/popup.js`; `browser_extension/selection.mjs`; `browser_extension/styles.css`; `browser_extension/icon.svg`; `browser_extension/icon-16.png`; `browser_extension/icon-32.png`; `browser_extension/icon-48.png`; `browser_extension/icon-128.png`; `browser_extension/tests/analyzer.test.mjs`; `browser_extension/tests/detector.test.mjs`; `browser_extension/tests/selection.test.mjs`; `tests/browser/extension.spec.mjs`; `tests/test_extension_package.py`; `tests/test_fisher_cli.mjs`; `fisher.mjs`; `fisher_extension_package.py`; `package.json`; `package-lock.json`; `docs/research/EXECUTION_STATUS.md`
+
+### Findings and decision
+
+[OBSERVED - parent-supplied] The browser extension and JavaScript package identity are coordinated at v0.5.0 across package metadata, manifest, analyzer engine version, CLI batch reports, packager, tests, and current README prose. The Python research package remains 0.2.0 as a separate intentional version.
+
+#### Decision D-210 - Ship a bounded, local-only v0.5 extension product slice
+
+Decision: Keep the popup as the user-facing product and deliver the v0.5 behavior as a privacy-preserving, transparent local checker. Centralize link scanning in `browser_extension/links.mjs`; mask locator/email-like spans before semantic matching; preserve message-versus-URL distinctions; and bound selection and input processing. Polish the popup with mode limits, inline correction, focus recovery, separate in-memory drafts, source labels, plain link summaries, ordered next steps, and an `Edit input` action. Add local branding icons, including editable SVG source and PNG runtime icons.
+
+Rationale: [OBSERVED - parent-supplied] The implemented and tested product is the browser-extension popup; no conventional standalone site is present in the repository. [DERIVED] A single link authority prevents analyzer/detector disagreement, while bounded local processing and in-memory drafts preserve the verified privacy boundary. [DERIVED] The v0.5 identity is necessary because externally visible behavior, packaging, docs, and tests changed from the historical v0.4 snapshot.
+
+Alternatives not selected:
+
+- Add storage or scan history: rejected because the verified product promise is local-only and privacy-preserving.
+- Build a standalone website: rejected because the actual user-facing product in scope is the popup extension.
+- Keep duplicate link detectors: rejected because one canonical authority is needed for consistent evidence and semantics.
+- Retain stale v0.4 identity: rejected because the coordinated extension behavior and package contents changed.
+- Keep the result action named `Check another`: rejected because `Edit input` accurately describes draft-preserving behavior.
+- Include SVG in the runtime archive: rejected because PNG sizes provide the runtime manifest assets while SVG remains an editable source asset.
+
+### Impacts and claim boundary
+
+- [OBSERVED] No new network access, storage, host permissions, background worker, content scripts, or CSP relaxation was introduced. The package remains local-only and bounded.
+- [OBSERVED] Runtime packaging includes 12 members and excludes the SVG source; the generated archive is ignored, local, and unpublished.
+- [DERIVED] The changes improve consistency, privacy clarity, error recovery, and usability without claiming live reputation checks, a trained model, or safety guarantees.
+- [UNKNOWN] Broad real-world accuracy, multilingual coverage, manual screen-reader behavior, and stock Edge behavior remain unmeasured or not directly verified.
+
+### Verification
+
+- [OBSERVED - parent-supplied] `npm test`: 91 passed, 0 failed.
+- [OBSERVED - parent-supplied] `npm run test:browser`: 13 passed, 0 failed, including unpacked Chromium, Axe empty/populated states, no external requests, 320px layout, source labels, drafts, `Edit input`, and selection privacy/fidelity.
+- [OBSERVED - parent-supplied] `uv run --python 3.11 python -m unittest -q tests.test_extension_package`: 25 passed.
+- [OBSERVED - parent-supplied] `uv run --python 3.11 python -m unittest discover -q -s tests -p 'test_*.py'`: 317 passed in 53.904s.
+- [OBSERVED - parent-supplied] `npm audit --json`: 0 vulnerabilities.
+- [OBSERVED - parent-supplied] Independent final product review found no P0 regression.
+- [OBSERVED - parent-supplied] `outputs/browser_extension/fisher-scam-signal-prototype-v0.5.0.zip` contains 12 runtime members, is 82,196 bytes, has SHA-256 `32ad3509089a6c01a665f54c41a0835eefb967b0e9daede21e7452e1022e10a6`, matched an independent `openssl` digest, and passed `unzip -t`.
+- [OBSERVED - parent-supplied] Prior `git diff --check` was clean; the parent must rerun it after this append.
+- Not run: model training, corpus evaluation, accuracy measurement, language-coverage measurement, live reputation validation, manual screen-reader testing, stock Edge testing, Git commit, or push.
+
+### Remaining risks and follow-up
+
+- [UNKNOWN] The rule-based prototype’s broad accuracy and language coverage remain unmeasured; no trained phishing model or live reputation service is part of v0.5.
+- [UNKNOWN] Manual assistive-technology and stock Edge checks remain outstanding.
+- [OBSERVED] The v0.5 ZIP is ignored, local, and unpublished; the working tree is uncommitted.
+- Next owner/action: parent should complete the final diff/status audit, obtain explicit user approval for the proposed commit, then request separate approval before pushing to the intended remote.
+
+### Correction history
+
+None. This is an append-only local artifact checkpoint.
+
+### Dated revision - 11 September 2026 final v0.5 verification correction
+
+Revision status: `CORRECTED_PREPARED_LOCAL`; uncommitted; no staging, commit, amend, push, or publication authorized. This append-only revision preserves the original prepared record and supersedes its stale verification and archive facts.
+
+[OBSERVED - Luna inspection] Branch `main` is at `4dbf38c9487a7aeb4da1c42efdb91b8fb1b36787`; `origin/main` remains at that published initial commit. Planned subject remains `Polish Fisher v0.5 extension`; any future commit must carry `Luna-ID: LUNA-20260911-002`. No v0.5 commit or push exists.
+
+[OBSERVED - parent-supplied final evidence] The v0.5 product is an explicit-action, local-only MV3 popup with message/link modes, in-memory drafts, inline validation and focus recovery, edit/clear/shortcut actions, source labels, bounded 20,000-character message and 2,048-character link inputs, isolated bounded selection, canonical link scanning, raw host validation, exact locator/email masking, generic non-echo evidence, and no storage, network, reputation, or trained-model behavior. Version 0.5.0 is coordinated across the extension/package surfaces; four PNG runtime icons and an SVG source are present.
+
+[OBSERVED - parent-supplied final evidence] Punctuation, wrapper, emoji, Indic, and CJK boundary fixes preserve visible semantics; invalid authorities terminate at host punctuation; valid userinfo, ports, IPv6, and balanced paths remain supported; later HTTP/HXXP schemes remain independent candidates; internal defang markers are transparent; default-ignorable runs are detected without false positives for ordinary emoji and tested Indic joiners. These are heuristics and do not prove destination safety.
+
+#### Superseded verification and archive data
+
+- Original `npm test` 91 passes → superseded by 113/113.
+- Original browser 13 passes → superseded by 14/14.
+- Original package test 25 passes → superseded by 26/26.
+- Original full Python 317 passes in 53.904 seconds → superseded by 318/318 in 53.082 seconds.
+- Original archive 82,196 bytes / SHA-256 `32ad3509089a6c01a665f54c41a0835eefb967b0e9daede21e7452e1022e10a6` → superseded by 105,300 bytes / SHA-256 `8e71e577b202e2379082ba276b58b3ff4ae843d19b11f66c8f6406772f369088`.
+- Original `npm audit --json` wording → superseded by `npm audit --audit-level=high`, which found 0 vulnerabilities.
+
+#### Final verification
+
+- [OBSERVED - parent-supplied] `npm test`: 113/113 passed.
+- [OBSERVED - parent-supplied] `npm run test:browser`: 14/14 passed with Chromium, Axe, 320px layout, selection, and no-external-request checks.
+- [OBSERVED - parent-supplied] Python package tests: 26/26; full Python discovery: 318/318 in 53.082 seconds.
+- [OBSERVED - parent-supplied] `npm audit --audit-level=high`: 0 vulnerabilities; `git diff --check`: passed.
+- [OBSERVED - parent-supplied] Independent link/security review: 72/72 focused checks, 518 accumulated custom assertions, and 200 malformed-chain assertions passed; zero reproducible in-scope P0/P1 findings.
+- [OBSERVED - parent-supplied] Final ignored archive has exactly 12 members, passed `unzip -t` and allowlist checks, and byte-compares equal to current runtime sources.
+- Not run: GitHub CI for uncommitted v0.5; model/corpus/accuracy evaluation; reputation validation; stock Chrome/Edge low-end latency; manual screen-reader, keyboard, forced-colors, or zoom testing.
+
+#### Impacts, risks, and follow-up
+
+- [OBSERVED] This correction changes only this Markdown register; the legacy DOCX and Git state were not changed by Luna.
+- [DERIVED] Evidence supports a bounded local rule-based prototype, not a safety guarantee or trained-model claim.
+- [UNKNOWN] Delimiter-free repeated-email input measured approximately 507–519 ms warm and one 801 ms cold mixed run; stock-device latency and broad accuracy remain unknown. Manual accessibility, stock Edge, multilingual coverage, and GitHub CI remain unverified.
+
+Next owner/action: parent should audit final status/diff, obtain fresh approval for the proposed commit with this register and trailer `Luna-ID: LUNA-20260911-002`, commit only after approval, then request separate approval before pushing to `origin/main`. A later substantive Luna update must backfill the commit SHA; no document-only backfill commit is allowed.
+
+## Decision record - LUNA-20260924-001
+
+### Fisher extension improvement scope checkpoint
+
+- Lifecycle: `SCOPE_DECIDED_PREPARED_LOCAL`; working tree uncommitted; no staging, commit, publication, or push authorized
+- Recorded: 24 September 2026, Asia/Kolkata; responsible agent: luna; branch: `main`
+- Planned commit subject: `Expand Fisher extension workspace and reporting UX` (prospective; requires separate user approval)
+- Required trailer: `Luna-ID: LUNA-20260924-001` if a future commit is approved
+- Commit SHA: Pending — no commit created
+- Parent SHA: `4dbf38c9487a7aeb4da1c42efdb91b8fb1b36787` (current `HEAD`)
+- Affected paths: `browser_extension/popup.html`; `browser_extension/styles.css`; `browser_extension/popup.js`; related extension tests and documentation only if implementation evidence later confirms changes
+
+### Findings and decision
+
+[OBSERVED - repository state] The working tree already contains uncommitted Fisher v0.5 extension, CLI, packaging, test, README, and research-status changes, plus untracked runtime icon assets. Existing product work must be preserved while the requested improvement pass is developed.
+
+[OBSERVED - parent-supplied verification] The current baseline `npm test` completed with 113 passed and 0 failed on 24 September 2026. This is baseline evidence only; it does not verify the new improvement scope.
+
+[ASSUMED - parent-supplied scope pending optional user clarification] The request “go crazy show tons of improvements” is interpreted as a broad but bounded improvement pass for the existing Fisher browser-extension experience. The existing local-only privacy boundary, CLI/report schema, and current dirty v0.5 working tree are preserved.
+
+#### Decision D-211 - Improve the existing popup experience in place
+
+Decision: Extend the same popup runtime into a responsive workspace with stronger result hierarchy and accessibility, additional synthetic multilingual examples, explicit sanitized report export that excludes user inputs, and inline help. Root implementation ownership is limited to the extension UI; controller and test work remains separately owned. Do not introduce storage, history, external services, new dependencies, trained-model claims, or performance claims in this checkpoint.
+
+Rationale: [OBSERVED] The existing user-facing product is the Fisher browser-extension popup. [DERIVED] Improving that surface directly gives the requested visible breadth while preserving the established runtime and privacy boundaries. [DERIVED] Sanitized export and inline help make findings easier to understand and share without copying raw message, selection, or URL inputs into an exported report.
+
+#### Alternatives not selected
+
+- Build a standalone website: rejected because the verified product in scope is the browser-extension popup and no standalone site is established by the supplied evidence.
+- Add persistent storage or scan history: rejected because it would expand the established local-only privacy boundary and was not requested with supporting requirements.
+- Add new dependencies or a trained model: rejected because the checkpoint is for user-facing product improvements and contains no verified dependency, training, corpus, or performance evidence.
+- Change the CLI/report schema: rejected because preserving that interface is an explicit parent constraint; report export must be sanitized at the UI boundary.
+- Replace the current dirty v0.5 worktree: rejected because existing user changes must be preserved and are part of the implementation context.
+
+### Impacts and claim boundary
+
+- [DERIVED] If implemented as scoped, the changes affect externally visible extension UI, accessibility behavior, examples, and report-export workflow.
+- [OBSERVED] No new network access, persistent storage, host permissions, or background service is authorized by this checkpoint.
+- [DERIVED] Export must omit raw user inputs and remain compatible with the existing report semantics; exact fields require implementation verification.
+- [UNKNOWN] Final browser behavior, accessibility coverage, export contents, multilingual example quality, and regression status remain unverified until implementation and tests complete.
+
+### Verification
+
+- [OBSERVED] `git status --short` and the existing register were inspected before this append; the worktree contains the pre-existing uncommitted paths listed above.
+- [OBSERVED - parent-supplied] `npm test`: 113 passed, 0 failed on 24 September 2026 (baseline only).
+- Not run for this scope checkpoint: browser tests for the new UI, report-export assertions, accessibility checks, multilingual-example checks, package verification, full Python suite, `npm audit`, or final `git diff --check` after implementation.
+- No staging, commit, amend, reset, restore, clean, or push performed.
+
+### Remaining risks and follow-up
+
+- [UNKNOWN] The final scope may change if the parent receives materially different user clarification.
+- [UNKNOWN] The improvement pass may expose regressions in popup layout, keyboard/focus behavior, existing drafts, selection handling, or report compatibility.
+- [UNKNOWN] Synthetic multilingual examples are demonstration content, not evidence of language coverage or detection accuracy.
+- Next owner/action: parent and implementation agents should complete the bounded UI/controller changes, run targeted browser and regression verification, then request a substantive Luna update with exact changed paths, command outcomes, remaining risks, and any intended commit information.
+
+### Correction history
+
+None. This is an append-only scope checkpoint.
+
+## Decision record - LUNA-20260924-002
+
+### Fisher extension workspace and reporting UX implementation checkpoint
+
+- Lifecycle: `IMPLEMENTED_VERIFIED_LOCAL`; working tree uncommitted; no staging, commit, publication, or push authorized
+- Recorded: 24 September 2026, Asia/Kolkata; responsible agent: luna; branch: `main`
+- Planned commit subject: `Expand Fisher extension workspace and reporting UX` (prospective; no commit requested)
+- Required trailer: `Luna-ID: LUNA-20260924-002` if a future commit is approved
+- Commit SHA: Pending — no commit created
+- Parent SHA: `4dbf38c9487a7aeb4da1c42efdb91b8fb1b36787` (current `HEAD`)
+- Affected paths: `README.md`; `browser_extension/README.md`; `browser_extension/popup.html`; `browser_extension/popup.js`; `browser_extension/styles.css`; `browser_extension/tests/selection.test.mjs`; `tests/browser/extension.spec.mjs`; `tests/test_extension_package.py`; and this register
+
+### Findings and decision
+
+[OBSERVED - parent-supplied final evidence] The implementation adds a redesigned compact popup and a same-runtime expanded workspace opened through `?view=workspace` in a new tab. The workspace supports responsive desktop/mobile layouts, system dark theme, contrast and forced-colors behavior, reduced motion, focus handling, actual report/check counts, collapsible nonempty check details, four synthetic examples (Hindi, Tamil, Telugu, and everyday benign text), inline help, composition-aware shortcuts, precise privacy guidance, and local habit guidance.
+
+[OBSERVED - parent-supplied final evidence] The report action downloads an allowlisted generic JSON file with a fixed filename, excludes raw input and URLs, and invalidates stale export state. The popup opens the workspace with `noopener`, an empty draft, and no transferred input or page selection. Temporary drafts remain in memory; no input history or persistent application storage was added.
+
+#### Decision D-212 - Deliver the bounded workspace and sanitized reporting slice
+
+Decision: Keep Fisher as the existing local-only extension and improve its primary interaction surface in place. Add the workspace view, responsive and accessibility-oriented presentation, synthetic examples, result-detail hierarchy, inline help, and explicit sanitized report download. Preserve the current analyzer, detector, link, selection-reader, manifest, CLI/report schema, privacy boundary, and dependency set.
+
+Rationale: [OBSERVED] The requested improvement work changed the popup, controller, styling, documentation, and focused tests while the engine and manifest remained byte-equal to the saved pre-session baseline. [DERIVED] This concentrates user-visible value in the existing product without expanding permissions, network behavior, storage, model scope, or report interfaces. [OBSERVED] Review found and corrected privacy wording to state that nothing leaves the device and that drafts are temporary with no input history.
+
+#### Alternatives not selected
+
+- Change detector policy or heuristics: deferred because the current heuristics are documented and no corpus evidence supports a policy change in this UX checkpoint.
+- Treat reviewer P0 speculation as a confirmed defect: rejected because no additional reproducible export, stale-state, workspace, or IME defect was found.
+- Add persistent history or storage: rejected because the local-only privacy boundary requires temporary in-memory drafts and no input history.
+- Rebuild or change the CLI/report schema: rejected because compatibility with the existing schema was an explicit scope constraint; export is sanitized at the UI boundary.
+- Add dependencies, permissions, external services, or trained-model behavior: rejected because the implementation did not need them and no evidence supports expanding those claims.
+- Claim language coverage or measured accuracy from the synthetic examples: rejected because these are demonstrations only, not evaluation evidence.
+
+### Impacts and claim boundary
+
+- [OBSERVED] New work changed exactly the nine implementation/documentation/test paths listed above, plus this register; current engine, detector, link, selection-reader, and manifest changes from the pre-existing dirty worktree were preserved.
+- [OBSERVED] No new dependencies, permissions, network requests, persistent application storage, or history were introduced. A downloaded generic report is persisted by the browser only after the user explicitly requests the download.
+- [DERIVED] The workspace improves discoverability, result comprehension, and sharing while retaining local processing and excluding raw inputs from exported reports.
+- [UNKNOWN] Manual screen-reader, stock Chrome/Edge, broad accuracy, language coverage, model, and performance evaluation remain unverified.
+- [UNKNOWN] The existing v0.5 archive was not rebuilt for this checkpoint; local screenshot outputs are ignored and are not package contents.
+
+### Verification
+
+- [OBSERVED - parent-supplied] `npm test`: 121 passed, 0 failed (session 44338).
+- [OBSERVED - parent-supplied] `npm run test:browser`: 18 passed, 0 failed in 12.7 seconds (session 42226).
+- [OBSERVED - parent-supplied] `uv run --python 3.11 python -m unittest -q tests.test_extension_package`: 26 passed, 0 failed in 0.581 seconds.
+- [OBSERVED - parent-supplied] `node --check` for `browser_extension/popup.js` passed; focused controller checks passed 40/40.
+- [OBSERVED - parent-supplied] `git diff --check` passed.
+- [OBSERVED - parent-supplied] Root visually inspected light, dark, 320px mobile, and popup/workspace screenshots. A local preview at `127.0.0.1:8765/popup.html?view=workspace` served only the extension folder and was not published.
+- [OBSERVED - parent-supplied] Terra read-only review found no additional reproducible export, stale-state, workspace, or IME defects after the privacy wording correction; an earlier reviewer reported 119 tests, superseded by the final 121-test result.
+- Not run: full Python discovery suite; manual screen-reader, stock Chrome/Edge, keyboard/forced-colors/zoom coverage beyond automated checks; accuracy, language-coverage, model, or performance evaluation; archive rebuild; Git commit or push.
+
+### Remaining risks and follow-up
+
+- [UNKNOWN] Manual assistive-technology and stock-browser behavior remain unverified.
+- [UNKNOWN] Synthetic multilingual examples do not establish multilingual detection coverage or accuracy.
+- [UNKNOWN] The current rule-based engine remains a heuristic prototype; detector-policy changes require corpus-backed evaluation.
+- [UNKNOWN] The v0.5 archive does not include this uncommitted workspace implementation because it was not rebuilt.
+- Next owner/action: parent should perform the final status/diff audit, decide whether to request a commit, and if so obtain fresh approval for the exact paths and subject, stage this register with the matching `Luna-ID`, and request a later substantive update for SHA backfill.
+
+### Correction history
+
+None. This is an append-only implementation and verification checkpoint.
+
+### Dated revision - 24 September 2026, 11:22:45 IST (+0530)
+
+Revision status: `CORRECTED_IMPLEMENTED_VERIFIED_LOCAL`; uncommitted; no staging, commit, amend, publication, or push authorized. This append-only revision preserves the original record and corrects its path-count wording and evidence labels using the final parent-supplied review.
+
+- [OBSERVED - parent-supplied final evidence] The final implementation changed 8 non-register paths plus `docs/CHANGE_DECISION_LOG.md`, for 9 changed paths total in this workstream. The original phrase “nine implementation/documentation/test paths ... plus this register” was imprecise and is superseded by this revision.
+- [OBSERVED - parent-supplied final evidence] The saved-baseline comparison found no changes in the engine, selection reader, or manifest attributable to this final improvement work. The existing unrelated dirty changes remain preserved.
+- [OBSERVED - parent-supplied final evidence] The v0.5 archive was not rebuilt and does not contain this uncommitted workspace implementation; this is verified state, not an unknown.
+- [OBSERVED - correction to original claim] The original `UNKNOWN` archive-risk bullet is superseded: the archive state and absence of the new workspace implementation were verified by the parent.
+- [OBSERVED - parent-supplied final evidence] The byte-equal engine/selection/manifest conclusion is based on the saved-baseline comparison and should be read as parent-supplied evidence wherever the original rationale used an unqualified `OBSERVED` label.
+- [OBSERVED - parent-supplied final evidence] The workspace-expand action was moved into the header for discoverability. The parent re-inspected the final light workspace and compact popup screenshots, and the local preview returned HTTP 200.
+
+Correction rationale: [DERIVED] These edits improve audit precision without changing the implementation record or creating a recursive new checkpoint. No source, configuration, legacy DOCX, or Git state was changed by Luna.
+
+## Decision record - LUNA-20260924-003
+
+### Fisher functionality expansion scope checkpoint
+
+- Lifecycle: `SCOPE_DECIDED_PREPARED_LOCAL`; working tree uncommitted; no staging, commit, release, or push authorized
+- Recorded: 24 September 2026, Asia/Kolkata; responsible agent: luna; branch: `main`
+- Planned commit subject: `Add bounded batch checking and functional URL evidence` (prospective; no commit requested)
+- Required trailer: `Luna-ID: LUNA-20260924-003` if a future commit is approved
+- Commit SHA: Pending — no commit created
+- Parent SHA: `4dbf38c9487a7aeb4da1c42efdb91b8fb1b36787` (current `HEAD`)
+- Affected paths: to be finalized from implementation evidence; expected popup/controller, analyzer or link handling, tests, and directly related documentation only
+
+### Findings and decision
+
+[OBSERVED - parent-supplied repository inspection] The current popup, analyzer, detector, link handling, tests, package manifest/source inventory, and dirty Git state were inspected. Existing changes are preserved. A baseline snapshot exists at `baseline/functionality-baseline-20260924`.
+
+[ASSUMED - parent-supplied scope pending optional user priorities] The user correction “too green, i want changes in functionality” is interpreted as a shift from primarily visual polish to useful bounded batch and navigation functionality. Exact priorities may still be refined, but the material architecture constraints below are fixed.
+
+#### Decision D-213 - Prioritize local batch checking and bounded navigation evidence
+
+Decision: Explore a browser workflow for multiple messages or links using one-per-line `.txt` import, explicit input bounds, filters, per-item generic findings, cancellation and progress, and a sanitized batch report. Add bounded local nested-redirect query evidence for navigation URLs. Replace the green-heavy palette with neutral gray, white, and blue while keeping visual changes subordinate to the functional work. Preserve the single-input API schema, CLI behavior, local-only boundary, and existing permissions.
+
+Rationale: [DERIVED] The user explicitly requested functionality after reviewing the prior visual-focused work. [OBSERVED] The existing product already has local analyzers, link handling, tests, and a baseline snapshot that can anchor behavior comparisons. [DERIVED] Bounded batch processing and generic per-item output provide concrete utility without requiring cloud services or persistent storage. [OBSERVED] Nested navigation evidence is intended as a reviewable observation, not a high-confidence safety verdict or accuracy claim.
+
+#### Alternatives not selected
+
+- Continue with cosmetic-only changes: rejected because the user explicitly requested functionality.
+- Add cloud reputation services or a trained model: rejected because this would violate the preserved local-only boundary or exceed the verified evidence and dependency scope.
+- Change the single-input API or CLI schema: rejected because backward compatibility is an explicit constraint.
+- Add persistent history or broad storage: rejected because input data must remain only in the current window and no storage expansion is authorized.
+- Treat nested redirect observations as safety or accuracy claims: rejected because the evidence supports bounded review only.
+
+### Impacts and claim boundary
+
+- [DERIVED] Batch mode would add externally visible workflow, progress/cancellation behavior, filtering, and sanitized reporting while retaining the current single-input path.
+- [OBSERVED - parent-supplied constraint] Input data may be retained only in the current window; generic row line IDs are acceptable for new batch reports.
+- [OBSERVED - parent-supplied constraint] No new network access, permissions, persistent storage, or dependencies are authorized.
+- [UNKNOWN] Final bounds, cancellation semantics, report fields, nested-navigation matching behavior, palette implementation, and regression status remain unverified until implementation completes.
+- [UNKNOWN] Detection observations may change for nested navigation URLs; this is a review concern, not evidence of improved accuracy.
+
+### Verification
+
+- [OBSERVED] Existing register structure, Luna IDs, current Git dirty state, and relevant repository inventory were inspected before this append.
+- [OBSERVED - parent-supplied] `baseline/functionality-baseline-20260924` is available for comparison.
+- Not run for this scope checkpoint: implementation tests, browser tests, batch import/export tests, cancellation/progress checks, accessibility checks, package verification, or final `git diff --check` after implementation.
+- No staging, commit, amend, reset, restore, clean, release, or push performed.
+
+### Remaining risks and follow-up
+
+- [UNKNOWN] Batch workloads may expose performance, cancellation, memory, or malformed-line edge cases.
+- [UNKNOWN] Nested navigation evidence may produce changed observations requiring careful review and regression coverage.
+- [UNKNOWN] The final user priority between batch messages, batch links, navigation evidence, and palette changes is not yet explicit.
+- Next owner/action: parent and implementation agents should finalize the bounded design, implement only supported functionality, compare against the baseline snapshot, run targeted and regression verification, then request a substantive Luna update with exact changed paths and outcomes.
+
+### Correction history
+
+None. This is an append-only scope checkpoint.
+
+### Dated revision - 24 September 2026, final baseline-path correction
+
+Revision status: `CORRECTED_SCOPE_PREPARED_LOCAL`; uncommitted; no staging, commit, amend, release, or push authorized. This append-only revision preserves the original scope statement and corrects the baseline path using the verified repository location.
+
+- [OBSERVED - repository inspection] The baseline snapshot is located at `outputs/functionality-baseline-20260924` and exists as a directory with browser-extension and test snapshot contents.
+- [CORRECTION] The earlier reference to `baseline/functionality-baseline-20260924` was incorrect and is superseded by the verified path `outputs/functionality-baseline-20260924`.
+
+
+## Decision record - LUNA-20260924-004
+
+### Fisher bounded batch functionality implementation checkpoint
+
+- Lifecycle: `IMPLEMENTED_VERIFIED_LOCAL`; working tree uncommitted; no staging, commit, release, or push authorized
+- Recorded: 24 September 2026, Asia/Kolkata; responsible agent: luna; branch: `main`
+- Planned commit subject: `Add bounded batch checking and functional URL evidence` (prospective; no commit requested)
+- Required trailer: `Luna-ID: LUNA-20260924-004` if a future commit is approved
+- Commit SHA: Pending — no commit created
+- Parent SHA: `4dbf38c9487a7aeb4da1c42efdb91b8fb1b36787` (current `HEAD`)
+- Affected paths: `README.md`; `browser_extension/README.md`; `browser_extension/links.mjs`; `browser_extension/popup.html`; `browser_extension/popup.js`; `browser_extension/styles.css`; `browser_extension/tests/analyzer.test.mjs`; `browser_extension/tests/selection.test.mjs`; `tests/browser/extension.spec.mjs`; `tests/test_fisher_cli.mjs`; and this register
+
+### Findings and decision
+
+[OBSERVED - parent-supplied final evidence] The functionality pass adds bounded batch checking for up to 100 physical LF lines and 100,000 Unicode code points total, with shared per-item limits, one-per-line `.txt` import up to 1 MiB, fatal invalid UTF-8 handling, accepted empty or `text/plain` MIME essence with parameters, draft-only import behavior, exact CLI-compatible line numbering, blank-line handling, and duplicate-CR normalization.
+
+[OBSERVED - parent-supplied final evidence] Batch analysis is cancellable and generation-invalidated after edits, mode/type changes, imports, and clears. The UI provides progress, counts, filters, individual generic findings, Locate input behavior using original UTF-16 line offsets, and sanitized line-indexed JSON reports that exclude raw text, URLs, and filenames. Incomplete or stale analysis cannot produce a partial completed export.
+
+[OBSERVED - parent-supplied final evidence] Link analysis now performs bounded one-level nested query destination checks across the specified case-insensitive keys, with one URLSearchParams decode, HTTP(S) and protocol-relative targets only, no recursion or fetch, prevalidation for malformed/control/Unicode/percent/surrogate input, bounded targets and pairs, and generic handling for malformed, unsupported, or over-limit cases. Outer address counts remain unchanged; relative, bare, and double-encoded targets are ignored. Literal unencoded nested URLs in messages retain existing scanner splitting behavior.
+
+[OBSERVED - parent-supplied final evidence] The green-heavy palette was replaced with gray, white, charcoal, and blue while retaining risk red and amber. No new dependency, permission, runtime file, API, CLI aggregate shape, network behavior, or storage was introduced.
+
+#### Decision D-214 - Deliver functional local batch workflows with bounded navigation evidence
+
+Decision: Ship the functionality-focused browser workflow as a local, bounded extension enhancement while preserving the existing single-input and CLI contracts. Use shared local rule analysis for batch items, generic sanitized reports, cancellable state, and review-only nested navigation evidence. Keep nested findings subordinate to the outer result and make no safety or accuracy claim from them.
+
+Rationale: [OBSERVED - parent-supplied baseline comparison] The saved `baseline/functionality-baseline-20260924` snapshot was used to isolate this turn’s changes. The parent observed `analyzer.mjs`, `detector.mjs`, `selection.mjs`, `manifest.json`, and `fisher.mjs` byte-equal to baseline for this turn; `tests/test_extension_package.py` was dirty before this turn and unchanged. [DERIVED] Shared local analysis and bounded one-level inspection provide useful functionality without cloud reputation, model training, new permissions, or dependency expansion.
+
+#### Alternatives not selected
+
+- Continue with cosmetic-only changes: rejected because the user explicitly requested functionality.
+- Add a cloud model, reputation service, or network lookup: rejected because it would expand the local-only privacy and permission boundary without supporting evidence.
+- Follow redirects recursively or fetch destinations: rejected because bounded review evidence is sufficient for this scope and recursion would increase risk, latency, and claim ambiguity.
+- Export raw source text, URLs, or filenames: rejected because reports must remain generic and sanitized.
+- Change the existing single-input API or CLI aggregate schema: rejected because compatibility is an explicit constraint.
+- Add new permissions, dependencies, or persistent storage: rejected because the implemented workflows do not require them.
+
+### Impacts and claim boundary
+
+- [OBSERVED] Ten non-register paths changed this turn; existing unrelated dirty paths were preserved. Parent byte comparison found the engine, detector, selection reader, manifest, and CLI implementation unchanged this turn, while `tests/test_extension_package.py` remained pre-existing dirty state.
+- [OBSERVED] Input data remains in the current window only. Generic row line IDs are used for new batch reports; raw text, URLs, and filenames are excluded.
+- [OBSERVED] No new network, permissions, storage, dependencies, runtime files, API changes, or CLI aggregate-shape changes were introduced.
+- [DERIVED] Nested destination presence is review evidence attached to the outer result, not a standalone high-risk verdict.
+- [UNKNOWN] The rule-based engine cannot prove safety; finite embedded coverage, extension reload behavior, and installed-extension page-selection privileges remain limitations.
+- [OBSERVED - parent-supplied] The old v0.5 ZIP was not rebuilt and is not the current deliverable.
+
+### Verification
+
+- [OBSERVED - parent-supplied] `npm test`: 148 passed, 0 failed, comprising 84 analyzer/detector, 54 controller, and 10 CLI checks.
+- [OBSERVED - parent-supplied] `uv run --python 3.11 python -m unittest -q tests.test_extension_package`: 26 passed, 0 failed in 0.631 seconds.
+- [OBSERVED - parent-supplied] `npm run test:browser`: 22 passed, 0 failed in 13.4 seconds.
+- [OBSERVED - parent-supplied] Combined targeted verification totaled 196 passed checks; `git diff --check` was clean.
+- [OBSERVED - parent-supplied] Disposable Chromium checks covered batch filters, blank numbering, Locate, cancellation, import, UTF-8 handling, private exports, no external requests, accessibility, mobile, light, and dark states.
+- [OBSERVED - parent-supplied] Parent visually inspected `outputs/browser_extension/bulk-workspace.png` and `bulk-workspace-dark.png`; local preview returned HTTP 200 at `127.0.0.1:8765`; synthetic demo behavior was checked.
+- [OBSERVED - parent-supplied] Independent Terra review and parent audit fixed malformed nested prevalidation, MIME handling, same-file retry reset, empty/oversized draft preservation, duplicate-CR stripping, oversized-input splitting avoidance, selected-row visibility, and Locate assertions.
+- Not run: full Python research suite; stock Chrome/Edge; manual screen-reader testing; model accuracy, corpus, language-coverage, or performance evaluation; ZIP rebuild; Git commit, release, or push.
+
+### Remaining risks and follow-up
+
+- [UNKNOWN] The local pattern engine remains heuristic and cannot establish safety or accuracy.
+- [UNKNOWN] Finite nested-query coverage may miss unsupported or unusual navigation patterns.
+- [UNKNOWN] A loaded existing extension requires reload to receive the new code; the local preview cannot provide installed-extension page-selection privileges.
+- [OBSERVED] No commit, release, push, or ZIP rebuild was authorized or performed.
+- Next owner/action: parent should perform final status and diff review, obtain separate approval if a commit is desired, and stage this register with `Luna-ID: LUNA-20260924-004` before that commit.
+
+### Correction history
+
+None. This is an append-only implementation and verification checkpoint.
+
+### Dated revision - 24 September 2026, final baseline and parsing correction
+
+Revision status: `CORRECTED_IMPLEMENTED_VERIFIED_LOCAL`; uncommitted; no staging, commit, amend, release, or push authorized. This append-only revision preserves the original implementation record and corrects its baseline path and parsing-bound wording using verified parent evidence.
+
+- [OBSERVED - repository inspection] The baseline snapshot used for this turn is `outputs/functionality-baseline-20260924`, which exists as a directory with browser-extension and test snapshot contents.
+- [CORRECTION] The original reference to `baseline/functionality-baseline-20260924` is superseded by `outputs/functionality-baseline-20260924`.
+- [CORRECTION] The original phrase “duplicate-CR normalization” is superseded by the exact behavior: split on LF, remove exactly one final LF-generated empty member, and strip exactly one terminal CR per line; a second CR is retained and never normalized away.
+- [CORRECTION] The bounded nested-navigation limits are exactly 32 query pairs and 4 qualifying targets.
+- [OBSERVED - parent-supplied final evidence] The 10 non-register paths listed in this record are the paths changed this turn; pre-existing dirty paths remain preserved.
+
+## Decision record - LUNA-20261011-001
+
+### Fisher finish scope and baseline verification checkpoint
+
+- Lifecycle: `SCOPE_DECIDED_PREPARED_LOCAL`; working tree uncommitted; no staging, commit, release, or push authorized
+- Recorded: 11 October 2026, Asia/Kolkata; responsible agent: luna; branch: `main`
+- Planned commit subject: `fix: finish local fisher app delivery` (prospective; no commit requested)
+- Required trailer: `Luna-ID: LUNA-20261011-001` if a future commit is approved
+- Commit SHA: Pending — no commit created
+- Parent SHA: `4dbf38c9487a7aeb4da1c42efdb91b8fb1b36787` (current `HEAD`)
+- Affected paths: current Fisher implementation, extension packaging, CLI, tests, and status/documentation paths are in the pre-existing dirty working tree; exact implementation paths remain subject to the completed finish diff. Five new icon files are also present. This register is the only path changed by Luna.
+
+### Findings and decision
+
+[OBSERVED - parent-supplied repository evidence] The repository is on `main` at `4dbf38c9487a7aeb4da1c42efdb91b8fb1b36787`. At task start, 22 tracked paths were modified and five new extension icon files were present. A baseline snapshot was saved at `outputs/finish-baseline-20261011`.
+
+[OBSERVED - parent-supplied verification evidence] `npm run test:browser` completed with 22 passing checks in 19.3 seconds. `uv run --python 3.11 python -m unittest discover -q -s tests -p 'test_*.py'` completed with 318 tests OK in 64.970 seconds. `git diff --check` exited 0. The environment reported Node `v25.9.0` and uv `0.7.20`.
+
+[OBSERVED - parent-supplied status] Product review is still in progress and no implementation changes have been made for this finish checkpoint. The existing v0.5 ZIP predates the 24 September bulk/workspace work; byte comparison is pending.
+
+[ASSUMED - parent-supplied scope pending optional user response] “Finish Fisher” means finish the local extension and CLI application, fix confirmed defects, refresh inaccurate status, and build a verified current installation package. Research collection and model work are separate blocked work and must not be represented as complete. The optional user scope question has not received an answer.
+
+#### Decision D-215 - Finish the verified local delivery boundary
+
+Decision: Continue toward a reviewable local Fisher delivery consisting of the extension, CLI, confirmed defect fixes, accurate status documentation, and a verified current installation package. Preserve the explicit boundary that research collection and model work remain blocked and incomplete unless separately evidenced and authorized.
+
+Rationale: [OBSERVED] The baseline tests pass and the current dirty worktree contains the extension, CLI, packaging, tests, and status-related paths needed for the local delivery review. [DERIVED] A baseline snapshot and passing baseline checks provide a concrete comparison point for implementation and packaging verification. [ASSUMED] The parent’s stated scope is the intended interpretation until the optional user response arrives.
+
+#### Alternatives not selected
+
+- Claim the entire Fisher project finished from the current tests: rejected because product review remains in progress, package freshness comparison is pending, and research/model work is explicitly blocked.
+- Add or claim a research collection or trained-model deliverable: rejected because no verified input, implementation, dataset evidence, or authorization supports that scope.
+- Treat the existing v0.5 ZIP as the current installation package: rejected because parent evidence says it predates the 24 September bulk/workspace work; byte comparison and a current rebuild remain pending.
+- Expand scope into speculative features or unconfirmed defects: rejected because only confirmed defects and explicitly supported local-delivery work are authorized by the supplied evidence.
+- Commit or publish the work at this checkpoint: rejected because no commit or publication approval was requested, and implementation/product review is incomplete.
+
+### Impacts and claim boundary
+
+- [OBSERVED] Baseline verification covers the named browser and Python test commands and a clean whitespace check at the recorded checkpoint.
+- [DERIVED] Subsequent changes can be compared against `outputs/finish-baseline-20261011` while preserving unrelated pre-existing edits.
+- [UNKNOWN] The final set of implementation changes, current package contents, package byte comparison, product-review outcome, and installation behavior remain unverified.
+- [UNKNOWN] Research collection, model training/inference, empirical accuracy, language coverage, and performance claims remain outside the completed scope.
+- [OBSERVED] No staging, commit, release, push, or publication was performed for this checkpoint.
+
+### Verification
+
+- [OBSERVED - parent-supplied] `npm run test:browser` — 22 passed in 19.3 seconds.
+- [OBSERVED - parent-supplied] `uv run --python 3.11 python -m unittest discover -q -s tests -p 'test_*.py'` — 318 tests OK in 64.970 seconds.
+- [OBSERVED - parent-supplied] `git diff --check` — exit 0.
+- [OBSERVED - parent-supplied] Baseline snapshot saved at `outputs/finish-baseline-20261011`.
+- Not run for this checkpoint: final product review; current installation-package rebuild and byte comparison; post-implementation regression checks; manual stock-browser, assistive-technology, accuracy, research, model, or performance evaluation; Git commit, release, or push.
+
+### Remaining risks and follow-up
+
+- [UNKNOWN] The current v0.5 archive may omit later bulk/workspace work; rebuild and compare the current package before claiming installation-package completion.
+- [UNKNOWN] Product review may identify confirmed defects requiring additional bounded fixes.
+- [UNKNOWN] The optional user scope response may refine priorities within the local extension and CLI boundary.
+- [UNKNOWN] Research collection and model work have no completion evidence and remain blocked.
+- Next owner/action: parent and implementation agents should finish only the verified local extension/CLI scope, fix reproducible defects, refresh inaccurate status, rebuild and verify the current installation package, rerun relevant tests, then request a substantive Luna update with exact changed paths, outcomes, and any intended commit subject.
+
+### Correction history
+
+None. This is an append-only baseline and scope checkpoint.
+
+### Dated completion revision - 11 October 2026, Asia/Kolkata
+
+Revision status: `IMPLEMENTED_VERIFIED_LOCAL`; working tree uncommitted; no staging, commit, release, or push authorized. This append-only revision preserves `LUNA-20261011-001` and records the completed local-delivery and verification checkpoint using parent-supplied evidence.
+
+- Planned commit subject: `docs: finalize local fisher delivery` (prospective; commit not requested)
+- Commit SHA: Pending — no commit created
+- Parent SHA: `4dbf38c9487a7aeb4da1c42efdb91b8fb1b36787`
+- Required trailer if later approved: `Luna-ID: LUNA-20261011-001`
+- [OBSERVED] Relative to `outputs/finish-baseline-20261011`, the changed paths are exactly `README.md`, `browser_extension/README.md`, `docs/research/EXECUTION_STATUS.md`, and this register. Runtime, CLI, and test paths were byte-unchanged relative to that baseline. Existing unrelated working-tree changes remain preserved.
+
+#### Decision D-216 - Finalize the verified local Fisher delivery boundary
+
+Decision: Treat the local extension and CLI delivery as implemented and locally verified for this checkpoint. Keep the current v0.5 version identifier because this is a local, never-released iteration. Refresh README/package guidance and research status to identify the current artifact and historical snapshots accurately. Preserve the existing implementation and avoid speculative source changes.
+
+Rationale: [OBSERVED - parent-supplied product review] The sol_high product review found no reproducible blocker. [OBSERVED - parent-supplied package evidence] A fresh package was built successfully with 12 members, 153,663 bytes, and SHA-256 `3a3599724ef8861caf644453f4040c9377a12ff3d6087be53b42fd433c666040`. Root and reviewer independently verified ZIP integrity and source-byte equality for all 12 members; a second isolated build produced the same hash. [DERIVED] Documentation/status corrections and package regeneration complete the local-delivery checkpoint without requiring runtime or CLI source edits.
+
+#### Alternatives not selected
+
+- Change runtime or CLI implementation despite no reproducible blocker: rejected because reviewer evidence found no confirmed defect requiring source changes and baseline behavior remained verified.
+- Claim research collection, model training/inference, reputation data, accuracy, or public publication as complete: rejected because those gates remain unsupported and blocked.
+- Replace the v0.5 identifier with a release version: rejected because the iteration remains local and unreleased.
+- Preserve the stale ZIP as the current deliverable: rejected because its recorded SHA-256 `8e71e577b202e2379082ba276b58b3ff4ae843d19b11f66c8f6406772f369088` and contents predate the current bulk/workspace work. It was retained under `outputs/finish-baseline-20261011/fisher-scam-signal-prototype-v0.5.0.zip` as historical evidence.
+- Add speculative features or broader claims: rejected because the verified local-delivery scope is complete and no evidence or authorization supports expansion.
+
+### Completion impacts and claim boundary
+
+- [OBSERVED] README guidance now links the 11 October snapshot; the extension guide documents ZIP extraction and reload; the research status distinguishes historical snapshots from the current counts and artifact identity while retaining research gates.
+- [OBSERVED] The current installation ZIP is `outputs/browser_extension/fisher-scam-signal-prototype-v0.5.0.zip`; its 12 members passed integrity and source-byte checks.
+- [OBSERVED] No model, dataset, reputation, accuracy, or public-publication work was performed. The Python wheel/sdist build was exploratory; generated archives were removed afterward and are not deliverables.
+- [DERIVED] The local package is suitable for review/install testing under the documented local workflow, subject to the remaining manual checks below.
+- [UNKNOWN] Stock Chrome/Edge behavior, manual assistive-technology behavior, and research data/model gates remain unverified.
+
+### Completion verification
+
+- [OBSERVED - parent-supplied] `npm test` — 148 passed in 1.48 seconds.
+- [OBSERVED - parent-supplied] `node --check` passed for five runtime files; bounded/privacy probes passed.
+- [OBSERVED - parent-supplied] Baseline `npm run test:browser` — 22 passed in 19.3 seconds.
+- [OBSERVED - parent-supplied] Baseline `uv run --python 3.11 python -m unittest discover -q -s tests -p 'test_*.py'` — 318 tests OK in 64.970 seconds.
+- [OBSERVED - parent-supplied] `uv run --python 3.11 python -m fisher_extension_package` — current ZIP built successfully with 12 members, 153,663 bytes, SHA-256 `3a3599724ef8861caf644453f4040c9377a12ff3d6087be53b42fd433c666040`.
+- [OBSERVED - parent-supplied] Root and independent reviewer verified ZIP integrity/source-byte equality for all 12 members; reviewer’s isolated second build matched the same hash.
+- [OBSERVED - parent-supplied] Targeted packaging checks: root 26 passed in 0.569 seconds; reviewer 26 passed in 0.520 seconds.
+- [OBSERVED - parent-supplied] Extracted-package disposable headless Chromium checks covered high-risk messaging, nested URL review, batch results, individual/batch JSON privacy, zero page errors, and zero external HTTP(S) requests.
+- [OBSERVED - parent-supplied] Root visually inspected `outputs/finish-20261011/workspace.png`; local preview served the extension directory at `127.0.0.1:8765`.
+- [OBSERVED - parent-supplied] `uv build --out-dir outputs/finish-20261011/python` produced a wheel and sdist as an exploratory check; generated archives were removed afterward.
+- [OBSERVED - parent-supplied] `git diff --check` passed.
+- Not run: manual stock Chrome/Edge testing; manual screen-reader/assistive-technology testing; research data collection; model training/inference; corpus accuracy, language-coverage, or performance evaluation; public publication; Git commit, release, or push.
+
+### Completion risks and follow-up
+
+- [UNKNOWN] Browser behavior outside disposable headless Chromium, especially stock Chrome/Edge installation and assistive technologies, remains unverified.
+- [UNKNOWN] Research collection and model work remain blocked; the local delivery does not establish empirical accuracy or language coverage.
+- [OBSERVED] The historical stale ZIP is preserved for comparison, while the current ZIP is available at `outputs/browser_extension/fisher-scam-signal-prototype-v0.5.0.zip`.
+- Next owner/action: parent should perform any remaining manual checks, decide whether a commit is desired, and obtain separate approval for the exact commit paths and subject. If approved, stage this register with the matching `Luna-ID` trailer before committing.
+
+## Decision record - LUNA-20261014-001
+
+### Fisher v0.5 local toolkit commit-preparation checkpoint
+
+- Lifecycle: `COMMIT_PREPARED_PENDING_APPROVAL`; staged and uncommitted; no commit, push, release, or publication performed
+- Recorded: 14 October 2026, Asia/Kolkata; responsible agent: luna; branch: `main`
+- Planned commit subject: `feat: complete fisher v0.5 local toolkit`
+- Required trailer: `Luna-ID: LUNA-20261014-001`
+- Commit SHA: Pending — commit has not been created
+- Parent SHA: `4dbf38c9487a7aeb4da1c42efdb91b8fb1b36787`
+- Remote comparison: [OBSERVED] `git ls-remote origin refs/heads/main` returned the same SHA as local `HEAD`; `gh repo view` confirmed `m-rithik/Phishing-in-indian-language`, default branch `main`, and `isPrivate: true`
+- Approval boundary: exact commit approval is pending; push approval must be requested separately for `origin/main`
+
+### Staged change inventory
+
+[OBSERVED] The staged change contains exactly 26 non-register paths: 21 modified paths and five new icon paths. The register remains unstaged until this record is reviewed.
+
+- `README.md`
+- `browser_extension/README.md`
+- `browser_extension/analyzer.mjs`
+- `browser_extension/detector.mjs`
+- `browser_extension/icon-128.png`
+- `browser_extension/icon-16.png`
+- `browser_extension/icon-32.png`
+- `browser_extension/icon-48.png`
+- `browser_extension/icon.svg`
+- `browser_extension/links.mjs`
+- `browser_extension/manifest.json`
+- `browser_extension/popup.html`
+- `browser_extension/popup.js`
+- `browser_extension/selection.mjs`
+- `browser_extension/styles.css`
+- `browser_extension/tests/analyzer.test.mjs`
+- `browser_extension/tests/detector.test.mjs`
+- `browser_extension/tests/selection.test.mjs`
+- `docs/research/EXECUTION_STATUS.md`
+- `fisher.mjs`
+- `fisher_extension_package.py`
+- `package-lock.json`
+- `package.json`
+- `tests/browser/extension.spec.mjs`
+- `tests/test_extension_package.py`
+- `tests/test_fisher_cli.mjs`
+
+### Findings and decision
+
+[OBSERVED - parent-supplied final verification] No new implementation work was performed during this commit-preparation turn. The staged set is the accumulated local Fisher v0.5 extension, CLI, packaging, tests, icons, and documentation work recorded by prior substantive entries.
+
+#### Decision D-217 - Prepare one reproducible local toolkit commit
+
+Decision: Prepare the exact 26-path staged set under `feat: complete fisher v0.5 local toolkit`, preserving the v0.5 local version and requiring the matching Luna trailer. The intended outcome is a reviewable local toolkit supporting bulk/workspace review, bounded link and selection handling, generic reports, reproducible packaging, tests, and accurate documentation without public publication.
+
+Rationale: [OBSERVED] The staged audit found 5,649 insertions and 727 deletions across 21 modified paths and five new icons, with no accidental output/archive/dataset/environment/key/certificate paths or obvious credential patterns. [OBSERVED] All 12 staged runtime members match the Oct 11 package bytes and extracted contents. [DERIVED] One commit keeps the tested local toolkit and its supporting documentation synchronized and makes the intended reproducible delivery boundary reviewable.
+
+#### Alternatives not selected
+
+- Commit only the Oct 11 documentation/status corrections: rejected because the intended local toolkit includes the staged runtime, UI, icons, CLI, packaging, tests, and documentation accumulated since the parent commit.
+- Split the staged set into speculative feature commits: rejected because the current evidence supports one coherent v0.5 local-toolkit delivery and no separate independently verified release boundary was supplied.
+- Change the v0.5 version: rejected because the toolkit remains a local, unreleased iteration and coordinated version evidence is already present.
+- Add model, dataset, reputation, accuracy, or public-publication work: rejected because those areas remain outside verified scope and are not represented in the staged paths.
+- Push immediately after commit: rejected because push to `origin/main` requires separate explicit approval even though the destination is confirmed private.
+
+### Impacts and claim boundary
+
+- [OBSERVED] The extension manifest retains `activeTab` and `scripting` permissions with no new host permissions; dependency versions are unchanged.
+- [OBSERVED] Shared version, EPIPE, generic-report, CLI, packaging, and runtime checks were included in the staged audit.
+- [OBSERVED] The current package identity is 12 members, 153,663 bytes, SHA-256 `3a3599724ef8861caf644453f4040c9377a12ff3d6087be53b42fd433c666040`; all 12 staged runtime bytes equal the Oct 11 package and extracted contents.
+- [DERIVED] The staged change preserves the local-only processing and generic-report boundary evidenced by the tests and manifest review.
+- [OBSERVED] The remote destination is private; no public publication claim is made.
+- [UNKNOWN] Manual stock Chrome/Edge and assistive-technology coverage, model/data evaluation, and public-release readiness remain outside this checkpoint.
+
+### Verification
+
+- [OBSERVED - parent-supplied] `npm test` — 148 passed, 0 failed in 2,067.537875 ms.
+- [OBSERVED - parent-supplied] `npm run test:browser` — 22 passed in 14.9 seconds.
+- [OBSERVED - parent-supplied] `uv run --python 3.11 python -m unittest discover -q -s tests -p 'test_*.py'` — 318 tests OK in 59.938 seconds.
+- [OBSERVED - parent-supplied] Combined count: 488 unique tests/checks passed.
+- [OBSERVED - parent-supplied] `git diff --cached --check` passed; `git diff --check` passed.
+- [OBSERVED - parent-supplied] Independent sol_high staged audit passed for the exact 26 non-register paths, including scope comparison, permissions, coordinated v0.5 version, unchanged dependency versions, CLI checks, package checks, and obvious-secret/path review.
+- [OBSERVED - parent-supplied] `git ls-remote origin refs/heads/main` matched local `HEAD` at `4dbf38c9487a7aeb4da1c42efdb91b8fb1b36787`.
+- [OBSERVED - parent-supplied] Package integrity and source-byte equality passed for all 12 members; staged package SHA-256 matched `3a3599724ef8861caf644453f4040c9377a12ff3d6087be53b42fd433c666040`.
+- [OBSERVED - parent-supplied] `gh repo view m-rithik/Phishing-in-indian-language --json nameWithOwner,url,isPrivate,defaultBranchRef` exited 0 and confirmed the private `main` destination.
+- Not run or not established: Git commit, push, release/publication; manual stock-browser and assistive-technology checks; model, dataset, accuracy, language-coverage, or performance evaluation.
+
+### Remaining risks and follow-up
+
+- [UNKNOWN] Manual browser and assistive-technology behavior remains unverified.
+- [UNKNOWN] Research collection and model/data evaluation remain blocked and are not part of this commit.
+- [OBSERVED] The remote destination is private, but push remains a separate approval-gated action.
+- Next owner/action: parent should review this record, stage `docs/CHANGE_DECISION_LOG.md`, obtain explicit approval for this exact commit subject and 27-path commit including the register, then request separate explicit approval before pushing to `origin/main`.
+
+### Correction history
+
+None. This is an append-only commit-preparation record; the commit SHA remains Pending until a later substantive Luna update can match the trailer and backfill it.

@@ -1,6 +1,6 @@
 # Fisher
 
-Fisher v0.4 is a local message and link checking toolkit: a Chrome/Edge
+Fisher v0.5 is a local message and link checking toolkit: a Chrome/Edge
 extension, a shared analysis engine, and a command-line companion. Paste a
 message, inspect a link without opening it, or explicitly analyze selected page
 text. Results explain the detected patterns and suggest what to do next.
@@ -25,8 +25,27 @@ or check its reputation. These are transparent pattern checks with known blind
 spots, not measured phishing predictions. A result without a match does not
 establish safety.
 
+For more room, choose **Open a roomy workspace** in the popup. The expanded view
+adds side-by-side input and findings, follows your system's light/dark appearance,
+and includes synthetic Hindi, Tamil, Telugu, and everyday-message examples.
+**Save report** downloads generic findings as JSON without your submitted text or
+link addresses. Each workspace starts with an empty draft; page selection stays
+in the toolbar popup.
+
+**Bulk check** accepts pasted inputs or a local UTF-8 `.txt` file, one message or
+link per line. Review up to 100 inputs, filter by result, inspect individual line
+findings, cancel an active run, and download a report excluding source text.
+Link checks also inspect immediate destinations embedded in common navigation
+query fields, reporting structural cues without opening or following any URL.
+
 See the [extension and local-tool guide](browser_extension/README.md) for
 keyboard shortcuts, limits, installation, testing, and packaging.
+
+The local v0.5 package was refreshed on 11 October 2026 to include the workspace
+and bulk-checking features. Extract the ZIP before loading its folder, or reload
+an existing unpacked installation. See the
+[current verification record](docs/research/EXECUTION_STATUS.md#current-local-product-snapshot--11-october-2026)
+for the tested scope and package identity.
 
 ## Research context
 
@@ -88,7 +107,7 @@ results are **High-risk patterns found**, **Worth a closer look**, **No clear
 pattern match**, and **Could not analyze**. No-match is explicitly not a safety
 result.
 
-The v0.4 shared engine adds bounded structural link inspection for embedded
+The v0.5 shared engine performs bounded structural link inspection for embedded
 credentials, IP addresses, internationalized hosts, unusual ports, defanged
 spelling, and other review cues. It does not decide whether a domain is genuine.
 The CLI emits generic reports or aggregate batch counts, without echoing input

@@ -1,14 +1,18 @@
+import { inspectMessageContext } from "./links.mjs";
+
 export const MAX_INPUT_CHARS = 20_000;
 export const CONFUSABLE_PROFILE_VERSION = "FISHER_GC_SENSITIVE_V1";
 
 const DEFAULT_IGNORABLES =
   /[\p{Cf}\u034f\u115f\u1160\u17b4\u17b5\u180b-\u180f\u3164\ufe00-\ufe0f\uffa0\ufff0-\ufff8\u{1bca0}-\u{1bca3}\u{1d173}-\u{1d17a}\u{e0000}-\u{e0fff}]/gu;
-const HAS_DEFAULT_IGNORABLE =
+const DEFAULT_IGNORABLE_CHARACTER =
   /[\p{Cf}\u034f\u115f\u1160\u17b4\u17b5\u180b-\u180f\u3164\ufe00-\ufe0f\uffa0\ufff0-\ufff8\u{1bca0}-\u{1bca3}\u{1d173}-\u{1d17a}\u{e0000}-\u{e0fff}]/u;
+const BIDI_CONTROL = /[\u061c\u200e\u200f\u202a-\u202e\u2066-\u2069]/u;
+const JOINER_CHARACTER = /^[\u200c\u200d]$/u;
+const SUPPORTED_INDIC_CHARACTER =
+  /^(?:\p{Script_Extensions=Devanagari}|\p{Script_Extensions=Tamil}|\p{Script_Extensions=Telugu})$/u;
+const TOKEN_CHARACTER = /^[\p{L}\p{M}\p{N}]$/u;
 const DOT_VARIANTS = /[\u3002\uff0e\uff61]/gu;
-const OBFUSCATED_DOTS = /\[\s*\.\s*\]|\(\s*dot\s*\)/giu;
-const SPACED_DOTS = /\s*\.\s*/gu;
-const WORD_DOTS = /\s+dot\s+/giu;
 const DISALLOWED_CONTROLS = /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f]/u;
 const CONFUSABLE_REASON =
   "Contains character lookalikes resembling a configured sensitive term.";
@@ -74,13 +78,6 @@ const SIGNALS = [
     pattern:
       /₹|\b(?:payment|pay now|prize|lottery|reward|refund|cashback|fine|loan|rupees?|lakh)\b|रुपये|इनाम|जुर्माना|ऋण|பணம்|பரிசு|அபராதம்|கடன்|రూపాయలు|బహుమతి|జరిమానా|రుణం/iu,
   },
-  {
-    category: "link",
-    weight: 3,
-    reason: "Contains a web address or an obfuscated domain.",
-    pattern:
-      /\b(?:https?:\/\/|hxxps?:\/\/|www\.)[^\s]{1,2048}|\b(?:[a-z0-9][a-z0-9-]{0,62}\.){1,5}(?:com|in|org|net|xyz|top|site|online|link|info|click|example)\b/iu,
-  },
 ];
 
 const PROTECTIVE_ADVISORY =
@@ -94,8 +91,40 @@ const NEGATION_BEFORE_REQUEST =
 const NEGATION_AFTER_REQUEST =
   /^\s*(?:mat|na|nahi|न करें|मत|வேண்டாம்|கூடாது|వద్దు|ద్దు|ుకోవద్దు|కూడదు|చేయవద్దు)/iu;
 
+function hasSuspiciousDefaultIgnorable(raw) {
+  const characters = Array.from(raw);
+  for (let index = 0; index < characters.length; index += 1) {
+    if (!DEFAULT_IGNORABLE_CHARACTER.test(characters[index])) continue;
+    let runEnd = index + 1;
+    while (
+      runEnd < characters.length &&
+      DEFAULT_IGNORABLE_CHARACTER.test(characters[runEnd])
+    ) {
+      runEnd += 1;
+    }
+    const run = characters.slice(index, runEnd);
+    if (run.some((character) => BIDI_CONTROL.test(character))) return true;
+    const previous = characters[index - 1];
+    const next = characters[runEnd];
+    if (
+      previous !== undefined &&
+      next !== undefined &&
+      TOKEN_CHARACTER.test(previous) &&
+      TOKEN_CHARACTER.test(next)
+    ) {
+      const isSupportedIndicJoinerSequence =
+        run.every((character) => JOINER_CHARACTER.test(character)) &&
+        SUPPORTED_INDIC_CHARACTER.test(previous) &&
+        SUPPORTED_INDIC_CHARACTER.test(next);
+      if (!isSupportedIndicJoinerSequence) return true;
+    }
+    index = runEnd - 1;
+  }
+  return false;
+}
+
 function normalizeInput(raw) {
-  const removedFormat = HAS_DEFAULT_IGNORABLE.test(raw);
+  const removedFormat = hasSuspiciousDefaultIgnorable(raw);
   const withoutOriginalIgnorables = raw.replace(DEFAULT_IGNORABLES, "");
   const compatibilityNormalized = withoutOriginalIgnorables.normalize("NFKC");
   const withoutIgnorables = compatibilityNormalized.replace(DEFAULT_IGNORABLES, "");
@@ -107,13 +136,6 @@ function normalizeInput(raw) {
       .trim(),
     removedFormat,
   };
-}
-
-function domainMatchingView(text) {
-  return text
-    .replace(OBFUSCATED_DOTS, ".")
-    .replace(WORD_DOTS, ".")
-    .replace(SPACED_DOTS, ".");
 }
 
 function hasUnpairedSurrogate(text) {
@@ -195,7 +217,7 @@ function hasConfiguredConfusableSensitiveTerm(text) {
   return false;
 }
 
-export function analyzeText(input) {
+function validateInput(input) {
   if (typeof input !== "string") {
     return {
       risk: "cannot_analyze",
@@ -222,18 +244,31 @@ export function analyzeText(input) {
       reasons: ["No analyzable text was provided."],
     };
   }
+  return null;
+}
+
+function analyzeMessageContext(input, messageContext) {
+  const originalNormalized = normalizeInput(input);
+  const normalized = normalizeInput(messageContext.semanticText);
+  normalized.removedFormat = originalNormalized.removedFormat;
 
   const reasons = [];
   const categories = new Set();
   let score = 0;
 
-  const matchingText = domainMatchingView(normalized.text);
   for (const signal of SIGNALS) {
-    if (signal.pattern.test(matchingText)) {
+    if (signal.pattern.test(normalized.text)) {
       score += signal.weight;
       categories.add(signal.category);
       reasons.push(signal.reason);
     }
+  }
+
+  const hasInspectedLink = messageContext.linkResult.summary.inspected > 0;
+  if (hasInspectedLink) {
+    score += 3;
+    categories.add("link");
+    reasons.push("Contains a locally recognized web address pattern.");
   }
 
   if (normalized.removedFormat) {
@@ -251,16 +286,45 @@ export function analyzeText(input) {
     reasons.push("Protective wording was detected; context may be a warning.");
   }
 
+  if (messageContext.linkResult.limited) {
+    reasons.push("Web-address inspection was incomplete because of its format or a local limit.");
+  }
+
   if (reasons.length === 0) {
     reasons.push("No configured scam-signal combination was detected.");
   }
 
   const highRiskCombination =
-    hasSensitiveRequest && (categories.has("link") || categories.has("urgency"));
+    hasSensitiveRequest && (hasInspectedLink || categories.has("urgency"));
   const risk = highRiskCombination
     ? "high"
-    : hasConfusableSensitiveTerm || score >= 3
+    : messageContext.linkResult.limited || hasConfusableSensitiveTerm || score >= 3
       ? "review"
       : "no_match";
   return { risk, reasons };
+}
+
+export function analyzeTextWithLinks(input) {
+  const invalidResult = validateInput(input);
+  if (invalidResult !== null) {
+    return {
+      textResult: invalidResult,
+      linkResult: {
+        found: false,
+        limited: false,
+        summary: { inspected: 0, flagged: 0, limited: false },
+        checks: [],
+      },
+    };
+  }
+
+  const messageContext = inspectMessageContext(input);
+  return {
+    textResult: analyzeMessageContext(input, messageContext),
+    linkResult: messageContext.linkResult,
+  };
+}
+
+export function analyzeText(input) {
+  return analyzeTextWithLinks(input).textResult;
 }

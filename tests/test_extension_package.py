@@ -8,6 +8,7 @@ from pathlib import Path
 import re
 import shutil
 import stat
+import struct
 import subprocess
 import sys
 import tempfile
@@ -27,6 +28,11 @@ EXPECTED_FILES = {
     "README.md",
     "analyzer.mjs",
     "detector.mjs",
+    "icon-128.png",
+    "icon-16.png",
+    "icon-32.png",
+    "icon-48.png",
+    "icon.svg",
     "links.mjs",
     "manifest.json",
     "popup.html",
@@ -40,6 +46,10 @@ EXPECTED_FILES = {
 RUNTIME_FILES = {
     "analyzer.mjs",
     "detector.mjs",
+    "icon-128.png",
+    "icon-16.png",
+    "icon-32.png",
+    "icon-48.png",
     "links.mjs",
     "manifest.json",
     "popup.html",
@@ -47,6 +57,13 @@ RUNTIME_FILES = {
     "selection.mjs",
     "styles.css",
 }
+ICON_FILES = {
+    "icon-16.png": 16,
+    "icon-32.png": 32,
+    "icon-48.png": 48,
+    "icon-128.png": 128,
+}
+TEXT_RUNTIME_FILES = RUNTIME_FILES - set(ICON_FILES)
 EXPECTED_ORDER = tuple(sorted(EXPECTED_FILES))
 
 
@@ -109,7 +126,7 @@ class ExtensionPackageTests(unittest.TestCase):
     def test_manifest_has_exact_temporary_permissions_and_no_standing_page_access(self) -> None:
         manifest = json.loads((EXTENSION / "manifest.json").read_text(encoding="utf-8"))
         self.assertEqual(manifest["manifest_version"], 3)
-        self.assertEqual(manifest["version"], "0.4.0")
+        self.assertEqual(manifest["version"], "0.5.0")
         self.assertEqual(manifest["permissions"], ["activeTab", "scripting"])
         self.assertNotIn("host_permissions", manifest)
         self.assertNotIn("optional_host_permissions", manifest)
@@ -118,7 +135,20 @@ class ExtensionPackageTests(unittest.TestCase):
         self.assertNotIn("externally_connectable", manifest)
         self.assertNotIn("web_accessible_resources", manifest)
         self.assertIn("selected", manifest["description"].lower())
+        self.assertEqual(
+            manifest["icons"],
+            {
+                "16": "icon-16.png",
+                "32": "icon-32.png",
+                "48": "icon-48.png",
+                "128": "icon-128.png",
+            },
+        )
         self.assertEqual(manifest["action"]["default_popup"], "popup.html")
+        self.assertEqual(
+            manifest["action"]["default_icon"],
+            {"16": "icon-16.png", "32": "icon-32.png"},
+        )
         self.assertEqual(
             manifest["content_security_policy"]["extension_pages"],
             "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; "
@@ -128,16 +158,37 @@ class ExtensionPackageTests(unittest.TestCase):
     def test_runtime_references_are_local_and_present(self) -> None:
         html = (EXTENSION / "popup.html").read_text(encoding="utf-8")
         references = re.findall(r'(?:href|src)="([^"]+)"', html)
-        self.assertEqual(set(references), {"styles.css", "popup.js"})
+        self.assertEqual(set(references), {"styles.css", "popup.js", "popup.html?view=workspace"})
         for reference in references:
             self.assertFalse(reference.startswith(("http:", "https:", "//")))
-            self.assertTrue((EXTENSION / reference).is_file())
+            self.assertTrue((EXTENSION / reference.split("?", 1)[0]).is_file())
 
         javascript = (EXTENSION / "popup.js").read_text(encoding="utf-8")
         imports = re.findall(r'from\s+"\.\/([^"?]+)"', javascript)
-        self.assertEqual(imports, ["analyzer.mjs", "selection.mjs"])
+        self.assertEqual(
+            imports,
+            ["analyzer.mjs", "detector.mjs", "links.mjs", "selection.mjs"],
+        )
         for reference in imports:
             self.assertTrue((EXTENSION / reference).is_file())
+
+    def test_product_version_identity_is_coordinated(self) -> None:
+        manifest = json.loads((EXTENSION / "manifest.json").read_text(encoding="utf-8"))
+        package_json = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))
+        analyzer = (EXTENSION / "analyzer.mjs").read_text(encoding="utf-8")
+        engine_version = re.search(
+            r'^export const ENGINE_VERSION = "([^"]+)";$',
+            analyzer,
+            re.MULTILINE,
+        )
+
+        self.assertIsNotNone(engine_version)
+        assert engine_version is not None
+        expected = manifest["version"]
+        self.assertEqual(package_json["version"], expected)
+        self.assertEqual(engine_version.group(1), expected)
+        self.assertEqual(package.EXPECTED_MANIFEST["version"], expected)
+        self.assertEqual(package.DISTRIBUTION_NAME, f"fisher-scam-signal-prototype-v{expected}")
 
     def test_runtime_has_no_remote_code_network_storage_or_unsafe_html(self) -> None:
         prohibited = {
@@ -155,11 +206,19 @@ class ExtensionPackageTests(unittest.TestCase):
         }
         combined = "\n".join(
             (EXTENSION / relative).read_text(encoding="utf-8")
-            for relative in sorted(RUNTIME_FILES)
+            for relative in sorted(TEXT_RUNTIME_FILES)
         )
         for label, pattern in prohibited.items():
             with self.subTest(label=label):
                 self.assertIsNone(pattern.search(combined))
+
+    def test_icon_assets_are_local_rgba_pngs_at_manifest_sizes(self) -> None:
+        for filename, expected_size in ICON_FILES.items():
+            with self.subTest(filename=filename):
+                data = (EXTENSION / filename).read_bytes()
+                self.assertEqual(data[:8], b"\x89PNG\r\n\x1a\n")
+                self.assertEqual(struct.unpack(">II", data[16:24]), (expected_size, expected_size))
+                self.assertEqual(data[25], 6)
 
     def test_popup_is_explicit_action_only_and_labels_non_claims(self) -> None:
         html = (EXTENSION / "popup.html").read_text(encoding="utf-8")
@@ -364,6 +423,7 @@ class DeterministicDistributionTests(unittest.TestCase):
             "permissions_reordered": lambda manifest: manifest.update(
                 permissions=["scripting", "activeTab"]
             ),
+            "icons": lambda manifest: manifest.pop("icons"),
             "tabs_permission": lambda manifest: manifest.update(
                 permissions=["activeTab", "scripting", "tabs"]
             ),
@@ -385,6 +445,7 @@ class DeterministicDistributionTests(unittest.TestCase):
             "update_url": lambda manifest: manifest.update(update_url="local"),
             "csp": lambda manifest: manifest.update(content_security_policy={}),
             "popup": lambda manifest: manifest["action"].update(default_popup="other.html"),
+            "action_icon": lambda manifest: manifest["action"].pop("default_icon"),
             "action_extra": lambda manifest: manifest["action"].update(extra="value"),
             "title": lambda manifest: manifest["action"].update(default_title="Other"),
         }
@@ -867,7 +928,7 @@ class DeterministicDistributionTests(unittest.TestCase):
         self.assertRegex(
             success.stdout,
             rf"^archive=outputs/browser_extension/{re.escape(package.ARCHIVE_FILENAME)} "
-            r"members=8 bytes=\d+ sha256=[0-9a-f]{64}\n$",
+            rf"members={len(RUNTIME_FILES)} bytes=\d+ sha256=[0-9a-f]{{64}}\n$",
         )
         self.assertEqual(
             {path.name for path in fixture.output_base.iterdir()},

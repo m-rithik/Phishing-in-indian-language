@@ -60,11 +60,10 @@ export function extractSelectedText(maxCodePoints, maxVisitedTextNodes) {
     if (selection.rangeCount === 0) return { status: "empty" };
     if (selection.rangeCount !== 1) return { status: "too_complex" };
 
-    const characters = [];
-    let codePointCount = 0;
+    let selectedCodePointCount = 0;
     let visitedTextNodes = 0;
 
-    function appendText(data, start, end) {
+    function countSelectedCodePoints(data, start, end) {
       if (
         typeof data !== "string" ||
         !Number.isInteger(start) ||
@@ -77,19 +76,25 @@ export function extractSelectedText(maxCodePoints, maxVisitedTextNodes) {
       }
       for (let index = start; index < end; index += 1) {
         const first = data.charCodeAt(index);
-        let character = data[index];
         if (first >= 0xd800 && first <= 0xdbff && index + 1 < end) {
           const second = data.charCodeAt(index + 1);
           if (second >= 0xdc00 && second <= 0xdfff) {
-            character += data[index + 1];
             index += 1;
           }
         }
-        codePointCount += 1;
-        if (codePointCount > maxCodePoints) return "too_long";
-        characters.push(character);
+        selectedCodePointCount += 1;
+        if (selectedCodePointCount > maxCodePoints) return "too_long";
       }
       return "ok";
+    }
+
+    function renderedTextExceedsLimit(text) {
+      let count = 0;
+      for (const _character of text) {
+        count += 1;
+        if (count > maxCodePoints) return true;
+      }
+      return false;
     }
 
     for (let rangeIndex = 0; rangeIndex < selection.rangeCount; rangeIndex += 1) {
@@ -151,12 +156,20 @@ export function extractSelectedText(maxCodePoints, maxVisitedTextNodes) {
 
         const start = node === range.startContainer ? range.startOffset : 0;
         const end = node === range.endContainer ? range.endOffset : data.length;
-        const outcome = appendText(data, start, end);
+        const outcome = countSelectedCodePoints(data, start, end);
         if (outcome !== "ok") return { status: outcome };
       }
     }
 
-    const text = characters.join("");
+    if (selectedCodePointCount === 0) return { status: "empty" };
+
+    const stringifySelection = selection.toString;
+    if (typeof stringifySelection !== "function") {
+      return { status: "unavailable" };
+    }
+    const text = Reflect.apply(stringifySelection, selection, []);
+    if (typeof text !== "string") return { status: "unavailable" };
+    if (renderedTextExceedsLimit(text)) return { status: "too_long" };
     return text.trim() === "" ? { status: "empty" } : { status: "ok", text };
   } catch {
     return { status: "unavailable" };

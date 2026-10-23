@@ -11,13 +11,18 @@ import stat
 import sys
 import zipfile
 
-DISTRIBUTION_NAME = "fisher-scam-signal-prototype-v0.4.0"
+DISTRIBUTION_NAME = "fisher-scam-signal-prototype-v0.5.0"
 ARCHIVE_FILENAME = f"{DISTRIBUTION_NAME}.zip"
 OUTPUT_RELATIVE = Path("outputs/browser_extension")
 SOURCE_FILES = (
     "README.md",
     "analyzer.mjs",
     "detector.mjs",
+    "icon-128.png",
+    "icon-16.png",
+    "icon-32.png",
+    "icon-48.png",
+    "icon.svg",
     "links.mjs",
     "manifest.json",
     "popup.html",
@@ -31,6 +36,10 @@ SOURCE_FILES = (
 RUNTIME_FILES = (
     "analyzer.mjs",
     "detector.mjs",
+    "icon-128.png",
+    "icon-16.png",
+    "icon-32.png",
+    "icon-48.png",
     "links.mjs",
     "manifest.json",
     "popup.html",
@@ -46,12 +55,22 @@ EXPECTED_CSP = (
 EXPECTED_MANIFEST = {
     "manifest_version": 3,
     "name": "Fisher Scam Signal Prototype",
-    "version": "0.4.0",
+    "version": "0.5.0",
     "description": "Locally checks pasted messages, links, and explicitly selected text for scam signals.",
     "permissions": ["activeTab", "scripting"],
+    "icons": {
+        "16": "icon-16.png",
+        "32": "icon-32.png",
+        "48": "icon-48.png",
+        "128": "icon-128.png",
+    },
     "action": {
         "default_title": "Analyze text with Fisher",
         "default_popup": "popup.html",
+        "default_icon": {
+            "16": "icon-16.png",
+            "32": "icon-32.png",
+        },
     },
     "content_security_policy": {"extension_pages": EXPECTED_CSP},
 }

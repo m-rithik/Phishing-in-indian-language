@@ -1,5 +1,10 @@
 #!/usr/bin/env node
-import { analyzeContent } from "./browser_extension/analyzer.mjs";
+import { analyzeContent, ENGINE_VERSION } from "./browser_extension/analyzer.mjs";
+
+process.stdout.on("error", (error) => {
+  if (error.code === "EPIPE") process.exit(0);
+  throw error;
+});
 
 const USAGE = `Fisher — local message and link checks
 
@@ -55,7 +60,7 @@ function batchReport(input, mode) {
     counts[report.risk] += 1;
   }
   return {
-    engineVersion: "0.4.0",
+    engineVersion: ENGINE_VERSION,
     mode,
     total: lines.length,
     counts,
@@ -74,6 +79,7 @@ function textReport(report, batch) {
   return [
     `Fisher ${report.engineVersion} · ${report.risk}`,
     ...report.reasons.map((reason) => `- ${reason}`),
+    ...report.checks.map((check) => `Check: ${check.label} — ${check.detail}`),
     ...report.nextSteps.map((step) => `Next: ${step}`),
     "Local pattern checks only; no reputation or safety guarantee.",
   ].join("\n");

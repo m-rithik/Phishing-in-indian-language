@@ -77,7 +77,7 @@ under the design-only definition below. At that checkpoint, synthetic-engine
 implementation and empirical execution were still open. The historical rows
 remain evidence of their stated scopes only; none authorizes a human gate.
 
-#### Current product snapshot — 8 September 2026
+#### Historical product snapshot — 8 September 2026
 
 **OBSERVED:** the current local source tree adds the v0.4 explicit-action
 Chrome/Edge extension, its shared transparent-rule analyzer, and the root Node
@@ -102,6 +102,87 @@ evidence. This agrees with the declared boundary in the
 pre-data `P0` research specification with implemented local validation and
 synthetic-engine surfaces. It is not a trained phishing detector, benchmark,
 paper result, patentable invention, or deployable phishing system.
+
+#### Historical product snapshot — 11 September 2026
+
+**OBSERVED:** the uncommitted local working tree advances the extension and
+shared JavaScript engine to v0.5.0. The popup now keeps separate in-memory
+message and link drafts, applies the correct 20,000- or 2,048-code-point limit,
+shows inline input correction, labels message/link/selected-text results, puts
+recommended action before technical detail, and provides an **Edit input**
+return path. Selected page text uses a bounded DOM-text preflight followed by
+the browser-rendered selection string; form-control-only values remain
+excluded. Message link evidence and semantic masking now share one canonical,
+single-pass bounded scan. It validates raw authorities, handles common ASCII,
+Indic, CJK, wrapper, emoji, and defanged-link boundaries, masks every recognized
+candidate even after the 32-address inspection budget, and prevents address
+hosts, paths, user information, or email text from supplying message-pressure or
+credential cues. Four local Fisher icon sizes are declared without adding
+permissions, network access, or storage.
+
+**OBSERVED:** `npm test` passed 113/113 checks; the installed-extension Chromium
+suite passed 14/14 scenarios, including automated WCAG checks, selected-text
+fidelity, absence of external requests, and 320-pixel layout; the packaging
+module passed 26/26 checks; and the complete Python suite passed 318/318 tests.
+`npm audit --audit-level=high` reported zero vulnerabilities. Independent final
+security re-review found no reproducible in-scope P0 or P1 issue. A contrived
+delimiter-free, near-20,000-character repeated-email token took about 0.51
+seconds warm in that review; it stayed within the input bound and did not leak
+text or change the risk result. The deterministic ignored archive
+`outputs/browser_extension/fisher-scam-signal-prototype-v0.5.0.zip` contains 12
+runtime members, is 105,300 bytes, passes ZIP integrity and source-byte equality
+checking, and has SHA-256
+`8e71e577b202e2379082ba276b58b3ff4ae843d19b11f66c8f6406772f369088`.
+These are local implementation and packaging checks, not GitHub-hosted evidence
+for v0.5.
+
+**OBSERVED:** the product remains an explicit-action advisory checker. It has no
+authentic Fisher corpus, trained Fisher phishing model, live reputation lookup,
+or measured phishing accuracy. **DERIVED:** v0.5 is a more complete and
+internally consistent local product iteration, but it does not change any
+research, collection, model, deployment, publication, or safety gate below.
+
+#### Current local product snapshot — 11 October 2026
+
+**OBSERVED:** the local v0.5 extension and CLI include the expanded workspace,
+separate message/link/bulk drafts, bounded text-file import, cancellable batch
+analysis, filtered line findings, generic JSON exports, and bounded embedded
+navigation-destination checks. The local product completion pass found no
+reproducible blocking runtime defect in its reviewed scope. It preserves the
+existing runtime code and refreshes the installation package and instructions.
+
+**OBSERVED:** `npm test` passed 148/148 tests. `npm run test:browser` passed
+22/22 installed-extension Chromium scenarios, covering selection, input limits,
+batch import/cancellation, report privacy, narrow/dark layouts, and automated
+accessibility. `uv run --python 3.11 python -m unittest discover -q -s tests
+-p 'test_*.py'` passed 318/318 tests. Runtime syntax checks and `git diff --check`
+passed. These are local checks, not hosted-CI results, accuracy measurements,
+manual assistive-technology testing, or stock Chrome/Edge verification.
+
+**OBSERVED:** the rebuilt deterministic archive is
+`outputs/browser_extension/fisher-scam-signal-prototype-v0.5.0.zip`, with 12
+runtime files, 153,663 bytes, and SHA-256
+`3a3599724ef8861caf644453f4040c9377a12ff3d6087be53b42fd433c666040`.
+The old ZIP differed from current source in `links.mjs`, `popup.html`,
+`popup.js`, and `styles.css`; it is preserved under
+`outputs/finish-baseline-20261011/`. The September package measurements above
+describe that historical build, not the current download.
+
+**OBSERVED:** independent package verification passed ZIP integrity, exact
+runtime inventory, byte equality with all 12 source files, and an identical
+second build from an isolated source copy. A disposable Chromium installation
+extracted from the new ZIP passed message, embedded-destination, batch, and
+individual/batch JSON-export smoke checks, with zero page errors or external
+HTTP(S) requests. Both exports excluded the submitted synthetic canaries.
+The focused packaging suite also passed 26/26 tests after the documentation
+updates; these tests are included in the 318-test Python suite above.
+
+**DERIVED:** the local advisory product is ready for owner installation within
+the tested scope. **OBSERVED:** no authentic Fisher phishing dataset, trained
+Fisher phishing model, transliteration comparison, measured phishing accuracy,
+or completed research submission was produced by this pass. Research gates
+below remain separate and unresolved. Source changes remain local and
+uncommitted; no push, store submission, or public release was performed.
 
 ## 2. Historical Phase-0 environment observation
 

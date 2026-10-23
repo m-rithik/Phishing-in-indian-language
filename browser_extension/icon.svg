@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title">
+  <title id="title">Fisher</title>
+  <rect x="4" y="4" width="120" height="120" rx="34" fill="#0c3338"/>
+  <path d="M31 33L87 57" fill="none" stroke="#eff5e9" stroke-width="10" stroke-linecap="round"/>
+  <path d="M31 64H87" fill="none" stroke="#eff5e9" stroke-width="10" stroke-linecap="round"/>
+  <path d="M31 95L87 71" fill="none" stroke="#eff5e9" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="97" cy="64" r="7" fill="#e05a4f"/>
+</svg>

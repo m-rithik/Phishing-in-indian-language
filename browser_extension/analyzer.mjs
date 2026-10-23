@@ -1,7 +1,7 @@
-import { analyzeText, MAX_INPUT_CHARS } from "./detector.mjs";
-import { inspectMessageLinks, inspectUrlInput } from "./links.mjs";
+import { analyzeTextWithLinks } from "./detector.mjs";
+import { inspectUrlInput } from "./links.mjs";
 
-const ENGINE_VERSION = "0.4.0";
+export const ENGINE_VERSION = "0.5.0";
 const EMPTY_LINK_SUMMARY = Object.freeze({ inspected: 0, flagged: 0, limited: false });
 
 const NEXT_STEPS = {
@@ -22,15 +22,6 @@ const NEXT_STEPS = {
     "Check the input format and limits, then try again with permitted content.",
   ],
 };
-
-function exceedsCodePointLimit(text, limit) {
-  let count = 0;
-  for (const _character of text) {
-    count += 1;
-    if (count > limit) return true;
-  }
-  return false;
-}
 
 function report(mode, risk, reasons, linkSummary, checks) {
   return {
@@ -66,7 +57,7 @@ function resolveMode(options) {
 }
 
 function analyzeMessage(input) {
-  const textResult = analyzeText(input);
+  const { textResult, linkResult } = analyzeTextWithLinks(input);
   if (textResult.risk === "cannot_analyze") {
     return report(
       "message",
@@ -77,9 +68,8 @@ function analyzeMessage(input) {
     );
   }
 
-  const linkResult = inspectMessageLinks(input);
   let risk = textResult.risk;
-  if ((linkResult.found || linkResult.limited) && risk === "no_match") {
+  if ((linkResult.summary.inspected > 0 || linkResult.limited) && risk === "no_match") {
     risk = "review";
   }
 
@@ -94,7 +84,7 @@ function analyzeMessage(input) {
           : "The configured message rules produced the reported message finding.",
     },
   ];
-  if (linkResult.found) {
+  if (linkResult.summary.inspected > 0) {
     reasons.push("A web address was found and should be verified independently.");
     checks.push({
       id: "link_present",
@@ -118,13 +108,6 @@ function analyzeMessage(input) {
 }
 
 function analyzeUrl(input) {
-  if (typeof input === "string" && exceedsCodePointLimit(input, MAX_INPUT_CHARS)) {
-    return cannotAnalyze(
-      "url",
-      "Input exceeds the 20,000-character analysis limit; nothing was analyzed.",
-      { inspected: 0, flagged: 0, limited: true },
-    );
-  }
   const linkResult = inspectUrlInput(input);
   if (linkResult.status !== "ok") {
     const reasonByStatus = {
