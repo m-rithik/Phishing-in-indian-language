@@ -15,6 +15,9 @@ dependencies = [
   "scikit-learn>=1.5,<2",
 ]
 
+[dependency-groups]
+dev = ["pytest>=8"]
+
 [project.urls]
 Repository = "https://github.com/m-rithik/Phishing-in-indian-language"
 

@@ -1,0 +1,6 @@
+{"id": "fix-001", "text": "Aapka khata band ho jayega, turant OTP bhejo", "label": "scam", "language": "hindi", "script": "romanized", "source": "synthetic"}
+{"id": "fix-002", "text": "Kal shaam ko milte hain ghar pe chai peete hain", "label": "benign", "language": "hindi", "script": "romanized", "source": "synthetic"}
+{"id": "fix-003", "text": "Unga account blocked, udane OTP anuppunga", "label": "scam", "language": "tamil", "script": "romanized", "source": "synthetic"}
+{"id": "fix-004", "text": "Mee account blocked, ventane OTP pampandi", "label": "scam", "language": "telugu", "script": "romanized", "source": "synthetic"}
+{"id": "fix-005", "text": "आपका खाता बंद हो जाएगा तुरंत ओटीपी भेजें", "label": "scam", "language": "hindi", "script": "native", "source": "synthetic"}
+{"id": "fix-006", "text": "Please confirm the project delivery schedule with your team lead.", "label": "benign", "language": "english", "script": "latin_english", "source": "synthetic"}
