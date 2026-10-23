@@ -209,15 +209,16 @@ function showNotificationPopup(tabId, config, analysis) {
 
     console.log('Fisher: Showing notification -', config.title);
 
-    chrome.notifications.create(notificationId, {
+    chrome.notifications.create({
       type: 'basic',
-      iconUrl: chrome.runtime.getURL('icon-128.png'),
+      iconUrl: 'icon-128.png',
       title: config.title,
-      message: reason + '\n\nClick the Fisher icon for full analysis.',
-      priority: config.priority,
-      requireInteraction: true
-    }, (id) => {
+      message: reason,
+      priority: config.priority
+    }).then(id => {
       console.log('Fisher: Notification created -', id);
+    }).catch(error => {
+      console.error('Fisher: Notification error -', error);
     });
   } catch (error) {
     console.error('Fisher: Notification error -', error);
