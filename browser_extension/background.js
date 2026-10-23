@@ -1,21 +1,26 @@
 // Background script with automatic page scanning and notifications
 
+console.log('Fisher: Background script loaded');
+
 // Trigger Point 1: Page load detection
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (!tab.url || isRestrictedUrl(tab.url)) return;
+
   // TRIGGER POINT 1: Page starts loading
-  if (changeInfo.status === 'loading' && tab.url && !isRestrictedUrl(tab.url)) {
+  if (changeInfo.status === 'loading') {
+    console.log('Fisher: Page loading -', tab.url);
     chrome.action.setBadgeText({ text: '⏳', tabId });
     chrome.action.setBadgeBackgroundColor({ color: '#2196F3', tabId });
   }
 
   // TRIGGER POINT 2: Page finished loading
-  if (changeInfo.status === 'complete' && tab.url && !isRestrictedUrl(tab.url)) {
-    // Extract and analyze the page
+  if (changeInfo.status === 'complete') {
+    console.log('Fisher: Page complete -', tab.url);
     extractAndAnalyzePageContent(tabId);
   }
 });
 
-// Check if URL is restricted (chrome://, about://, etc)
+// Check if URL is restricted
 function isRestrictedUrl(url) {
   return url.startsWith('chrome://') ||
          url.startsWith('about:') ||
@@ -29,7 +34,6 @@ async function extractAndAnalyzePageContent(tabId) {
     const results = await chrome.scripting.executeScript({
       target: { tabId },
       func: () => {
-        // Extract all text from the page
         const walker = document.createTreeWalker(
           document.body,
           NodeFilter.SHOW_TEXT,
@@ -54,57 +58,96 @@ async function extractAndAnalyzePageContent(tabId) {
     });
 
     const pageText = results?.[0]?.result;
+    console.log('Fisher: Extracted', pageText?.length || 0, 'characters');
 
     if (pageText && pageText.length > 10) {
-      // TRIGGER POINT 4: Analysis starts
       analyzePageAndNotify(tabId, pageText);
     } else {
       chrome.action.setBadgeText({ text: '', tabId });
     }
   } catch (error) {
-    // Site is restricted or unreachable
+    console.log('Fisher: Extraction failed -', error.message);
     chrome.action.setBadgeText({ text: '', tabId });
   }
 }
 
-// TRIGGER POINT 4: Analyze using Fisher rules (delegated to popup)
+// TRIGGER POINT 4: Analyze page content
 async function analyzePageAndNotify(tabId, text) {
   try {
-    // For background script, we'll use a simple heuristic analysis
-    // Full analysis happens in popup when user clicks icon
     const analysis = performQuickAnalysis(text);
+    console.log('Fisher: Analysis result -', analysis.risk);
 
-    if (analysis && analysis.risk) {
-      // TRIGGER POINT 5: Results ready
+    if (analysis) {
       updateBadgeAndNotify(tabId, analysis);
-    } else {
-      chrome.action.setBadgeText({ text: '', tabId });
     }
   } catch (error) {
-    chrome.action.setBadgeText({ text: '○', tabId });
+    console.error('Fisher: Analysis error -', error);
   }
 }
 
-// Quick analysis in background (rules-based heuristics)
+// Quick analysis with better pattern matching
 function performQuickAnalysis(text) {
-  if (!text) return null;
+  if (!text) return { risk: 'no_match', reasons: [] };
 
   let risk = 'no_match';
   const reasons = [];
+  const textLower = text.toLowerCase();
 
-  // Check for common phishing signals
-  const urgencyPatterns = /urgent|immediately|act now|today only|suspend|block|verify|confirm|update|click here/i;
-  const credentialPatterns = /otp|password|pin|cvv|kyc|account number|verify.*account|confirm.*identity/i;
-  const phonePatterns = /call.*now|contact.*number|phone.*number|reach.*out/i;
+  // Expanded urgency patterns
+  const urgencyPatterns = [
+    'urgent', 'immediately', 'act now', 'today only', 'suspend', 'suspended',
+    'block', 'blocked', 'verify', 'confirm', 'update', 'click here', 'click link',
+    'verify account', 'confirm identity', 'verify identity', '24 hour', '24 hours',
+    'frozen', 'locked', 'restricted', 'limited', 'confirm now', 'verify now'
+  ];
 
-  const hasUrgency = urgencyPatterns.test(text);
-  const hasCredentialRequest = credentialPatterns.test(text);
-  const hasPhoneRequest = phonePatterns.test(text);
+  // Expanded credential patterns
+  const credentialPatterns = [
+    'otp', 'password', 'pin', 'cvv', 'kyc', 'account number',
+    'credit card', 'debit card', 'card number', 'routing number',
+    'ssn', 'social security', 'passport', 'drivers license', 'aadhaar'
+  ];
 
-  if (hasCredentialRequest && hasUrgency) {
+  // Phone request patterns
+  const phonePatterns = [
+    'call now', 'call immediately', 'contact number', 'phone number',
+    'reach out', 'call us', 'dial', 'contact us immediately'
+  ];
+
+  // Count matches
+  let urgencyCount = 0;
+  let credentialCount = 0;
+  let phoneCount = 0;
+
+  urgencyPatterns.forEach(pattern => {
+    const regex = new RegExp('\\b' + pattern + '\\b', 'gi');
+    const matches = textLower.match(regex);
+    if (matches) urgencyCount += matches.length;
+  });
+
+  credentialPatterns.forEach(pattern => {
+    const regex = new RegExp('\\b' + pattern + '\\b', 'gi');
+    const matches = textLower.match(regex);
+    if (matches) credentialCount += matches.length;
+  });
+
+  phonePatterns.forEach(pattern => {
+    const regex = new RegExp('\\b' + pattern + '\\b', 'gi');
+    const matches = textLower.match(regex);
+    if (matches) phoneCount += matches.length;
+  });
+
+  // Determine risk level
+  if (credentialCount > 0 && urgencyCount > 0) {
     risk = 'high';
     reasons.push('Requests credentials with urgency');
-  } else if (hasCredentialRequest || (hasUrgency && text.length < 500)) {
+  } else if (credentialCount > 2) {
+    risk = 'high';
+    reasons.push('Multiple credential requests detected');
+  } else if (credentialCount > 0 && (urgencyCount > 0 || phoneCount > 0)) {
+    risk = 'review';
+    reasons.push('Contains credential requests and pressure tactics');
+  } else if ((urgencyCount > 2 && text.length < 500) || (credentialCount > 0)) {
     risk = 'review';
     reasons.push('Contains suspicious patterns');
   }
@@ -123,24 +166,21 @@ function updateBadgeAndNotify(tabId, analysis) {
       emoji: '🚨',
       text: '⚠',
       color: '#d32f2f',
-      title: 'HIGH-RISK PAGE',
-      message: '⚠️ This page shows signs of phishing',
+      title: 'HIGH-RISK PAGE DETECTED',
       priority: 2
     },
     review: {
       emoji: '⚠️',
       text: '!',
       color: '#f57c00',
-      title: 'REVIEW NEEDED',
-      message: '⚠️ This page has suspicious patterns',
+      title: 'PAGE NEEDS REVIEW',
       priority: 1
     },
     no_match: {
       emoji: '✓',
       text: '✓',
       color: '#388e3c',
-      title: 'SAFE PAGE',
-      message: '✓ No phishing signals detected',
+      title: 'PAGE APPEARS SAFE',
       priority: 0
     }
   };
@@ -151,36 +191,40 @@ function updateBadgeAndNotify(tabId, analysis) {
   chrome.action.setBadgeText({ text: config.text, tabId });
   chrome.action.setBadgeBackgroundColor({ color: config.color, tabId });
   chrome.action.setTitle({
-    title: `${config.emoji} ${config.title}\n${analysis.reasons?.[0] || 'Click for details'}`,
+    title: `${config.emoji} ${config.title}`,
     tabId
   });
 
-  // TRIGGER POINT 6: Show notification popup
+  // TRIGGER POINT 6: Show notification
   if (risk === 'high' || risk === 'review') {
-    showNotificationPopup(config, analysis);
+    showNotificationPopup(tabId, config, analysis);
   }
 }
 
 // TRIGGER POINT 6: Display notification popup
-function showNotificationPopup(config, analysis) {
+function showNotificationPopup(tabId, config, analysis) {
   try {
-    const reason = analysis.reasons?.[0] || 'Suspicious patterns detected';
+    const reason = analysis.reasons?.[0] || 'Click the icon for details';
+    const notificationId = 'fisher-' + tabId + '-' + Date.now();
 
-    chrome.notifications.create({
+    console.log('Fisher: Showing notification -', config.title);
+
+    chrome.notifications.create(notificationId, {
       type: 'basic',
-      iconUrl: 'icon-128.png',
+      iconUrl: chrome.runtime.getURL('icon-128.png'),
       title: config.title,
-      message: `${reason}\n\nClick the Fisher icon for details.`,
+      message: reason + '\n\nClick the Fisher icon for full analysis.',
       priority: config.priority,
-      silent: false,
-      requireInteraction: config.priority > 0
+      requireInteraction: true
+    }, (id) => {
+      console.log('Fisher: Notification created -', id);
     });
   } catch (error) {
-    // Notification not available on some platforms
+    console.error('Fisher: Notification error -', error);
   }
 }
 
-// Clean up when tab closes
+// Clean up
 chrome.tabs.onRemoved.addListener((tabId) => {
-  // Cleanup if needed
+  console.log('Fisher: Tab closed -', tabId);
 });
