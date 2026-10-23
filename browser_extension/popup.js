@@ -924,45 +924,68 @@ export function createPopupController({
     const requestGeneration = supersede();
     hideResult();
     setSelectionBusy(true);
-    status.textContent = "Extracting all visible text from this page…";
+    status.textContent = "Scanning page content…";
 
     try {
       const tabs = await chromeApi.tabs.query({ active: true, currentWindow: true });
       if (!Array.isArray(tabs) || tabs.length === 0) {
-        throw new Error("No active tab found");
+        throw new Error("No active tab");
       }
 
-      const response = await chromeApi.tabs.sendMessage(tabs[0].id, {
-        action: "extractPageText",
-        maxCodePoints: MAX_INPUT_CHARS,
+      const tabId = tabs[0].id;
+
+      // Directly execute script to extract text
+      const results = await chromeApi.scripting.executeScript({
+        target: { tabId },
+        func: () => {
+          // Extract all text from page
+          const walker = document.createTreeWalker(
+            document.body,
+            NodeFilter.SHOW_TEXT,
+            null
+          );
+          let text = '';
+          let node;
+          let count = 0;
+          while ((node = walker.nextNode()) && count < 5000) {
+            const nodeText = node.textContent?.trim();
+            if (nodeText && nodeText.length > 0) {
+              text += (text.length > 0 ? ' ' : '') + nodeText;
+              if (text.length > 20000) {
+                text = text.substring(0, 20000);
+                break;
+              }
+            }
+            count++;
+          }
+          return text.trim();
+        }
       });
 
       if (requestGeneration !== generation) return;
       setSelectionBusy(false);
 
-      if (response?.success && response?.text) {
+      const text = results?.[0]?.result;
+      if (text && text.length > 10) {
         try {
-          const analysis = analyze(response.text, { mode: "message" });
-          render(analysis, "selection", "Page content check");
-          activeReport = buildDownloadReport(analysis, "selection", undefined, "Page content check");
+          const analysis = analyze(text, { mode: "message" });
+          render(analysis, "selection", "🔍 Auto-scan Result");
+          activeReport = buildDownloadReport(analysis, "selection", undefined, "Auto-scan Result");
           downloadReportButton.disabled = false;
-          status.textContent =
-            analysis?.risk === "cannot_analyze"
-              ? "Page content did not produce a result. It was not copied into the draft."
-              : "Page content analyzed locally. It was not copied into the draft. No input history is saved.";
-        } catch {
+          status.textContent = "✓ Page scanned and analyzed locally. No data uploaded.";
+        } catch (error) {
           invalidateActiveReport();
           renderAnalysisFailure("Page content", "selection");
         }
       } else {
-        render({ risk: "cannot_analyze", reasons: ["Could not extract page content."] }, "selection");
-        status.textContent = "Page content could not be extracted.";
+        render({ risk: "cannot_analyze", reasons: ["Could not extract enough text from this page."] }, "selection");
+        status.textContent = "Could not analyze - page has no readable text.";
       }
-    } catch {
+    } catch (error) {
       if (requestGeneration !== generation) return;
       setSelectionBusy(false);
-      render({ risk: "cannot_analyze", reasons: ["Could not access page content. Try selecting text instead."] }, "selection");
-      status.textContent = "Page content was not analyzed.";
+      render({ risk: "cannot_analyze", reasons: ["Could not access this page. Some pages may be restricted."] }, "selection");
+      status.textContent = "Could not analyze this page.";
     }
   }
 
