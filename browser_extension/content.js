@@ -1,6 +1,6 @@
 // Content script to extract page text and communicate with popup
 
-export function extractPageText(maxCodePoints = 20000) {
+function extractPageText(maxCodePoints = 20000) {
   try {
     // Get all visible text from the page
     const walker = document.createTreeWalker(

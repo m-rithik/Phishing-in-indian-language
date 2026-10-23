@@ -60,41 +60,27 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 });
 
 // Analyze text and show notification
-async function analyzeAndNotify(tabId, text) {
+function analyzeAndNotify(tabId, text) {
   try {
     if (!text || text.length === 0) {
       // No text to analyze - set neutral badge
-      chrome.action.setBadgeText({ text: '○', tabId });
-      chrome.action.setBadgeBackgroundColor({ color: '#888888', tabId });
+      chrome.action.setBadgeText({ text: '', tabId });
       return;
     }
 
-    // Import and use the analyzer
-    const { analyzeText } = await import('./detector.mjs');
-    const analysis = analyzeText(text);
-
-    if (analysis && analysis.risk) {
-      // Update badge
-      updateBadge(tabId, analysis.risk);
-
-      // Show notification for high-risk and review pages
-      if (analysis.risk === 'high' || analysis.risk === 'review') {
-        showNotification(analysis, analysis.risk);
-      }
-
-      // Cache the analysis
-      const cached = cachedResults.get(tabId);
-      if (cached) {
-        cached.analysis = analysis;
-      }
-    } else {
-      // Failed to analyze - set neutral badge
-      chrome.action.setBadgeText({ text: '○', tabId });
-      chrome.action.setBadgeBackgroundColor({ color: '#888888', tabId });
+    // For now, just cache the text and let popup do analysis
+    // This avoids module import issues in background script
+    const cached = cachedResults.get(tabId);
+    if (cached) {
+      cached.status = 'ready_for_analysis';
     }
+
+    // Set a pending badge
+    chrome.action.setBadgeText({ text: '⏳', tabId });
+    chrome.action.setBadgeBackgroundColor({ color: '#2196F3', tabId });
+    chrome.action.setTitle({ title: 'Page scanned - click to see analysis', tabId });
   } catch (error) {
-    // Silently fail if analysis doesn't work in background
-    chrome.action.setBadgeText({ text: '', tabId });
+    // Silently fail
   }
 }
 
