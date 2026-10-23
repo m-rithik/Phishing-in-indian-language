@@ -9,11 +9,13 @@ process.stdout.on("error", (error) => {
 const USAGE = `Fisher — local message and link checks
 
 Usage:
-  node fisher.mjs analyze [--mode message|url] [--format text|json]
-  node fisher.mjs batch   [--mode message|url] [--format text|json]
+  node fisher.mjs analyze      [--mode message|url] [--format text|json]
+  node fisher.mjs batch        [--mode message|url] [--format text|json]
+  node fisher.mjs batch-detail [--mode message|url]
 
 Read input from standard input. Analyze checks one complete message or link.
 Batch checks up to 500 physical lines and returns aggregate counts only.
+Batch-detail checks up to 500 physical lines and returns per-line JSON results.
 Input stays local; links are never opened. No reputation or safety guarantee.
 `;
 const MAX_BYTES = 1_048_576;
@@ -22,7 +24,7 @@ const MAX_BATCH_LINES = 500;
 function options(args) {
   if (args.length === 1 && ["--help", "-h"].includes(args[0])) return { help: true };
   const [command, ...rest] = args;
-  if (!["analyze", "batch"].includes(command) || rest.length % 2) return null;
+  if (!["analyze", "batch", "batch-detail"].includes(command) || rest.length % 2) return null;
   const result = { command, mode: "message", format: "text" };
   const seen = new Set();
   for (let index = 0; index < rest.length; index += 2) {
@@ -31,7 +33,7 @@ function options(args) {
     if (seen.has(key)) return null;
     seen.add(key);
     if (key === "--mode" && ["message", "url"].includes(value)) result.mode = value;
-    else if (key === "--format" && ["text", "json"].includes(value)) result.format = value;
+    else if (key === "--format" && command !== "batch-detail" && ["text", "json"].includes(value)) result.format = value;
     else return null;
   }
   return result;
@@ -68,6 +70,26 @@ function batchReport(input, mode) {
   };
 }
 
+function batchDetailReport(input, mode) {
+  const lines = input.split("\n");
+  if (lines.at(-1) === "") lines.pop();
+  if (!lines.length || lines.length > MAX_BATCH_LINES) throw new Error("input");
+  const results = [];
+  let hasCannotAnalyze = false;
+  for (let index = 0; index < lines.length; index += 1) {
+    const rawLine = lines[index];
+    const line = rawLine.endsWith("\r") ? rawLine.slice(0, -1) : rawLine;
+    const report = analyzeContent(line, { mode });
+    if (report.risk === "cannot_analyze") hasCannotAnalyze = true;
+    results.push({
+      line: index + 1,
+      risk: report.risk,
+      reasons: report.reasons,
+    });
+  }
+  return { results, hasCannotAnalyze };
+}
+
 function textReport(report, batch) {
   if (batch) {
     return [
@@ -97,6 +119,13 @@ async function main() {
   }
   try {
     const input = await readInput();
+    if (config.command === "batch-detail") {
+      const { results, hasCannotAnalyze } = batchDetailReport(input, config.mode);
+      for (const item of results) {
+        process.stdout.write(JSON.stringify(item) + "\n");
+      }
+      return hasCannotAnalyze ? 1 : 0;
+    }
     const batch = config.command === "batch";
     const report = batch ? batchReport(input, config.mode) : analyzeContent(input, { mode: config.mode });
     process.stdout.write((config.format === "json" ? JSON.stringify(report) : textReport(report, batch)) + "\n");
