@@ -296,7 +296,9 @@ function analyzeMessageContext(input, messageContext) {
 
   const highRiskCombination =
     (hasSensitiveRequest && (hasInspectedLink || categories.has("urgency"))) ||
-    (categories.has("impersonation") && hasInspectedLink &&
+    (!PROTECTIVE_ADVISORY.test(normalized.text) &&
+      categories.has("impersonation") &&
+      hasInspectedLink &&
       (categories.has("credential") || categories.has("urgency") || categories.has("money")));
   const risk = highRiskCombination
     ? "high"

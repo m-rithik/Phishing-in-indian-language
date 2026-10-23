@@ -290,6 +290,8 @@ uv run python scripts/translit_experiment.py
   prints one JSON result per input line (batch checks are limited to 500 lines
   per call, so larger sets are sent in chunks).
 
+The full Python test suite is designed for Linux/WSL; some filesystem tests are skipped on Windows.
+
 ### Evaluation limitations
 
 - The detector is rule-based (keyword and pattern signals), not a trained model.

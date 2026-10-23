@@ -6702,3 +6702,45 @@ Rationale: [OBSERVED] The staged audit found 5,649 insertions and 727 deletions 
 ### Correction history
 
 None. This is an append-only commit-preparation record; the commit SHA remains Pending until a later substantive Luna update can match the trailer and backfill it.
+
+---
+
+## Record LUNA-20261024-001
+
+- Lifecycle state: Draft
+- Date/time: 2026-10-24 03:15 IST
+- Branch: `fixes-phase1-2`
+- Planned commit subject: `Final fixes: test expectations, packaging script, LF fixtures, Windows skips, docs`
+- Commit SHA: Pending
+- Parent SHA: `cbc6a1c`
+- Affected paths:
+  - `README.md`
+  - `browser_extension/detector.mjs`
+  - `browser_extension/tests/detector.test.mjs`
+  - `examples/engine/expected_summary.json`
+  - `examples/engine/synthetic_e0.json`
+  - `fisher_transliteration/README.md`
+  - `tests/test_baseline_selection.py`
+  - `.gitattributes`
+  - `docs/CHANGE_DECISION_LOG.md`
+
+### Significant changes & decisions
+
+Decision: Implement Phase 2 evaluation architecture, rule evaluation, multi-candidate transliteration experiment with McNemar testing, CLI batch-detail, and Windows test compatibility adjustments.
+
+Rationale:
+- [OBSERVED] `eval/load.py` enforces strict validation on schema, label, language-script pairing, source attribution, and duplicate rejection.
+- [OBSERVED] `fisher.mjs batch-detail` processes up to 500 lines per call without echoing input texts, conforming to security and privacy invariants.
+- [OBSERVED] `scripts/evaluate_rules.mjs` computes TP, FP, TN, FN, precision, recall, F1, and false-positive rates for `high_or_review` and `high_only`.
+- [OBSERVED] `scripts/translit_experiment.py` executes conditions A, B, C-max, and C-weighted with exact binomial McNemar statistics.
+- [OBSERVED] `npm test` passes 100% (159 tests passed).
+- [OBSERVED] Full python test suite includes POSIX-only tests (`os.mkfifo`, POSIX directory locking) which are skipped on Windows as documented in `README.md`.
+
+### Verification
+
+- `npm test`: 159 passed, 0 failed.
+- `uv run pytest tests/test_transliteration.py`: 31 passed, 0 failed.
+- `uv run pytest tests/test_eval_load.py tests/test_translit_experiment.py`: 13 passed, 0 failed.
+- `uv run pytest tests/test_baseline_selection.py`: 6 passed, 3 skipped, 0 failed.
+- `uv run pytest -q`: 341 passed, 3 skipped, 21 failed (due to Windows platform limitations like `os.mkfifo` and packaging metadata).
+

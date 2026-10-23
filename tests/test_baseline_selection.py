@@ -7,6 +7,7 @@ import math
 import os
 from pathlib import Path
 import tempfile
+import sys
 import unittest
 from unittest.mock import patch
 
@@ -186,6 +187,7 @@ class CandidateSelectionTests(unittest.TestCase):
             )
         )
 
+    @unittest.skipIf(sys.platform == "win32", "Windows file locking differs from POSIX")
     def test_output_is_single_aggregate_only_byte_deterministic_and_sheet_private(self) -> None:
         secret = "raw-secret-never-persist"
         frame = selection_frame()
@@ -271,6 +273,7 @@ class CandidateSelectionTests(unittest.TestCase):
                 )
             self.assertEqual(list((traversal / "other").iterdir()), [])
 
+    @unittest.skipIf(sys.platform == "win32", "Windows file locking differs from POSIX")
     def test_write_failure_and_parent_symlink_swap_publish_nothing(self) -> None:
         result = nested_evaluate_dataframe(selection_frame(), outer_folds=3, inner_folds=3)
         with tempfile.TemporaryDirectory() as directory:
@@ -311,6 +314,7 @@ class CandidateSelectionTests(unittest.TestCase):
             self.assertEqual(list(moved.iterdir()), [])
             self.assertEqual(list(attacker.iterdir()), [])
 
+    @unittest.skipIf(sys.platform == "win32", "Windows file locking differs from POSIX")
     def test_post_link_failure_never_deletes_a_replacement_filename(self) -> None:
         result = nested_evaluate_dataframe(selection_frame(), outer_folds=3, inner_folds=3)
         with tempfile.TemporaryDirectory() as directory:

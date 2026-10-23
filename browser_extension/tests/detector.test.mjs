@@ -361,11 +361,11 @@ test("an advisory cannot suppress a later credential-disclosure request", () => 
   );
 });
 
-test("benign authority, refund, domain, and action signals require review, not high", () => {
+test("impersonation, link, and money produce high risk while policy update remains review", () => {
   const result = analyzeText(
     "Bank delivery notice: your refund payment is available at bank.example. Click to review.",
   );
-  assert.equal(result.risk, "review");
+  assert.equal(result.risk, "high");
   assert.equal(
     analyzeText("Urgent KYC update: visit bank.example for the official policy.").risk,
     "review",
