@@ -55,3 +55,35 @@ test("electricity disconnection threat is review or high", () => {
   );
   assert.ok(["review", "high"].includes(result.risk), `got ${result.risk}`);
 });
+
+test("native Hindi request with Latin OTP is high", () => {
+  assert.equal(
+    analyze("तुरंत अपना OTP भेजें वरना खाता बंद हो जाएगा").risk,
+    "high",
+  );
+});
+
+test("native Telugu request with Latin OTP is high", () => {
+  assert.equal(
+    analyze("మీ బ్యాంక్ ఖాతా బ్లాక్ చేయబడింది. వెంటనే OTP పంపండి").risk,
+    "high",
+  );
+});
+
+test("Hindi electricity disconnection scam is review or high", () => {
+  const result = analyze(
+    "आपका बिजली कनेक्शन आज रात काट दिया जाएगा। तुरंत इस नंबर पर कॉल करें",
+  );
+  assert.ok(["review", "high"].includes(result.risk), `got ${result.risk}`);
+});
+
+test("Hindi advisory not to share OTP is not high", () => {
+  assert.notEqual(
+    analyze("सावधान: अपना OTP किसी को मत भेजें, तुरंत 1930 पर शिकायत करें").risk,
+    "high",
+  );
+});
+
+test("benign team lunch message is no_match", () => {
+  assert.equal(analyze("Hi, team lunch moved to 1 PM").risk, "no_match");
+});
