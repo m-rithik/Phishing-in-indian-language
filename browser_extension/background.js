@@ -209,50 +209,56 @@ function showNotificationPopup(tabId, config, analysis) {
   try {
     const reason = analysis.reasons?.[0] || 'Click the icon for details';
 
-    console.log('Fisher: showNotificationPopup called -', config.title);
-    console.log('Fisher: Risk level -', config.priority);
-    console.log('Fisher: Reason -', reason);
+    console.log('Fisher: Injecting banner -', config.title);
 
-    // Try Chrome native notification first
-    chrome.notifications.create({
-      type: 'basic',
-      iconUrl: 'icon-128.png',
-      title: config.title,
-      message: reason,
-      priority: config.priority
-    }).then(id => {
-      console.log('Fisher: Native notification created -', id);
-    }).catch(error => {
-      console.error('Fisher: Native notification failed -', error.message);
-      // Fallback: inject alert into the page
-      console.log('Fisher: Using fallback alert for tabId', tabId);
-      fallbackAlert(tabId, config, reason);
-    });
-  } catch (error) {
-    console.error('Fisher: Notification try-catch error -', error);
-    fallbackAlert(tabId, config, analysis.reasons?.[0]);
-  }
-}
-
-// Fallback: Inject alert into the page
-function fallbackAlert(tabId, config, reason) {
-  console.log('Fisher: fallbackAlert called for tabId', tabId);
-  try {
+    // Inject visible banner into page
     chrome.scripting.executeScript({
       target: { tabId },
       world: 'MAIN',
-      func: (title, message) => {
-        console.log('Fisher: Alert executing on page');
-        alert(`🚨 FISHER ALERT\n\n${title}\n\n${message}\n\nClick the Fisher icon for full analysis.`);
+      func: (title, message, color) => {
+        // Create banner element
+        const banner = document.createElement('div');
+        banner.id = 'fisher-alert-banner';
+        banner.style.cssText = `
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          z-index: 999999;
+          background: ${color};
+          color: white;
+          padding: 20px;
+          font-size: 18px;
+          font-weight: bold;
+          text-align: center;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+          font-family: Arial, sans-serif;
+          line-height: 1.6;
+        `;
+
+        banner.innerHTML = `
+          <div>🚨 ${title}</div>
+          <div style="font-size: 14px; margin-top: 8px; font-weight: normal;">${message}</div>
+          <div style="font-size: 12px; margin-top: 8px; opacity: 0.9;">Click the Fisher icon for full analysis</div>
+        `;
+
+        document.body.insertBefore(banner, document.body.firstChild);
+
+        // Auto-remove after 8 seconds
+        setTimeout(() => {
+          if (banner && banner.parentNode) {
+            banner.remove();
+          }
+        }, 8000);
       },
-      args: [config.title, reason]
+      args: [config.title, reason, config.color || '#d32f2f']
     }).then(() => {
-      console.log('Fisher: Alert executed successfully');
+      console.log('Fisher: Banner injected successfully');
     }).catch(err => {
-      console.error('Fisher: Fallback alert failed -', err.message);
+      console.error('Fisher: Banner injection failed -', err.message);
     });
-  } catch (err) {
-    console.error('Fisher: executeScript error -', err.message);
+  } catch (error) {
+    console.error('Fisher: Notification error -', error);
   }
 }
 
