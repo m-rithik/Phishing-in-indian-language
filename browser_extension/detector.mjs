@@ -48,42 +48,42 @@ const SIGNALS = [
     weight: 3,
     reason: "Mentions account verification or sensitive credentials.",
     pattern:
-      /\b(?:otp|one[ -]?time password|pin|password|passcode|cvv|kyc|verify (?:your )?account)\b|ओटीपी|पासवर्ड|केवाईसी|ஓடிபி|கடவுச்சொல்|ஓடிபி|పాస్‌వర్డ్|కేవైసీ|ఓటీపీ/iu,
+      /\b(?:otp|one[ -]?time password|pin(?!\s*code)|password|passcode|cvv|kyc|verify (?:your )?account)\b|ओटीपी|पासवर्ड|केवाईसी|ஓடிபி|கடவுச்சொல்|ஓடிபி|పాస్వర్డ్|కేవైసీ|ఓటీపీ/iu,
   },
   {
     category: "urgency",
     weight: 2,
     reason: "Uses urgency, expiry, suspension, or immediate-pressure language.",
     pattern:
-      /\b(?:urgent|immediately|act now|today only|expires? today|suspend(?:ed|ion)?|block(?:ed|ing)?|jaldi|turant|abhi)\b|तुरंत|जल्दी|अभी|आज ही|बंद हो|உடனே|அவசரம்|இன்றே|முடக்க|వెంటనే|అత్యవసరం|ఈరోజే|నిలిపివేయ/iu,
+      /\b(?:urgent|immediately|act now|today only|expires? today|suspend(?:ed|ion)?|blocked|disconnect(?:ed|ion)?|udane|seekiram|ventane|jaldi|turant)\b|तुरंत|जल्दी|अभी|आज ही|बंद हो|உடனே|அவசரம்|இன்றே|முடக்க|వెంటనే|అత్యవసరం|ఈరోజే|నిలిపివేయ/iu,
   },
   {
     category: "action",
     weight: 2,
     reason: "Pushes the reader to click, open, call, send, share, or update.",
     pattern:
-      /\b(?:click|open|visit|verify|update|confirm|call|send|share|download|tap|bhejo|karo)\b|क्लिक|खोलें|भेजें|साझा|अपडेट|அழுத்த|திறக்க|அனுப்ப|பகிர|புதுப்பிக்க|క్లిక్|తెరవ|పంప|పంచ|అప్‌డేట్/iu,
+      /\b(?:click|open|visit|verify|update|confirm|call|send|share|download|tap|bhejo|karo)\b|क्लिक|खोलें|भेजें|साझा|अपडेट|அழுத்த|திறக்க|அனுப்ப|பகிர|புதுப்பிக்க|క్లిక్|తెరవ|పంప|పంచ|అప్డేట్/iu,
   },
   {
     category: "impersonation",
     weight: 2,
     reason: "Claims or implies authority from a bank, government, police, or delivery service.",
     pattern:
-      /\b(?:bank|sbi|rbi|government|govt|police|income tax|customs?|courier|delivery|support team|customer care)\b|बैंक|सरकार|पुलिस|आयकर|कूरियर|வங்கி|அரசு|காவல்|வருமான வரி|கூரியர்|బ్యాంక్|ప్రభుత్వం|పోలీస్|ఆదాయపు పన్ను|కొరియర్/iu,
+      /\b(?:bank|sbi|rbi|government|govt|police|income tax|customs?|courier|delivery|support team|customer care|electricity|eb|tneb|bescom|aadhaar|pan card)\b|बैंक|सरकार|पुलिस|आयकर|कूरियर|வங்கி|அரசு|காவல்|வருமான வரி|கூரியர்|బ్యాంక్|ప్రభుత్వం|పోలీస్|ఆదాయపు పన్ను|కొరియర్/iu,
   },
   {
     category: "money",
     weight: 2,
     reason: "Mentions payment, winnings, refunds, fines, loans, or financial rewards.",
     pattern:
-      /₹|\b(?:payment|pay now|prize|lottery|reward|refund|cashback|fine|loan|rupees?|lakh)\b|रुपये|इनाम|जुर्माना|ऋण|பணம்|பரிசு|அபராதம்|கடன்|రూపాయలు|బహుమతి|జరిమానా|రుణం/iu,
+      /₹|\b(?:payment|pay now|prize|lottery|reward|refund|cashback|pay (?:the )?fine|loan|rupees?|lakh)\b|रुपये|इनाम|जुर्माना|ऋण|பணம்|பரிசு|அபராதம்|கடன்|రూపాయలు|బహుమతి|జరిమానా|రుణం/iu,
   },
 ];
 
 const PROTECTIVE_ADVISORY =
   /\b(?:do not|don't|never)\s+(?:click|open|share|send|reveal|provide|tell|submit|enter|verify)|\b(?:bank|we)\s+will never ask|\botp\s+(?:share|send)\s+(?:mat|na)\b|ओटीपी.{0,24}(?:साझा न करें|मत भेजें)|(?:लिंक|कड़ी).{0,16}(?:न खोलें|क्लिक न करें)|ஓடிபி.{0,24}(?:பகிர வேண்டாம்|அனுப்ப வேண்டாம்)|இணைப்பை.{0,16}(?:திறக்க வேண்டாம்|அழுத்த வேண்டாம்)|ఓటీపీ.{0,24}(?:పంచుకోవద్దు|పంపవద్దు)|లింక్.{0,16}(?:తెరవద్దు|క్లిక్ చేయవద్దు)/iu;
 const DIRECT_DISCLOSURE_REQUEST =
-  /\b(?:send|share|reveal|provide|tell|submit|enter)\b(?:\s+(?:me|us|them|your|the)){0,2}\s+\b(?:otp|one[ -]?time password|pin|password|passcode|cvv)\b|\b(?:otp|one[ -]?time password|pin|password|passcode|cvv)\b(?:\s+(?:now|abhi|please)){0,2}\s+\b(?:send|share|reveal|provide|submit|enter|bhejo|batao)\b|(?:ओटीपी|पासवर्ड|पिन|सीवीवी)[^.!?;।！？]{0,16}(?:भेजें|भेजो|साझा|बताएं|बताओ|दर्ज करें)|(?:ஓடிபி|கடவுச்சொல்|பின்|சிவிவி)[^.!?;।！？]{0,16}(?:அனுப்ப|பகிர|சொல்ல|உள்ளிட)|(?:ఓటీపీ|పాస్‌వర్డ్|పిన్|సీవీవీ)[^.!?;।！？]{0,16}(?:పంప(?!వద్దు)|పంచ(?!ుకోవద్దు)|చెప్ప(?!వద్దు)|నమోదు)/giu;
+  /\b(?:send|share|reveal|provide|tell|submit|enter)\b(?:\s+(?:me|us|them|your|the)){0,2}\s+\b(?:otp|one[ -]?time password|pin(?!\s*code)|password|passcode|cvv)\b|\b(?:otp|one[ -]?time password|pin(?!\s*code)|password|passcode|cvv)\b(?:\s+(?:now|abhi|please)){0,2}\s+\b(?:send|share|reveal|provide|submit|enter|bhejo|batao|anuppunga|anuppu|sollunga|pampandi|pampu|cheppandi)\b|(?:ओटीपी|पासवर्ड|पिन|सीवीवी)[^.!?;।！？]{0,16}(?:भेजें|भेजो|साझा|बताएं|बताओ|दर्ज करें)|(?:ஓடிபி|கடவுச்சொல்|பின்|சிவிவி)[^.!?;।！？]{0,16}(?:அனுப்ப|பகிர|சொல்ல|உள்ளிட)|(?:ఓటీపీ|పాస్వర్డ్|పిన్|సీవీవీ)[^.!?;।！？]{0,16}(?:పంప(?!వద్దు)|పంచ(?!ుకోవద్దు)|చెప్ప(?!వద్దు)|నమోదు)/giu;
 const ACCOUNT_VERIFICATION_REQUEST =
   /\bverify (?:your )?account\b|(?:खाता|अकाउंट)[^.!?;।！？]{0,16}(?:सत्यापित करें|वेरीफाई करें)|கணக்கை[^.!?;।！？]{0,16}சரிபார்க்க|ఖాతాను[^.!?;।！？]{0,16}ధృవీకరించ/giu;
 const NEGATION_BEFORE_REQUEST =
@@ -295,7 +295,9 @@ function analyzeMessageContext(input, messageContext) {
   }
 
   const highRiskCombination =
-    hasSensitiveRequest && (hasInspectedLink || categories.has("urgency"));
+    (hasSensitiveRequest && (hasInspectedLink || categories.has("urgency"))) ||
+    (categories.has("impersonation") && hasInspectedLink &&
+      (categories.has("credential") || categories.has("urgency") || categories.has("money")));
   const risk = highRiskCombination
     ? "high"
     : messageContext.linkResult.limited || hasConfusableSensitiveTerm || score >= 3

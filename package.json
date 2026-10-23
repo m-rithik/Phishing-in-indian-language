@@ -1,6 +1,6 @@
 {
   "name": "fisher-local",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "private": true,
   "type": "module",
   "description": "Local Fisher message and link checks, browser extension, and companion CLI",
@@ -9,7 +9,8 @@
     "test": "node --test browser_extension/tests/*.test.mjs tests/test_fisher_cli.mjs",
     "test:browser": "playwright test",
     "analyze": "node fisher.mjs analyze",
-    "batch": "node fisher.mjs batch"
+    "batch": "node fisher.mjs batch",
+    "eval:rules": "node scripts/evaluate_rules.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.13.0",

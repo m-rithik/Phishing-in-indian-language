@@ -1,0 +1,8 @@
+{"id": "hi-001", "text": "Aapka khata band ho jayega, turant OTP bhejo", "label": "scam", "language": "hindi", "script": "romanized", "source": "synthetic"}
+{"id": "hi-002", "text": "Kal shaam ko milte hain, ghar pe chai peete hain", "label": "benign", "language": "hindi", "script": "romanized", "source": "synthetic"}
+{"id": "hi-003", "text": "आपका खाता बंद हो जाएगा, तुरंत ओटीपी भेजें", "label": "scam", "language": "hindi", "script": "native", "source": "synthetic"}
+{"id": "ta-001", "text": "Unga account blocked, udane OTP anuppunga", "label": "scam", "language": "tamil", "script": "romanized", "source": "synthetic"}
+{"id": "ta-002", "text": "நாளை மாலை சந்திக்கலாம்", "label": "benign", "language": "tamil", "script": "native", "source": "synthetic"}
+{"id": "te-001", "text": "Mee account blocked, ventane OTP pampandi", "label": "scam", "language": "telugu", "script": "romanized", "source": "synthetic"}
+{"id": "te-002", "text": "రేపు సాయంత్రం కలుద్దాం", "label": "benign", "language": "telugu", "script": "native", "source": "synthetic"}
+{"id": "en-001", "text": "Dear SBI customer, your KYC expired. Update now: sbi-kyc-update.xyz", "label": "scam", "language": "english", "script": "latin_english", "source": "synthetic"}

@@ -22,7 +22,7 @@ const REPORT_KEYS = [
 
 function assertExactReportShape(result) {
   assert.deepEqual(Object.keys(result), REPORT_KEYS);
-  assert.equal(ENGINE_VERSION, "0.5.0");
+  assert.equal(ENGINE_VERSION, "0.6.0");
   assert.equal(result.engineVersion, ENGINE_VERSION);
   assert.ok(["message", "url"].includes(result.mode));
   assert.ok(["high", "review", "no_match", "cannot_analyze"].includes(result.risk));

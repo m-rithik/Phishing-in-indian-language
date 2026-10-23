@@ -1,7 +1,13 @@
 """Romanization rules for Hindi (Devanagari), Tamil, and Telugu scripts.
 
-This module encodes common Romanization patterns used to write Indic scripts in Latin characters.
-Each pattern is weighted by frequency to prioritize likely interpretations.
+Rules are split into the pieces needed to compose whole syllables:
+
+* consonants: romanized unit -> alternative base characters with probabilities,
+* vowels: romanized unit -> alternative (independent form, dependent matra) pairs,
+* virama: the vowel-killer mark of the script,
+* lexicon: whole-word renderings for sensitive terms (otp, password, ...).
+
+For every romanized unit the alternative probabilities sum to 1.
 
 Sources:
 - Hindi: ITRANS, Harvard-Kyoto, modified Romanization (user-generated text)
@@ -10,187 +16,160 @@ Sources:
 """
 
 from dataclasses import dataclass
-from typing import Dict, List, Tuple
+from typing import Dict, Tuple
+
 
 @dataclass(frozen=True)
-class RomanizationRule:
-    """A single romanization pattern mapping."""
-    romanized: str
-    scripts: Dict[str, str]  # script -> character mapping
-    weight: float = 1.0
-    ambiguous: bool = False  # True if multiple interpretations are equally valid
+class VowelForm:
+    """One rendering of a romanized vowel unit.
 
-# Hindi (Devanagari) romanization rules
-# Ordered by likelihood in authentic text
-HINDI_RULES: List[RomanizationRule] = [
-    # Vowels (highest priority)
-    RomanizationRule("a", {"devanagari": "अ"}, weight=2.0),
-    RomanizationRule("aa", {"devanagari": "आ"}, weight=1.8),
-    RomanizationRule("aaa", {"devanagari": "आ"}, weight=0.3, ambiguous=True),
-    RomanizationRule("i", {"devanagari": "इ"}, weight=1.8),
-    RomanizationRule("ii", {"devanagari": "ई"}, weight=1.8),
-    RomanizationRule("u", {"devanagari": "उ"}, weight=1.8),
-    RomanizationRule("uu", {"devanagari": "ऊ"}, weight=1.8),
-    RomanizationRule("oo", {"devanagari": "ऊ"}, weight=0.5, ambiguous=True),
-    RomanizationRule("e", {"devanagari": "ए"}, weight=1.5),
-    RomanizationRule("ai", {"devanagari": "ऐ"}, weight=1.2),
-    RomanizationRule("o", {"devanagari": "ओ"}, weight=1.5),
-    RomanizationRule("au", {"devanagari": "औ"}, weight=1.2),
+    ``matra`` is the dependent sign used after a consonant; the empty string is
+    the inherent vowel (no mark). ``p_medial`` and ``p_final`` are the
+    probabilities of this form inside a word and at the end of a word.
+    """
 
-    # Common consonants
-    RomanizationRule("k", {"devanagari": "क"}, weight=1.8),
-    RomanizationRule("kh", {"devanagari": "ख"}, weight=1.5),
-    RomanizationRule("g", {"devanagari": "ग"}, weight=1.8),
-    RomanizationRule("gh", {"devanagari": "घ"}, weight=1.2),
-    RomanizationRule("ng", {"devanagari": "ङ"}, weight=0.8),
-    RomanizationRule("ch", {"devanagari": "छ"}, weight=1.8),
-    RomanizationRule("chh", {"devanagari": "छ"}, weight=0.5, ambiguous=True),
-    RomanizationRule("j", {"devanagari": "ज"}, weight=1.8),
-    RomanizationRule("jh", {"devanagari": "झ"}, weight=1.2),
-    RomanizationRule("ny", {"devanagari": "ञ"}, weight=1.0),
-    RomanizationRule("t", {"devanagari": "त"}, weight=1.8),
-    RomanizationRule("th", {"devanagari": "थ"}, weight=1.5),
-    RomanizationRule("d", {"devanagari": "द"}, weight=1.8),
-    RomanizationRule("dh", {"devanagari": "ध"}, weight=1.2),
-    RomanizationRule("n", {"devanagari": "न"}, weight=1.8),
-    RomanizationRule("p", {"devanagari": "प"}, weight=1.8),
-    RomanizationRule("ph", {"devanagari": "फ"}, weight=1.5),
-    RomanizationRule("b", {"devanagari": "ब"}, weight=1.8),
-    RomanizationRule("bh", {"devanagari": "भ"}, weight=1.2),
-    RomanizationRule("m", {"devanagari": "म"}, weight=1.8),
-    RomanizationRule("y", {"devanagari": "य"}, weight=1.8),
-    RomanizationRule("r", {"devanagari": "र"}, weight=1.8),
-    RomanizationRule("l", {"devanagari": "ल"}, weight=1.8),
-    RomanizationRule("v", {"devanagari": "व"}, weight=1.5),
-    RomanizationRule("w", {"devanagari": "व"}, weight=1.0, ambiguous=True),
-    RomanizationRule("sh", {"devanagari": "श"}, weight=1.5),
-    RomanizationRule("s", {"devanagari": "स"}, weight=1.8),
-    RomanizationRule("h", {"devanagari": "ह"}, weight=1.8),
+    independent: str
+    matra: str
+    p_medial: float = 1.0
+    p_final: float = 1.0
 
-    # Retroflex consonants (less common in casual text)
-    RomanizationRule("tt", {"devanagari": "ट"}, weight=0.8),
-    RomanizationRule("tth", {"devanagari": "ठ"}, weight=0.5),
-    RomanizationRule("dd", {"devanagari": "ड"}, weight=0.8),
-    RomanizationRule("ddh", {"devanagari": "ढ"}, weight=0.5),
-    RomanizationRule("nn", {"devanagari": "ण"}, weight=0.5),
 
-    # Sensitive term patterns (phishing detection context)
-    RomanizationRule("otp", {"devanagari": "ओटीपी"}, weight=2.5),
-    RomanizationRule("pwd", {"devanagari": "पीडब्लू"}, weight=0.8, ambiguous=True),
-    RomanizationRule("pass", {"devanagari": "पास"}, weight=1.5),
-    RomanizationRule("pin", {"devanagari": "पिन"}, weight=1.5),
-    RomanizationRule("cvv", {"devanagari": "सीवीवी"}, weight=1.8),
-    RomanizationRule("kyc", {"devanagari": "केवाईसी"}, weight=1.8),
-]
+@dataclass(frozen=True)
+class LanguageRules:
+    """All composition rules for a single script."""
 
-# Tamil romanization rules
-TAMIL_RULES: List[RomanizationRule] = [
-    # Vowels
-    RomanizationRule("a", {"tamil": "அ"}, weight=2.0),
-    RomanizationRule("aa", {"tamil": "ஆ"}, weight=1.8),
-    RomanizationRule("i", {"tamil": "இ"}, weight=1.8),
-    RomanizationRule("ii", {"tamil": "ஈ"}, weight=1.8),
-    RomanizationRule("u", {"tamil": "உ"}, weight=1.8),
-    RomanizationRule("uu", {"tamil": "ஊ"}, weight=1.8),
-    RomanizationRule("e", {"tamil": "எ"}, weight=1.5),
-    RomanizationRule("ee", {"tamil": "ஏ"}, weight=1.5),
-    RomanizationRule("ai", {"tamil": "ஐ"}, weight=1.2),
-    RomanizationRule("o", {"tamil": "ஒ"}, weight=1.5),
-    RomanizationRule("oo", {"tamil": "ஓ"}, weight=1.5),
-    RomanizationRule("ou", {"tamil": "ஔ"}, weight=1.2),
+    consonants: Dict[str, Tuple[Tuple[str, float], ...]]
+    vowels: Dict[str, Tuple[VowelForm, ...]]
+    virama: str
+    lexicon: Dict[str, str]
+    # Probability of a virama (vs. the inherent vowel) after a consonant that
+    # is followed directly by another consonant, and at the end of a word.
+    p_virama_before_consonant: float = 0.6
+    p_virama_final: float = 0.4
 
-    # Consonants
-    RomanizationRule("k", {"tamil": "க"}, weight=1.8),
-    RomanizationRule("kh", {"tamil": "க"}, weight=0.5, ambiguous=True),
-    RomanizationRule("g", {"tamil": "க"}, weight=1.0, ambiguous=True),
-    RomanizationRule("c", {"tamil": "ச"}, weight=1.8),
-    RomanizationRule("ch", {"tamil": "ச"}, weight=0.5, ambiguous=True),
-    RomanizationRule("j", {"tamil": "ஜ"}, weight=1.5),
-    RomanizationRule("jh", {"tamil": "ஜ"}, weight=0.3, ambiguous=True),
-    RomanizationRule("t", {"tamil": "த"}, weight=1.8),
-    RomanizationRule("th", {"tamil": "த"}, weight=0.5, ambiguous=True),
-    RomanizationRule("d", {"tamil": "த"}, weight=1.0, ambiguous=True),
-    RomanizationRule("n", {"tamil": "ன"}, weight=1.8),
-    RomanizationRule("p", {"tamil": "ப"}, weight=1.8),
-    RomanizationRule("ph", {"tamil": "ப"}, weight=0.5, ambiguous=True),
-    RomanizationRule("b", {"tamil": "ப"}, weight=1.0, ambiguous=True),
-    RomanizationRule("m", {"tamil": "ம"}, weight=1.8),
-    RomanizationRule("y", {"tamil": "ய"}, weight=1.8),
-    RomanizationRule("r", {"tamil": "ர"}, weight=1.8),
-    RomanizationRule("l", {"tamil": "ல"}, weight=1.8),
-    RomanizationRule("ll", {"tamil": "ள"}, weight=1.5),
-    RomanizationRule("v", {"tamil": "வ"}, weight=1.5),
-    RomanizationRule("w", {"tamil": "வ"}, weight=1.0, ambiguous=True),
-    RomanizationRule("sh", {"tamil": "ஷ"}, weight=1.3),
-    RomanizationRule("s", {"tamil": "ச"}, weight=1.8),
-    RomanizationRule("h", {"tamil": "ஹ"}, weight=1.8),
 
-    # Sensitive terms
-    RomanizationRule("otp", {"tamil": "ஓடிபி"}, weight=2.5),
-    RomanizationRule("password", {"tamil": "கடவுச்சொல்"}, weight=2.0),
-    RomanizationRule("pin", {"tamil": "பின்"}, weight=1.5),
-    RomanizationRule("cvv", {"tamil": "சிவிவி"}, weight=1.8),
-    RomanizationRule("kyc", {"tamil": "கேவைசி"}, weight=1.8),
-]
+def _c(*pairs: Tuple[str, float]) -> Tuple[Tuple[str, float], ...]:
+    return tuple(pairs)
 
-# Telugu romanization rules
-TELUGU_RULES: List[RomanizationRule] = [
-    # Vowels
-    RomanizationRule("a", {"telugu": "అ"}, weight=2.0),
-    RomanizationRule("aa", {"telugu": "ఆ"}, weight=1.8),
-    RomanizationRule("i", {"telugu": "ఇ"}, weight=1.8),
-    RomanizationRule("ii", {"telugu": "ఈ"}, weight=1.8),
-    RomanizationRule("u", {"telugu": "ఉ"}, weight=1.8),
-    RomanizationRule("uu", {"telugu": "ఊ"}, weight=1.8),
-    RomanizationRule("e", {"telugu": "ఎ"}, weight=1.5),
-    RomanizationRule("ee", {"telugu": "ఏ"}, weight=1.5),
-    RomanizationRule("ai", {"telugu": "ఐ"}, weight=1.2),
-    RomanizationRule("o", {"telugu": "ఒ"}, weight=1.5),
-    RomanizationRule("oo", {"telugu": "ఓ"}, weight=1.5),
-    RomanizationRule("ou", {"telugu": "ఔ"}, weight=1.2),
 
-    # Consonants
-    RomanizationRule("k", {"telugu": "క"}, weight=1.8),
-    RomanizationRule("kh", {"telugu": "ఖ"}, weight=1.2),
-    RomanizationRule("g", {"telugu": "గ"}, weight=1.8),
-    RomanizationRule("gh", {"telugu": "ఘ"}, weight=0.8),
-    RomanizationRule("ng", {"telugu": "ఙ"}, weight=0.5),
-    RomanizationRule("c", {"telugu": "చ"}, weight=1.8),
-    RomanizationRule("ch", {"telugu": "చ"}, weight=0.5, ambiguous=True),
-    RomanizationRule("j", {"telugu": "జ"}, weight=1.8),
-    RomanizationRule("jh", {"telugu": "ఝ"}, weight=0.8),
-    RomanizationRule("ny", {"telugu": "ఞ"}, weight=0.5),
-    RomanizationRule("t", {"telugu": "త"}, weight=1.8),
-    RomanizationRule("th", {"telugu": "థ"}, weight=1.2),
-    RomanizationRule("d", {"telugu": "ద"}, weight=1.8),
-    RomanizationRule("dh", {"telugu": "ధ"}, weight=1.0),
-    RomanizationRule("n", {"telugu": "న"}, weight=1.8),
-    RomanizationRule("p", {"telugu": "ప"}, weight=1.8),
-    RomanizationRule("ph", {"telugu": "ఫ"}, weight=1.2),
-    RomanizationRule("b", {"telugu": "బ"}, weight=1.8),
-    RomanizationRule("bh", {"telugu": "భ"}, weight=1.0),
-    RomanizationRule("m", {"telugu": "ము"}, weight=1.8),
-    RomanizationRule("y", {"telugu": "య"}, weight=1.8),
-    RomanizationRule("r", {"telugu": "ర"}, weight=1.8),
-    RomanizationRule("l", {"telugu": "ల"}, weight=1.8),
-    RomanizationRule("v", {"telugu": "వ"}, weight=1.5),
-    RomanizationRule("w", {"telugu": "వ"}, weight=1.0, ambiguous=True),
-    RomanizationRule("sh", {"telugu": "శ"}, weight=1.3),
-    RomanizationRule("s", {"telugu": "స"}, weight=1.8),
-    RomanizationRule("h", {"telugu": "హ"}, weight=1.8),
+def _single(char: str) -> Tuple[Tuple[str, float], ...]:
+    return ((char, 1.0),)
 
-    # Sensitive terms
-    RomanizationRule("otp", {"telugu": "ఓటీపీ"}, weight=2.5),
-    RomanizationRule("password", {"telugu": "పాస్‌వర్డ్"}, weight=2.0),
-    RomanizationRule("pin", {"telugu": "పిన్"}, weight=1.5),
-    RomanizationRule("cvv", {"telugu": "సీవీవీ"}, weight=1.8),
-    RomanizationRule("kyc", {"telugu": "కేవైసీ"}, weight=1.8),
-]
 
-def load_romanization_rules() -> Dict[str, List[RomanizationRule]]:
+def _short_long(short: Tuple[str, str], long: Tuple[str, str]) -> Tuple[VowelForm, ...]:
+    """Short/long pair; the long form is favoured at the end of a word."""
+    return (
+        VowelForm(short[0], short[1], p_medial=0.7, p_final=0.3),
+        VowelForm(long[0], long[1], p_medial=0.3, p_final=0.7),
+    )
+
+
+def _even(first: Tuple[str, str], second: Tuple[str, str]) -> Tuple[VowelForm, ...]:
+    return (
+        VowelForm(first[0], first[1], 0.5, 0.5),
+        VowelForm(second[0], second[1], 0.5, 0.5),
+    )
+
+
+def _one(independent: str, matra: str) -> Tuple[VowelForm, ...]:
+    return (VowelForm(independent, matra),)
+
+
+HINDI = LanguageRules(
+    consonants={
+        "k": _single("क"), "kh": _single("ख"), "q": _single("क"), "c": _single("क"),
+        "g": _single("ग"), "gh": _single("घ"), "ng": _single("ङ"),
+        "ch": _c(("च", 0.7), ("छ", 0.3)), "chh": _single("छ"),
+        "j": _single("ज"), "jh": _single("झ"), "z": _single("ज"), "ny": _single("ञ"),
+        "t": _c(("त", 0.6), ("ट", 0.4)), "th": _c(("थ", 0.6), ("ठ", 0.4)),
+        "d": _c(("द", 0.6), ("ड", 0.4)), "dh": _c(("ध", 0.6), ("ढ", 0.4)),
+        "tt": _single("ट"), "tth": _single("ठ"), "dd": _single("ड"), "ddh": _single("ढ"),
+        "n": _single("न"), "nn": _single("ण"),
+        "p": _single("प"), "ph": _single("फ"), "f": _single("फ"),
+        "b": _single("ब"), "bh": _single("भ"), "m": _single("म"),
+        "y": _single("य"), "r": _single("र"), "l": _single("ल"),
+        "v": _single("व"), "w": _single("व"),
+        "sh": _single("श"), "s": _single("स"), "h": _single("ह"),
+    },
+    vowels={
+        "a": _one("अ", ""), "aa": _one("आ", "ा"),
+        "i": _short_long(("इ", "ि"), ("ई", "ी")), "ii": _one("ई", "ी"), "ee": _one("ई", "ी"),
+        "u": _short_long(("उ", "ु"), ("ऊ", "ू")), "uu": _one("ऊ", "ू"), "oo": _one("ऊ", "ू"),
+        "e": _one("ए", "े"), "ai": _one("ऐ", "ै"),
+        "o": _one("ओ", "ो"), "au": _one("औ", "ौ"),
+    },
+    virama="्",
+    lexicon={
+        "otp": "ओटीपी", "pwd": "पीडब्लू", "pass": "पास",
+        "pin": "पिन", "cvv": "सीवीवी", "kyc": "केवाईसी",
+    },
+    p_virama_final=0.4,
+)
+
+TAMIL = LanguageRules(
+    consonants={
+        "k": _single("க"), "kh": _single("க"), "g": _single("க"), "gh": _single("க"),
+        "q": _single("க"),
+        "c": _single("ச"), "ch": _single("ச"), "s": _single("ச"),
+        "j": _single("ஜ"), "jh": _single("ஜ"), "z": _single("ஜ"),
+        "t": _single("த"), "th": _single("த"), "d": _single("த"), "dh": _single("த"),
+        "n": _single("ன"), "p": _single("ப"), "ph": _single("ப"), "b": _single("ப"),
+        "bh": _single("ப"), "f": _single("ஃப"), "m": _single("ம"),
+        "y": _single("ய"), "r": _single("ர"), "l": _single("ல"), "ll": _single("ள"),
+        "v": _single("வ"), "w": _single("வ"), "sh": _single("ஷ"), "h": _single("ஹ"),
+    },
+    vowels={
+        "a": _one("அ", ""), "aa": _one("ஆ", "ா"),
+        "i": _short_long(("இ", "ி"), ("ஈ", "ீ")), "ii": _one("ஈ", "ீ"),
+        "u": _short_long(("உ", "ு"), ("ஊ", "ூ")), "uu": _one("ஊ", "ூ"),
+        "e": _even(("எ", "ெ"), ("ஏ", "ே")), "ee": _one("ஏ", "ே"),
+        "ai": _one("ஐ", "ை"),
+        "o": _even(("ஒ", "ொ"), ("ஓ", "ோ")), "oo": _one("ஓ", "ோ"),
+        "ou": _one("ஔ", "ௌ"), "au": _one("ஔ", "ௌ"),
+    },
+    virama="்",
+    lexicon={
+        "otp": "ஓடிபி", "password": "கடவுச்சொல்", "pin": "பின்",
+        "cvv": "சிவிவி", "kyc": "கேவைசி",
+    },
+    p_virama_final=0.6,
+)
+
+TELUGU = LanguageRules(
+    consonants={
+        "k": _single("క"), "kh": _single("ఖ"), "q": _single("క"),
+        "g": _single("గ"), "gh": _single("ఘ"), "ng": _single("ఙ"),
+        "c": _single("చ"), "ch": _single("చ"),
+        "j": _single("జ"), "jh": _single("ఝ"), "z": _single("జ"), "ny": _single("ఞ"),
+        "t": _single("త"), "th": _single("థ"), "d": _single("ద"), "dh": _single("ధ"),
+        "n": _single("న"), "p": _single("ప"), "ph": _single("ఫ"), "f": _single("ఫ"),
+        "b": _single("బ"), "bh": _single("భ"), "m": _single("మ"),
+        "y": _single("య"), "r": _single("ర"), "l": _single("ల"),
+        "v": _single("వ"), "w": _single("వ"),
+        "sh": _single("శ"), "s": _single("స"), "h": _single("హ"),
+    },
+    vowels={
+        "a": _one("అ", ""), "aa": _one("ఆ", "ా"),
+        "i": _short_long(("ఇ", "ి"), ("ఈ", "ీ")), "ii": _one("ఈ", "ీ"),
+        "u": _short_long(("ఉ", "ు"), ("ఊ", "ూ")), "uu": _one("ఊ", "ూ"),
+        "e": _even(("ఎ", "ె"), ("ఏ", "ే")), "ee": _one("ఏ", "ే"),
+        "ai": _one("ఐ", "ై"),
+        "o": _even(("ఒ", "ొ"), ("ఓ", "ో")), "oo": _one("ఓ", "ో"),
+        "ou": _one("ఔ", "ౌ"), "au": _one("ఔ", "ౌ"),
+    },
+    virama="్",
+    lexicon={
+        "otp": "ఓటీపీ", "password": "పాస్‌వర్డ్", "pin": "పిన్",
+        "cvv": "సీవీవీ", "kyc": "కేవైసీ",
+    },
+    p_virama_final=0.6,
+)
+
+
+def load_romanization_rules() -> Dict[str, LanguageRules]:
     """Load all romanization rules by language."""
     return {
-        "hindi": HINDI_RULES,
-        "tamil": TAMIL_RULES,
-        "telugu": TELUGU_RULES,
+        "hindi": HINDI,
+        "tamil": TAMIL,
+        "telugu": TELUGU,
     }

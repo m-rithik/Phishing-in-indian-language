@@ -1,0 +1,212 @@
+{
+  "n_items": 4,
+  "k": 5,
+  "positive_risks": [
+    "high",
+    "review"
+  ],
+  "limitations": [
+    "Rule-based detector; no learned model.",
+    "Oracle language ID: the item's language field selects the transliteration script.",
+    "Small or synthetic evaluation data; no claim of real-world accuracy.",
+    "Messages are flattened to one line for the batch CLI."
+  ],
+  "conditions": {
+    "A": {
+      "overall": {
+        "n": 4,
+        "TP": 3,
+        "FP": 0,
+        "TN": 1,
+        "FN": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "per_language": {
+        "hindi": {
+          "n": 2,
+          "TP": 1,
+          "FP": 0,
+          "TN": 1,
+          "FN": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "tamil": {
+          "n": 1,
+          "TP": 1,
+          "FP": 0,
+          "TN": 0,
+          "FN": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "telugu": {
+          "n": 1,
+          "TP": 1,
+          "FP": 0,
+          "TN": 0,
+          "FN": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        }
+      }
+    },
+    "B": {
+      "overall": {
+        "n": 4,
+        "TP": 3,
+        "FP": 0,
+        "TN": 1,
+        "FN": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "per_language": {
+        "hindi": {
+          "n": 2,
+          "TP": 1,
+          "FP": 0,
+          "TN": 1,
+          "FN": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "tamil": {
+          "n": 1,
+          "TP": 1,
+          "FP": 0,
+          "TN": 0,
+          "FN": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "telugu": {
+          "n": 1,
+          "TP": 1,
+          "FP": 0,
+          "TN": 0,
+          "FN": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        }
+      }
+    },
+    "C-max": {
+      "overall": {
+        "n": 4,
+        "TP": 3,
+        "FP": 0,
+        "TN": 1,
+        "FN": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "per_language": {
+        "hindi": {
+          "n": 2,
+          "TP": 1,
+          "FP": 0,
+          "TN": 1,
+          "FN": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "tamil": {
+          "n": 1,
+          "TP": 1,
+          "FP": 0,
+          "TN": 0,
+          "FN": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "telugu": {
+          "n": 1,
+          "TP": 1,
+          "FP": 0,
+          "TN": 0,
+          "FN": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        }
+      }
+    },
+    "C-weighted": {
+      "overall": {
+        "n": 4,
+        "TP": 3,
+        "FP": 0,
+        "TN": 1,
+        "FN": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "per_language": {
+        "hindi": {
+          "n": 2,
+          "TP": 1,
+          "FP": 0,
+          "TN": 1,
+          "FN": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "tamil": {
+          "n": 1,
+          "TP": 1,
+          "FP": 0,
+          "TN": 0,
+          "FN": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "telugu": {
+          "n": 1,
+          "TP": 1,
+          "FP": 0,
+          "TN": 0,
+          "FN": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        }
+      }
+    }
+  },
+  "mcnemar_exact": {
+    "A_vs_B": {
+      "n_items": 4,
+      "first_only_correct": 0,
+      "second_only_correct": 0,
+      "p_value": 1.0
+    },
+    "B_vs_C-max": {
+      "n_items": 4,
+      "first_only_correct": 0,
+      "second_only_correct": 0,
+      "p_value": 1.0
+    },
+    "B_vs_C-weighted": {
+      "n_items": 4,
+      "first_only_correct": 0,
+      "second_only_correct": 0,
+      "p_value": 1.0
+    }
+  }
+}

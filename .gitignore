@@ -31,3 +31,5 @@ test-results/
 *.p12
 *.pfx
 docs/CHANGE_DECISION_LOG.docx
+
+all_code.txt

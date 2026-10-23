@@ -257,6 +257,47 @@ CLI, or synthetic research-engine packages.
 The source workbook, virtual environment, raw/processed data, model artifacts,
 and generated outputs are ignored by Git.
 
+## Evaluation
+
+The rule detector and an experimental transliteration step can be measured on
+your own labelled messages. No real evaluation data ships with the repository:
+`eval/messages.template.jsonl` holds 8 illustrative **synthetic** lines. Copy
+it to `eval/messages.jsonl` and replace it with your data (target: 30 scam and
+30 benign messages per language). The format and the rules for honest
+`source` labels are in [`eval/README.md`](eval/README.md); `eval/load.py`
+validates the file and rejects duplicate ids and duplicate text.
+
+```console
+cp eval/messages.template.jsonl eval/messages.jsonl   # then edit
+npm run eval:rules
+uv run python scripts/translit_experiment.py
+```
+
+- `npm run eval:rules` runs the shared engine on every message and reports
+  TP, FP, TN, FN, precision, recall, F1 and the false-positive rate on benign
+  messages, overall, per language and per script, for two settings (positive =
+  high or review; positive = high only). It writes
+  `eval/results/rules_metrics.json` and `eval/results/rules_errors.jsonl`
+  (every false positive and false negative with its reasons).
+- `scripts/translit_experiment.py` uses only `romanized` items. It compares the
+  raw text (A), the text plus its top-1 transliteration (B), and the text plus
+  5 transliteration variants aggregated by "any positive" (C-max) or by summed
+  variant weight >= 0.5 (C-weighted). It writes
+  `eval/results/translit_metrics.json` (per condition and language, plus exact
+  McNemar tests for A vs B, B vs C-max and B vs C-weighted) and
+  `eval/results/translit_examples.jsonl` (up to 20 items where the conditions
+  disagree). The detector runs through `node fisher.mjs batch-detail`, which
+  prints one JSON result per input line (batch checks are limited to 500 lines
+  per call, so larger sets are sent in chunks).
+
+### Evaluation limitations
+
+- The detector is rule-based (keyword and pattern signals), not a trained model.
+- The transliteration experiment uses an **oracle language ID**: each item's
+  `language` field picks the target script. A real system must detect the
+  language first, so those results are optimistic.
+- Evaluation data is small or synthetic, so metrics (and p-values) describe
+  that data only. This project makes **no claim of real-world accuracy**.
 ## Research boundary and next iteration
 
 The implemented baseline and pilot validator establish a reproducible technical

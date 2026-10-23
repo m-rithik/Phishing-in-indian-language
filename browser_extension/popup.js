@@ -1114,7 +1114,7 @@ export function createPopupController({
   }
   if (nlpReportButton) {
     nlpReportButton.addEventListener("click", () => {
-      chrome.tabs.create({ url: chrome.runtime.getURL('nlp_report.html') });
+      chromeApi.tabs.create({ url: chromeApi.runtime.getURL("nlp_report.html") });
     });
   }
   clearButton.addEventListener("click", clearResult);
@@ -1164,36 +1164,6 @@ export function createPopupController({
   setBatchBusy(false);
   clearBatchPresentation();
   hideResult();
-
-  // Auto-load cached page analysis on popup open
-  async function loadCachedAnalysis() {
-    try {
-      await new Promise((resolve) => {
-        chromeApi.runtime.sendMessage(
-          { action: 'getCachedPageContent' },
-          (response) => {
-            if (response?.found && response?.data?.text) {
-              const text = response.data.text;
-              try {
-                const analysis = analyze(text, { mode: 'message' });
-                render(analysis, 'selection', 'Page auto-detected');
-                activeReport = buildDownloadReport(analysis, 'selection', undefined, 'Page auto-detected');
-                downloadReportButton.disabled = false;
-                status.textContent = 'Page automatically analyzed on load.';
-              } catch (e) {
-                // Silent fail - don't show error if analysis fails
-              }
-            }
-            resolve();
-          }
-        );
-      });
-    } catch {
-      // Silent fail for auto-load
-    }
-  }
-
-  void loadCachedAnalysis();
 
   return {
     analyzePastedText,

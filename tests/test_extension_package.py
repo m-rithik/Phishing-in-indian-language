@@ -126,7 +126,7 @@ class ExtensionPackageTests(unittest.TestCase):
     def test_manifest_has_exact_temporary_permissions_and_no_standing_page_access(self) -> None:
         manifest = json.loads((EXTENSION / "manifest.json").read_text(encoding="utf-8"))
         self.assertEqual(manifest["manifest_version"], 3)
-        self.assertEqual(manifest["version"], "0.5.0")
+        self.assertEqual(manifest["version"], "0.6.0")
         self.assertEqual(manifest["permissions"], ["activeTab", "scripting"])
         self.assertNotIn("host_permissions", manifest)
         self.assertNotIn("optional_host_permissions", manifest)

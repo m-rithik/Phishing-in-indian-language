@@ -161,3 +161,26 @@ test("embedded destinations appear in CLI findings while batch reports stay aggr
   assert.equal(Object.hasOwn(aggregate, "items"), false);
   assert.doesNotMatch(batch.stdout, /SECRET_TOKEN|PRIVATE_PATH|relay\.example|example\.com/);
 });
+
+test("batch-detail prints one ordered JSON result per line without echoing input", () => {
+  const input = "Lunch at noon\nSECRET_CANARY send OTP immediately at bank.example\nUnga account blocked, udane OTP anuppunga\n";
+  const result = run(["batch-detail"], input);
+  assert.equal(result.status, 0);
+  assert.equal(result.stderr, "");
+  const rows = result.stdout.trimEnd().split("\n").map((row) => JSON.parse(row));
+  assert.deepEqual(rows.map((row) => row.line), [1, 2, 3]);
+  assert.deepEqual(rows.map((row) => row.risk), ["no_match", "high", "high"]);
+  assert.ok(rows.every((row) => Array.isArray(row.reasons) && row.reasons.length > 0));
+  assert.doesNotMatch(result.stdout, /SECRET_CANARY|bank\.example|Lunch/);
+  const blank = run(["batch-detail"], "Lunch at noon\n\n");
+  assert.equal(blank.status, 1);
+  assert.equal(JSON.parse(blank.stdout.trimEnd().split("\n")[1]).risk, "cannot_analyze");
+});
+
+test("batch-detail enforces the 500-line limit and rejects invalid options", () => {
+  assert.equal(run(["batch-detail"], "hello\n".repeat(500)).status, 0);
+  const tooMany = run(["batch-detail"], "hello\n".repeat(501));
+  assert.equal(tooMany.status, 1);
+  assert.equal(tooMany.stdout, "");
+  assert.equal(run(["batch-detail", "--mode"], "hello\n").status, 2);
+});

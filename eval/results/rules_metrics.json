@@ -1,0 +1,203 @@
+{
+  "engine_version": "0.6.0",
+  "total_messages": 8,
+  "cannot_analyze": 0,
+  "note": "Rule-based detector; cannot_analyze counts as not positive. Small or synthetic data gives no real-world accuracy claim.",
+  "settings": {
+    "high_or_review": {
+      "positive_risks": [
+        "high",
+        "review"
+      ],
+      "overall": {
+        "n": 8,
+        "TP": 5,
+        "FP": 0,
+        "TN": 3,
+        "FN": 0,
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "false_positive_rate": 0
+      },
+      "per_language": {
+        "english": {
+          "n": 1,
+          "TP": 1,
+          "FP": 0,
+          "TN": 0,
+          "FN": 0,
+          "precision": 1,
+          "recall": 1,
+          "f1": 1,
+          "false_positive_rate": null
+        },
+        "hindi": {
+          "n": 3,
+          "TP": 2,
+          "FP": 0,
+          "TN": 1,
+          "FN": 0,
+          "precision": 1,
+          "recall": 1,
+          "f1": 1,
+          "false_positive_rate": 0
+        },
+        "tamil": {
+          "n": 2,
+          "TP": 1,
+          "FP": 0,
+          "TN": 1,
+          "FN": 0,
+          "precision": 1,
+          "recall": 1,
+          "f1": 1,
+          "false_positive_rate": 0
+        },
+        "telugu": {
+          "n": 2,
+          "TP": 1,
+          "FP": 0,
+          "TN": 1,
+          "FN": 0,
+          "precision": 1,
+          "recall": 1,
+          "f1": 1,
+          "false_positive_rate": 0
+        }
+      },
+      "per_script": {
+        "latin_english": {
+          "n": 1,
+          "TP": 1,
+          "FP": 0,
+          "TN": 0,
+          "FN": 0,
+          "precision": 1,
+          "recall": 1,
+          "f1": 1,
+          "false_positive_rate": null
+        },
+        "native": {
+          "n": 3,
+          "TP": 1,
+          "FP": 0,
+          "TN": 2,
+          "FN": 0,
+          "precision": 1,
+          "recall": 1,
+          "f1": 1,
+          "false_positive_rate": 0
+        },
+        "romanized": {
+          "n": 4,
+          "TP": 3,
+          "FP": 0,
+          "TN": 1,
+          "FN": 0,
+          "precision": 1,
+          "recall": 1,
+          "f1": 1,
+          "false_positive_rate": 0
+        }
+      }
+    },
+    "high_only": {
+      "positive_risks": [
+        "high"
+      ],
+      "overall": {
+        "n": 8,
+        "TP": 5,
+        "FP": 0,
+        "TN": 3,
+        "FN": 0,
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "false_positive_rate": 0
+      },
+      "per_language": {
+        "english": {
+          "n": 1,
+          "TP": 1,
+          "FP": 0,
+          "TN": 0,
+          "FN": 0,
+          "precision": 1,
+          "recall": 1,
+          "f1": 1,
+          "false_positive_rate": null
+        },
+        "hindi": {
+          "n": 3,
+          "TP": 2,
+          "FP": 0,
+          "TN": 1,
+          "FN": 0,
+          "precision": 1,
+          "recall": 1,
+          "f1": 1,
+          "false_positive_rate": 0
+        },
+        "tamil": {
+          "n": 2,
+          "TP": 1,
+          "FP": 0,
+          "TN": 1,
+          "FN": 0,
+          "precision": 1,
+          "recall": 1,
+          "f1": 1,
+          "false_positive_rate": 0
+        },
+        "telugu": {
+          "n": 2,
+          "TP": 1,
+          "FP": 0,
+          "TN": 1,
+          "FN": 0,
+          "precision": 1,
+          "recall": 1,
+          "f1": 1,
+          "false_positive_rate": 0
+        }
+      },
+      "per_script": {
+        "latin_english": {
+          "n": 1,
+          "TP": 1,
+          "FP": 0,
+          "TN": 0,
+          "FN": 0,
+          "precision": 1,
+          "recall": 1,
+          "f1": 1,
+          "false_positive_rate": null
+        },
+        "native": {
+          "n": 3,
+          "TP": 1,
+          "FP": 0,
+          "TN": 2,
+          "FN": 0,
+          "precision": 1,
+          "recall": 1,
+          "f1": 1,
+          "false_positive_rate": 0
+        },
+        "romanized": {
+          "n": 4,
+          "TP": 3,
+          "FP": 0,
+          "TN": 1,
+          "FN": 0,
+          "precision": 1,
+          "recall": 1,
+          "f1": 1,
+          "false_positive_rate": 0
+        }
+      }
+    }
+  }
+}
