@@ -16,7 +16,8 @@
   color: var(--ink);
 }
 * { box-sizing: border-box; }
-body { margin: 0 auto; width: 404px; max-width: 100vw; background: var(--paper); }
+html { height: 600px; }
+body { margin: 0 auto; width: 404px; height: 600px; max-width: 100vw; background: var(--paper); }
 button, textarea, select, input { font: inherit; }
 button, a, summary { -webkit-tap-highlight-color: transparent; }
 button { cursor: pointer; }
