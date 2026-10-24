@@ -1,5 +1,6 @@
 """Tests for whole-word transliteration candidate generation."""
 
+import dataclasses
 import math
 
 import pytest
@@ -7,6 +8,7 @@ import pytest
 from fisher_transliteration.candidates import (
     Candidate,
     CandidateConfig,
+    CandidateGenerator,
     generate_candidates,
 )
 
@@ -84,3 +86,106 @@ def test_candidate_is_frozen_dataclass():
     candidate = Candidate("x", "hindi", 1.0)
     with pytest.raises(Exception):
         candidate.text = "y"
+
+
+def _composed_only(word, language, max_candidates=20):
+    """Candidates produced by the composition rules alone (lexicon disabled)."""
+    generator = CandidateGenerator(CandidateConfig(language=language, max_candidates=max_candidates))
+    generator.rules = dataclasses.replace(generator.rules, lexicon={})
+    return generator.generate(word)
+
+
+@pytest.mark.parametrize(
+    ("word", "language", "expected"),
+    [
+        ("udane", "tamil", "உடனே"),
+        ("ventane", "telugu", "వెంటనే"),
+        ("pampandi", "telugu", "పంపండి"),
+        ("password", "hindi", "पासवर्ड"),
+    ],
+)
+def test_scam_vocabulary_in_default_candidates(word, language, expected):
+    candidates = generate_candidates(word, CandidateConfig(language=language))
+    assert expected in _texts(candidates)
+
+
+@pytest.mark.parametrize(
+    ("word", "language", "expected"),
+    [
+        ("udane", "tamil", "உடனே"),
+        ("ventane", "telugu", "వెంటనే"),
+        ("pampandi", "telugu", "పంపండి"),
+    ],
+)
+def test_composition_rules_alone_reach_the_correct_spelling(word, language, expected):
+    assert expected in _texts(_composed_only(word, language))
+
+
+@pytest.mark.parametrize("language", ["hindi", "tamil", "telugu"])
+@pytest.mark.parametrize(
+    "word",
+    ["udane", "anuppunga", "pampandi", "ventane", "turant", "jaldi", "bhejo", "password", "otp", "pin", "kyc"],
+)
+def test_scam_lexicon_has_every_word_and_confidences_sum_to_one(language, word):
+    rules = CandidateGenerator(CandidateConfig(language=language)).rules
+    assert word in rules.lexicon
+    candidates = generate_candidates(word, CandidateConfig(language=language))
+    assert rules.lexicon[word] in _texts(candidates)
+    assert math.isclose(sum(c.confidence for c in candidates), 1.0, abs_tol=1e-9)
+
+
+@pytest.mark.parametrize(
+    ("language", "dental", "retroflex"),
+    [("tamil", "த", "ட"), ("telugu", "త", "ట")],
+)
+def test_t_has_dental_and_retroflex_alternatives(language, dental, retroflex):
+    candidates = _composed_only("ata", language)
+    by_text = {c.text: c.confidence for c in candidates}
+    dental_text = next(t for t in by_text if t.endswith(dental))
+    retroflex_text = next(t for t in by_text if t.endswith(retroflex))
+    assert math.isclose(by_text[dental_text], by_text[retroflex_text], rel_tol=1e-9)
+
+
+def test_d_has_retroflex_alternative_in_telugu_and_tamil():
+    assert any("డ" in t for t in _texts(_composed_only("ada", "telugu")))
+    assert any("ட" in t for t in _texts(_composed_only("ada", "tamil")))
+
+
+@pytest.mark.parametrize(
+    ("word", "language", "expected"),
+    [
+        ("canta", "hindi", "कंत"),
+        ("kampa", "hindi", "कंप"),
+        ("kanta", "telugu", "కంత"),
+        ("kampa", "telugu", "కంప"),
+        ("anga", "tamil", "அங்க"),
+    ],
+)
+def test_nasal_before_a_stop_can_render_as_the_nasal_mark(word, language, expected):
+    assert any(expected in t for t in _texts(_composed_only(word, language)))
+
+
+def test_nasal_mark_is_an_extra_branch_not_a_replacement():
+    texts = _texts(_composed_only("kanta", "telugu"))
+    assert any("ం" in t for t in texts)
+    assert any("న" in t for t in texts)
+
+
+def test_nasal_mark_needs_a_preceding_vowel_and_a_following_stop():
+    assert not any("ం" in t for t in _texts(_composed_only("kana", "telugu")))
+    assert not any("ं" in t for t in _texts(_composed_only("nta", "hindi")))
+
+
+@pytest.mark.parametrize("language", ["hindi", "tamil", "telugu"])
+def test_native_script_input_is_labelled_native_not_romanized(language):
+    candidates = generate_candidates("ओटीपी भेजें", CandidateConfig(language=language))
+    assert candidates
+    assert {c.script for c in candidates} == {"native"}
+    assert math.isclose(sum(c.confidence for c in candidates), 1.0, abs_tol=1e-9)
+
+
+def test_mixed_native_and_latin_input_keeps_native_label_on_original():
+    candidates = generate_candidates("ओटीपी send", CandidateConfig(language="hindi"))
+    original = next(c for c in candidates if c.source_rule == "original")
+    assert original.script == "native"
+    assert not any(c.script == "romanized" for c in candidates)

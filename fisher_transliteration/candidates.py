@@ -28,13 +28,19 @@ LEXICON_WEIGHT = 2.0  # whole-word sensitive terms outrank composed spellings
 ROMANIZED_PRIOR = 0.3  # prior mass kept for the untouched romanized text
 
 _WORD_RE = re.compile(r"([a-z]+)")
+# Hindi (Devanagari), Tamil and Telugu blocks: input containing any of these
+# characters is already (partly) in native script.
+_NATIVE_RE = re.compile("[\u0900-\u097f\u0b80-\u0bff\u0c00-\u0c7f]")
+# Stop-consonant units that make a preceding n or m render as an anusvara.
+_ANUSVARA_NASALS = frozenset({"n", "m"})
+_ANUSVARA_STOPS = frozenset({"t", "d", "k", "g", "p", "b", "j", "c"})
 
 
 @dataclass(frozen=True)
 class Candidate:
     """A single transliteration hypothesis."""
     text: str
-    script: str  # "hindi", "tamil", "telugu", or "romanized"
+    script: str  # "hindi", "tamil", "telugu", "romanized", or "native"
     confidence: float
     source_rule: Optional[str] = None
     ambiguous: bool = False
@@ -86,13 +92,17 @@ class CandidateGenerator:
             return []
 
         scored: List[Candidate] = []
+        # Input that already contains native-script characters is not romanized.
+        original_script = "native" if _NATIVE_RE.search(normalized) else "romanized"
         if self.config.include_romanized:
             scored.append(
-                Candidate(normalized, "romanized", ROMANIZED_PRIOR, "original")
+                Candidate(normalized, original_script, ROMANIZED_PRIOR, "original")
             )
 
         language = self.config.language
         for composed_text, score, source, ambiguous in self._transliterate(normalized):
+            if self.config.include_romanized and composed_text == normalized:
+                continue  # nothing was transliterated; the original already covers it
             scored.append(Candidate(composed_text, language, score, source, ambiguous))
 
         scored = [c for c in scored if c.confidence >= self.config.min_confidence]
@@ -193,6 +203,21 @@ class CandidateGenerator:
                 if token in rules.consonants:
                     base_text, base_branched = text, branched
                     base_prob = prob
+                    if (
+                        rules.anusvara
+                        and not pending
+                        and text
+                        and token in _ANUSVARA_NASALS
+                        and index < last
+                        and tokens[index + 1] in _ANUSVARA_STOPS
+                    ):
+                        # n/m after a vowel and before a stop: extra branch that
+                        # writes the nasal mark instead of the nasal consonant.
+                        next_states.append(
+                            (text + rules.anusvara, prob * rules.p_anusvara, False, True)
+                        )
+                        base_prob = prob * (1.0 - rules.p_anusvara)
+                        base_branched = True
                     if pending:
                         # consonant directly after consonant: virama or inherent
                         for mark, p in (

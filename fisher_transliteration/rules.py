@@ -5,7 +5,9 @@ Rules are split into the pieces needed to compose whole syllables:
 * consonants: romanized unit -> alternative base characters with probabilities,
 * vowels: romanized unit -> alternative (independent form, dependent matra) pairs,
 * virama: the vowel-killer mark of the script,
-* lexicon: whole-word renderings for sensitive terms (otp, password, ...).
+* lexicon: whole-word renderings for sensitive terms (otp, password, ...),
+* anusvara: the nasal mark that n or m before a stop consonant can become
+  (empty when the script has no such mark).
 
 For every romanized unit the alternative probabilities sum to 1.
 
@@ -46,6 +48,10 @@ class LanguageRules:
     # is followed directly by another consonant, and at the end of a word.
     p_virama_before_consonant: float = 0.6
     p_virama_final: float = 0.4
+    # Nasal mark for n/m directly before a stop consonant, and the probability
+    # of choosing it over the plain nasal consonant.
+    anusvara: str = ""
+    p_anusvara: float = 0.5
 
 
 def _c(*pairs: Tuple[str, float]) -> Tuple[Tuple[str, float], ...]:
@@ -102,17 +108,21 @@ HINDI = LanguageRules(
     lexicon={
         "otp": "ओटीपी", "pwd": "पीडब्लू", "pass": "पास",
         "pin": "पिन", "cvv": "सीवीवी", "kyc": "केवाईसी",
+        "password": "पासवर्ड", "turant": "तुरंत", "jaldi": "जल्दी", "bhejo": "भेजो",
+        "udane": "उडने", "ventane": "वेंटने", "anuppunga": "अनुप्पुंगा", "pampandi": "पंपंडि",
     },
+    anusvara="ं",
     p_virama_final=0.4,
 )
 
 TAMIL = LanguageRules(
     consonants={
         "k": _single("க"), "kh": _single("க"), "g": _single("க"), "gh": _single("க"),
-        "q": _single("க"),
+        "q": _single("க"), "ng": _single("ங்க"),
         "c": _single("ச"), "ch": _single("ச"), "s": _single("ச"),
         "j": _single("ஜ"), "jh": _single("ஜ"), "z": _single("ஜ"),
-        "t": _single("த"), "th": _single("த"), "d": _single("த"), "dh": _single("த"),
+        "t": _c(("த", 0.5), ("ட", 0.5)), "th": _single("த"),
+        "d": _c(("த", 0.5), ("ட", 0.5)), "dh": _single("த"),
         "n": _single("ன"), "p": _single("ப"), "ph": _single("ப"), "b": _single("ப"),
         "bh": _single("ப"), "f": _single("ஃப"), "m": _single("ம"),
         "y": _single("ய"), "r": _single("ர"), "l": _single("ல"), "ll": _single("ள"),
@@ -131,6 +141,8 @@ TAMIL = LanguageRules(
     lexicon={
         "otp": "ஓடிபி", "password": "கடவுச்சொல்", "pin": "பின்",
         "cvv": "சிவிவி", "kyc": "கேவைசி",
+        "udane": "உடனே", "anuppunga": "அனுப்புங்க", "pampandi": "பம்பண்டி",
+        "ventane": "வெண்டனே", "turant": "துரந்த்", "jaldi": "ஜல்தி", "bhejo": "பேஜோ",
     },
     p_virama_final=0.6,
 )
@@ -141,7 +153,8 @@ TELUGU = LanguageRules(
         "g": _single("గ"), "gh": _single("ఘ"), "ng": _single("ఙ"),
         "c": _single("చ"), "ch": _single("చ"),
         "j": _single("జ"), "jh": _single("ఝ"), "z": _single("జ"), "ny": _single("ఞ"),
-        "t": _single("త"), "th": _single("థ"), "d": _single("ద"), "dh": _single("ధ"),
+        "t": _c(("త", 0.5), ("ట", 0.5)), "th": _single("థ"),
+        "d": _c(("ద", 0.5), ("డ", 0.5)), "dh": _single("ధ"),
         "n": _single("న"), "p": _single("ప"), "ph": _single("ఫ"), "f": _single("ఫ"),
         "b": _single("బ"), "bh": _single("భ"), "m": _single("మ"),
         "y": _single("య"), "r": _single("ర"), "l": _single("ల"),
@@ -161,7 +174,10 @@ TELUGU = LanguageRules(
     lexicon={
         "otp": "ఓటీపీ", "password": "పాస్‌వర్డ్", "pin": "పిన్",
         "cvv": "సీవీవీ", "kyc": "కేవైసీ",
+        "udane": "ఉడనే", "anuppunga": "అనుప్పుంగ", "pampandi": "పంపండి",
+        "ventane": "వెంటనే", "turant": "తురంత్", "jaldi": "జల్దీ", "bhejo": "భేజో",
     },
+    anusvara="ం",
     p_virama_final=0.6,
 )
 
