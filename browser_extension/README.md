@@ -21,11 +21,12 @@ Use **Ctrl+Enter** / **Cmd+Enter** to analyze. Example buttons fill a synthetic 
 ## A roomier workspace
 
 Choose **Open a roomy workspace** (↗) in the popup header to open an independent tab with
-the input and findings side by side. It starts empty: neither your draft nor the
-selected page text is transferred. Page selection remains available only in the
-toolbar popup. Both views adapt to narrow screens and the system's light or dark
-appearance, respect reduced motion, and retain visible keyboard focus and
-high-contrast selection states.
+the input and findings side by side. When opened from the header, it starts empty: neither
+your draft nor the selected page text is transferred. When a workspace tab is opened from
+the menu, it starts with the selected text analyzed but never copied into the draft. Page
+selection remains available only in the toolbar popup. Both views adapt to narrow screens
+and the system's light or dark appearance, respect reduced motion, and retain visible keyboard
+focus and high-contrast selection states.
 
 Try the Hindi, Tamil, Telugu, and everyday-message samples alongside the original
 delivery and account examples. These are synthetic demonstrations of the current
@@ -125,9 +126,9 @@ Exit `0` means a report was produced for every input, regardless of the risk lev
 
 ## Permissions and data handling
 
-For the popup's selection button, `activeTab` provides temporary permission associated with the user invoking the extension. The code queries the active tab and injects the selection reader only after the user presses **Selection mode**. Injection is limited to frame `0` (the top frame), so selections inside embedded frames are not read via that button. A bounded preflight reads text data only after a text node is confirmed to intersect the selection and enforces raw code-point and text-node limits. Only then does the reader use the browser-rendered selection string, which preserves block separators and inline word joins. Form-control-only selections are deliberately excluded, and the reader does not access control values, the page URL, title, HTML, or unselected page text.
+For the popup's selection button, `activeTab` provides temporary permission associated with the user invoking the extension. The code queries the active tab and injects the selection reader only after the user presses **Selection mode**. Injection is limited to frame `0` (the top frame), so selections inside embedded frames are not read via that button. By contrast, the right-click path uses the browser's selection string, which can include text inside iframes. A bounded preflight in the button path reads text data only after a text node is confirmed to intersect the selection and enforces raw code-point and text-node limits. Only then does the reader use the browser-rendered selection string, which preserves block separators and inline word joins. Form-control-only selections are deliberately excluded, and the reader does not access control values, the page URL, title, HTML, or unselected page text.
 
-Users can also right-click any selected text and choose **Check selection with Fisher**. The right-click item sends only the text you selected, held in memory by the background service worker for about 30 seconds, or until the browser stops the extension worker, until the popup reads it, with no automatic scanning. This selection can include text inside iframes.
+Users can also right-click any selected text and choose **Check selection with Fisher**. The right-click path uses the browser's selection string, which can include text inside iframes. The right-click item sends only the text you selected, held in memory by the background service worker for about 30 seconds, or until the browser stops the extension worker, until the popup reads it, with no automatic scanning. If a workspace tab is opened from the menu, it starts with the selected text analyzed but never copied into the draft.
 
 The manifest requests exactly three permissions: `activeTab`, `contextMenus`, and `scripting`. It declares no host permissions, content scripts, `tabs`, or `notifications`, so Fisher never reads a page unless you select text and either trigger the context menu or press **Selection mode**. There is no automatic page scan and no page-analysis report.
 
