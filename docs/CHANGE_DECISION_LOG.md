@@ -7650,3 +7650,63 @@ Decision: Modernize extension popup and workspace layout with inline SVG icons, 
 
 None.
 
+---
+
+## Record LUNA-20261024-011
+
+- Lifecycle state: Finalized
+- Date/time: 2026-10-24 11:55 IST
+- Branch: `feat/v0.6-cleanup-and-transliteration`
+- Planned commit subject: `Add right-click context menu selection checking with background service worker`
+- Required trailer: `Luna-ID: LUNA-20261024-011`
+- Commit SHA: Pending
+- Prior commit SHAs in cycle: `3124ba4`, `16a6c80`, `8ca3527`, `eee4ef6`, `497fc58`
+- Parent SHA: `497fc58`
+- Affected paths:
+  - `browser_extension/manifest.json`
+  - `browser_extension/background.js`
+  - `browser_extension/popup.js`
+  - `browser_extension/popup.html`
+  - `browser_extension/README.md`
+  - `README.md`
+  - `fisher_extension_package.py`
+  - `tests/test_extension_package.py`
+  - `browser_extension/tests/selection.test.mjs`
+  - `tests/browser/extension.spec.mjs`
+  - `docs/CHANGE_DECISION_LOG.md`
+
+### Significant changes & decisions
+
+Decision: Implement a right-click "Check selection with Fisher" context menu item backed by a lightweight in-memory background service worker with strict 30-second TTL and 20,000 code-point bounds, supporting selections inside iframes.
+
+1. **Manifest Configuration (`browser_extension/manifest.json`)**:
+   - Added `"contextMenus"` to permissions alongside `"activeTab"` and `"scripting"` (exactly three permissions; no storage, tabs, host_permissions, or content_scripts).
+   - Declared `"background": { "service_worker": "background.js" }`.
+2. **Background Service Worker (`browser_extension/background.js`)**:
+   - Created standalone plain service worker containing exactly three event listeners: `onInstalled` (registers static title "Check selection with Fisher"), `contextMenus.onClicked` (bounds selection at 20,000 code points, stores in memory with timestamp, and triggers `chrome.action.openPopup()` with fallback to workspace view), and `runtime.onMessage` (replies to `fisher-pending-selection` within 30-second window, then clears state).
+   - Enforced zero network, storage, dynamic script execution, or telemetry APIs.
+3. **Popup Pending Selection Handling (`browser_extension/popup.js`)**:
+   - Query background worker for pending selection on startup via `{ type: "fisher-pending-selection" }`.
+   - On `ok`, executes message analysis and renders with `selection` context without copying raw input into the textarea or report. On `too_long`, renders the standard 20,000-character limit notice. Ignores `empty` and communication errors silently. Works in both popup and workspace views.
+4. **Packaging and Test Verification**:
+   - Added `background.js` to runtime and source file allowlists in `fisher_extension_package.py` and `tests/test_extension_package.py`.
+   - Added strict forbidden API checks on `background.js` and verified exact permissions (`activeTab`, `contextMenus`, `scripting`).
+   - Added unit tests covering all message reply states (`ok`, `too_long`, `empty`, `throws`, `runtime missing`, and workspace view).
+   - Added Playwright test verifying service worker registration and context menu availability.
+5. **Documentation Synchronization**:
+   - Updated `README.md`, `browser_extension/README.md`, and About disclosure in `browser_extension/popup.html` to document the context menu, 30s memory limit, iframe selection capability, and exact three permissions.
+
+### Verification
+
+- `npm test`: 180 passed, 0 failed.
+- `npm run test:browser`: 23 passed, 0 failed.
+- `uv run pytest -q`: 416 passed, 24 skipped, 383 subtests passed, 0 failed.
+
+### Remaining risks
+
+- `chrome.action.openPopup()` behavior: programmatic opening of extension popups is subject to browser user-gesture requirements; the background script includes automated fallback to `popup.html?view=workspace&from=menu`.
+
+### Correction history
+
+None.
+

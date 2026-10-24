@@ -94,14 +94,17 @@ and the 6,000-message confirmatory design are deferred from the immediate path.
 
 ## Browser extension and shared engine
 
-`browser_extension/` is a Manifest V3 Chrome/Edge prototype. It requests only
-`activeTab` and `scripting`, declares no host permissions, content scripts or
-background worker, and reads page text only when the user selects it and presses
-**Selection mode**. The popup checks pasted messages, links, and explicitly
-selected text with the shared engine. There is no network, telemetry, or storage
-API. Its four popup results are **High-risk patterns found**, **Worth a closer
-look**, **No clear pattern match**, and **Could not analyze**. No-match is
-explicitly not a safety result.
+`browser_extension/` is a Manifest V3 Chrome/Edge prototype. It requests exactly
+three permissions: `activeTab`, `contextMenus`, and `scripting`. It declares no host
+permissions or content scripts, and reads page text only when you select text and either
+choose "Check selection with Fisher" from the context menu or press **Selection mode** in
+the popup. The right-click item sends only the text you selected (which can include text
+inside iframes), held in memory by the background service worker for at most 30 seconds
+until the popup reads it, with no automatic scanning. The popup checks pasted messages,
+links, and explicitly selected text with the shared engine. There is no network,
+telemetry, or storage API. Its four popup results are **High-risk patterns found**,
+**Worth a closer look**, **No clear pattern match**, and **Could not analyze**. No-match
+is explicitly not a safety result.
 
 The v0.6 shared engine performs bounded structural link inspection for embedded
 credentials, IP addresses, internationalized hosts, unusual ports, defanged
