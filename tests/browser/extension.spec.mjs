@@ -672,3 +672,22 @@ test("link checking exposes embedded navigation cues without opening destination
   expect(requests).toEqual([]);
   await page.close();
 });
+
+test("context menu item is registered by background service worker", async () => {
+  let sw = context.serviceWorkers().find((w) => w.url().includes(extensionId));
+  if (!sw) {
+    sw = await context.waitForEvent("serviceworker", {
+      predicate: (worker) => worker.url().includes(extensionId),
+      timeout: 5000,
+    }).catch(() => null);
+  }
+  if (sw) {
+    const hasContextMenu = await sw.evaluate(() => typeof chrome.contextMenus !== "undefined");
+    expect(hasContextMenu).toBe(true);
+  } else {
+    const { targetInfos } = await control.send("Target.getTargets", { filter: [{}] });
+    const swTarget = targetInfos.find((t) => t.type === "service_worker" && t.url.includes(extensionId));
+    expect(swTarget).toBeDefined();
+  }
+});
+

@@ -17,6 +17,7 @@ OUTPUT_RELATIVE = Path("outputs/browser_extension")
 SOURCE_FILES = (
     "README.md",
     "analyzer.mjs",
+    "background.js",
     "detector.mjs",
     "icon-128.png",
     "icon-16.png",
@@ -36,6 +37,7 @@ SOURCE_FILES = (
 )
 RUNTIME_FILES = (
     "analyzer.mjs",
+    "background.js",
     "detector.mjs",
     "icon-128.png",
     "icon-16.png",
@@ -58,7 +60,8 @@ EXPECTED_MANIFEST = {
     "name": "Fisher Scam Signal Prototype",
     "version": "0.6.0",
     "description": "Locally checks pasted messages, links, and explicitly selected text for scam signals.",
-    "permissions": ["activeTab", "scripting"],
+    "permissions": ["activeTab", "contextMenus", "scripting"],
+    "background": {"service_worker": "background.js"},
     "icons": {
         "16": "icon-16.png",
         "32": "icon-32.png",

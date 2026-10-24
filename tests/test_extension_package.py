@@ -27,6 +27,7 @@ EXTENSION = ROOT / "browser_extension"
 EXPECTED_FILES = {
     "README.md",
     "analyzer.mjs",
+    "background.js",
     "detector.mjs",
     "icon-128.png",
     "icon-16.png",
@@ -46,6 +47,7 @@ EXPECTED_FILES = {
 }
 RUNTIME_FILES = {
     "analyzer.mjs",
+    "background.js",
     "detector.mjs",
     "icon-128.png",
     "icon-16.png",
@@ -128,11 +130,12 @@ class ExtensionPackageTests(unittest.TestCase):
         manifest = json.loads((EXTENSION / "manifest.json").read_text(encoding="utf-8"))
         self.assertEqual(manifest["manifest_version"], 3)
         self.assertEqual(manifest["version"], "0.6.0")
-        self.assertEqual(manifest["permissions"], ["activeTab", "scripting"])
+        self.assertEqual(manifest["permissions"], ["activeTab", "contextMenus", "scripting"])
+        self.assertEqual(manifest["background"], {"service_worker": "background.js"})
         self.assertNotIn("host_permissions", manifest)
         self.assertNotIn("optional_host_permissions", manifest)
         self.assertNotIn("content_scripts", manifest)
-        self.assertNotIn("background", manifest)
+        self.assertNotIn("storage", manifest.get("permissions", []))
         self.assertNotIn("externally_connectable", manifest)
         self.assertNotIn("web_accessible_resources", manifest)
         self.assertIn("selected", manifest["description"].lower())
@@ -212,6 +215,25 @@ class ExtensionPackageTests(unittest.TestCase):
         for label, pattern in prohibited.items():
             with self.subTest(label=label):
                 self.assertIsNone(pattern.search(combined))
+
+    def test_background_service_worker_contains_no_forbidden_apis(self) -> None:
+        bg_path = EXTENSION / "background.js"
+        self.assertTrue(bg_path.is_file())
+        bg = bg_path.read_text(encoding="utf-8")
+        forbidden = [
+            "fetch(",
+            "XMLHttpRequest",
+            "WebSocket",
+            "chrome.storage",
+            "localStorage",
+            "import",
+            "executeScript",
+            "tabs.onUpdated",
+            "webNavigation",
+        ]
+        for term in forbidden:
+            with self.subTest(term=term):
+                self.assertNotIn(term, bg, f"Forbidden API {term} found in background.js")
 
     def test_icon_assets_are_local_rgba_pngs_at_manifest_sizes(self) -> None:
         for filename, expected_size in ICON_FILES.items():
@@ -423,11 +445,14 @@ class DeterministicDistributionTests(unittest.TestCase):
             "description": lambda manifest: manifest.update(description="Other"),
             "permissions": lambda manifest: manifest.update(permissions=[]),
             "permissions_reordered": lambda manifest: manifest.update(
-                permissions=["scripting", "activeTab"]
+                permissions=["scripting", "contextMenus", "activeTab"]
             ),
             "icons": lambda manifest: manifest.pop("icons"),
             "tabs_permission": lambda manifest: manifest.update(
-                permissions=["activeTab", "scripting", "tabs"]
+                permissions=["activeTab", "contextMenus", "scripting", "tabs"]
+            ),
+            "storage_permission": lambda manifest: manifest.update(
+                permissions=["activeTab", "contextMenus", "scripting", "storage"]
             ),
             "host_permissions": lambda manifest: manifest.update(
                 host_permissions=["<all_urls>"]
@@ -435,7 +460,8 @@ class DeterministicDistributionTests(unittest.TestCase):
             "optional_host_permissions": lambda manifest: manifest.update(
                 optional_host_permissions=["<all_urls>"]
             ),
-            "background": lambda manifest: manifest.update(background={}),
+            "background_missing": lambda manifest: manifest.pop("background"),
+            "background_invalid": lambda manifest: manifest.update(background={}),
             "content_scripts": lambda manifest: manifest.update(content_scripts=[]),
             "web_accessible_resources": lambda manifest: manifest.update(
                 web_accessible_resources=[]

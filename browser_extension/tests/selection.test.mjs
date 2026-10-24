@@ -2018,3 +2018,167 @@ test("batch and selected-item exports contain allowlisted reports and line numbe
   assert.equal(saved[1].report.context, "Batch message · line 2");
   assert.doesNotMatch(JSON.stringify(saved[1].report), /SECRET/);
 });
+
+test("popup startup consumes pending selection message: ok status", async () => {
+  const { elements, documentApi } = popupFixture();
+  const saved = [];
+  const analyzedInputs = [];
+  const chromeApi = {
+    runtime: {
+      sendMessage: (message, callback) => {
+        assert.equal(message.type, "fisher-pending-selection");
+        if (typeof callback === "function") {
+          callback({ status: "ok", text: "Urgent: send OTP immediately" });
+        }
+        return Promise.resolve({ status: "ok", text: "Urgent: send OTP immediately" });
+      },
+    },
+  };
+
+  const controller = createPopupController({
+    documentApi,
+    chromeApi,
+    analyze: (input, options) => {
+      analyzedInputs.push({ input, options });
+      return analysisResult({
+        mode: options.mode,
+        risk: "high",
+        reasons: ["Test high risk reason"],
+        nextSteps: ["Do not share OTP"],
+      });
+    },
+    saveReport: (report, filename) => saved.push({ report, filename }),
+  });
+  if (controller.pendingSelectionOperation) {
+    await controller.pendingSelectionOperation;
+  }
+
+  assert.equal(analyzedInputs.length, 1);
+  assert.equal(analyzedInputs[0].input, "Urgent: send OTP immediately");
+  assert.equal(analyzedInputs[0].options.mode, "message");
+  assert.equal(elements.message.value, "");
+  assert.equal(elements.result.hidden, false);
+  assert.equal(elements["result-context"].textContent, "Selected text check");
+  assert.equal(elements.risk.textContent, "High-risk patterns found");
+  assert.match(elements.status.textContent, /Selected text analyzed locally/);
+
+  assert.equal(controller.downloadReport(), true);
+  assert.equal(saved.length, 1);
+  assert.equal(saved[0].report.context, "Selected text check");
+  assert.doesNotMatch(JSON.stringify(saved[0].report), /Urgent: send OTP/);
+});
+
+test("popup startup consumes pending selection message: too_long status", async () => {
+  const { elements, documentApi } = popupFixture();
+  const chromeApi = {
+    runtime: {
+      sendMessage: (_message, callback) => {
+        if (typeof callback === "function") {
+          callback({ status: "too_long" });
+        }
+        return Promise.resolve({ status: "too_long" });
+      },
+    },
+  };
+
+  const controller = createPopupController({
+    documentApi,
+    chromeApi,
+  });
+  if (controller.pendingSelectionOperation) {
+    await controller.pendingSelectionOperation;
+  }
+
+  assert.equal(elements.message.value, "");
+  assert.equal(elements.result.hidden, false);
+  assert.equal(elements.risk.textContent, "Could not analyze");
+  assert.match(elements.reasons.children[0].textContent, /20,000-character/);
+  assert.match(elements.status.textContent, /was not analyzed/);
+});
+
+test("popup startup ignores empty pending selection message", async () => {
+  const { elements, documentApi } = popupFixture();
+  const chromeApi = {
+    runtime: {
+      sendMessage: (_message, callback) => {
+        if (typeof callback === "function") {
+          callback({ status: "empty" });
+        }
+        return Promise.resolve({ status: "empty" });
+      },
+    },
+  };
+
+  const controller = createPopupController({
+    documentApi,
+    chromeApi,
+  });
+  if (controller.pendingSelectionOperation) {
+    await controller.pendingSelectionOperation;
+  }
+
+  assert.equal(elements.result.hidden, true);
+  assert.equal(elements["empty-state"].hidden, false);
+  assert.equal(elements.message.value, "");
+});
+
+test("popup startup handles sendMessage throwing without error", async () => {
+  const { elements, documentApi } = popupFixture();
+  const chromeApi = {
+    runtime: {
+      sendMessage: () => {
+        throw new Error("Port disconnected");
+      },
+    },
+  };
+
+  assert.doesNotThrow(() => {
+    const controller = createPopupController({
+      documentApi,
+      chromeApi,
+    });
+    assert.ok(controller);
+  });
+  assert.equal(elements.result.hidden, true);
+});
+
+test("popup startup handles missing chromeApi or runtime safely", () => {
+  const { elements, documentApi } = popupFixture();
+  assert.doesNotThrow(() => {
+    const controller1 = createPopupController({ documentApi, chromeApi: {} });
+    assert.ok(controller1);
+    const controller2 = createPopupController({ documentApi, chromeApi: undefined });
+    assert.ok(controller2);
+  });
+  assert.equal(elements.result.hidden, true);
+});
+
+test("popup startup pending selection works in workspace view (?view=workspace&from=menu)", async () => {
+  const { elements, documentApi } = popupFixture();
+  const chromeApi = {
+    runtime: {
+      sendMessage: (_message, callback) => {
+        if (typeof callback === "function") {
+          callback({ status: "ok", text: "Workspace menu text" });
+        }
+        return Promise.resolve({ status: "ok", text: "Workspace menu text" });
+      },
+    },
+  };
+
+  const controller = createPopupController({
+    documentApi,
+    chromeApi,
+    expandedWorkspace: true,
+  });
+  if (controller.pendingSelectionOperation) {
+    await controller.pendingSelectionOperation;
+  }
+
+  assert.equal(elements.selection.hidden, true);
+  assert.equal(elements.selection.disabled, true);
+  assert.equal(elements.result.hidden, false);
+  assert.equal(elements["result-context"].textContent, "Selected text check");
+  assert.equal(elements.message.value, "");
+});
+
