@@ -7537,6 +7537,68 @@ Decision: Remove the 3:1 public benign cap, decouple evaluation reporting by sou
 ### Correction history
 
 None.
+---
 
+## Record LUNA-20261024-009
 
+- Lifecycle state: Finalized
+- Date/time: 2026-10-24 11:00 IST
+- Branch: `feat/v0.6-cleanup-and-transliteration`
+- Planned commit subject: `Docs, detector rules, transliteration validation, and change register update`
+- Required trailer: `Luna-ID: LUNA-20261024-009`
+- Commit SHA: Pending
+- Prior commit SHAs in cycle: `dbeeb16`, `dd51326`, `f0bdc79`
+- Parent SHA: `f0bdc79`
+- Affected paths:
+  - `browser_extension/detector.mjs`
+  - `browser_extension/tests/realistic_messages.test.mjs`
+  - `docs/CHANGE_DECISION_LOG.md`
+  - `eval/handwritten.jsonl`
+  - `fisher_baselines/holdout.py`
+  - `fisher_transliteration/candidates.py`
+  - `fisher_transliteration/rules.py`
+  - `MODEL_CARD.md`
+  - `package.json`
+  - `README.md`
+  - `RELEASE_NOTES.md`
+  - `scripts/build_eval_set.py`
+  - `tests/test_build_eval_set.py`
+  - `tests/test_holdout.py`
+  - `tests/test_performance.mjs`
+  - `tests/test_transliteration.py`
+
+### Significant changes & decisions
+
+Decision: Refine detector rules for native/Romanized action verbs and telephone contact routes; enforce zero final virama for Hindi transliteration candidate generation with parameter adjustment; sync documentation and baselines from v0.5 to v0.6; deduplicate evaluation seed sets while supporting empty/missing handwritten sets; integrate performance benchmarks into the core test harness.
+
+1. **Step 1 ("Detect sensitive requests and phone contact routes")**:
+   - `browser_extension/detector.mjs`: Added native verbs/words `क्लिक करें`, `क्लिक`, `डालो`, `दर्ज`, and Romanized `daalo`, `dalo`, `enter karo` to sensitive request patterns.
+   - Added telephone contact route rule: `impersonation && hasPhoneNumber && (urgency || action) && !PROTECTIVE_ADVISORY` classifies as `high` risk.
+   - `browser_extension/tests/realistic_messages.test.mjs`: Added positive and benign unit tests for native KYC click requests, Romanized UPI PIN entry, electricity disconnection call threats, benign delivery calls, and casual contacts.
+2. **Step 2 ("Transliteration: Hindi final virama penalty and candidate validation")**:
+   - `fisher_transliteration/rules.py`: Set Hindi `p_virama_final = 0.02`.
+   - `fisher_transliteration/candidates.py`: Filtered out composed Hindi candidates ending in virama (`self.rules.virama`, `्`).
+   - `tests/test_transliteration.py`: Strengthened whole-word test asserting no Hindi candidate ends in virama (`assert not any(c.text.endswith("्") for c in candidates if c.script == "hindi")`). Restored `test_min_confidence_filter` and `test_ambiguous_mappings_flagged`. Verified `jaldi`, `turant`, `bhejo`, `password` return `जल्दी`, `तुरंत`, `भेजो`, `पासवर्ड` first.
+3. **Step 3 ("Docs, evaluation deduplication, and test performance integration")**:
+   - Updated stale v0.5 references to v0.6 in `README.md`, `MODEL_CARD.md`, `fisher_baselines/holdout.py` (including approach keys `rules_v0_6`), and `tests/test_holdout.py`, while preserving historical release archive notes.
+   - `RELEASE_NOTES.md`: Updated breaking changes and limitation notes; updated roadmap replacing obsolete "v0.6.0 planned for Q1 2027" with "Future Work (Phase 2)".
+   - `eval/handwritten.jsonl`: Cleared synthetic content to eliminate duplication with `eval/messages.template.jsonl`.
+   - `scripts/build_eval_set.py`: Updated `build_evaluation_set` to gracefully accept empty or missing handwritten files. Added tests `test_build_eval_set_accepts_empty_handwritten` and `test_build_eval_set_accepts_missing_handwritten` in `tests/test_build_eval_set.py`.
+   - `tests/test_performance.mjs` & `package.json`: Updated benchmark version to v0.6.0 and added `tests/test_performance.mjs` to the `npm test` script.
+4. **Step 4 ("Verification and change log update")**: Executed all three test suites and verified pass counts.
+
+### Verification
+
+- `npm test`: 174 passed, 0 failed (11 test files, including CLI and performance benchmarks).
+- `npm run test:browser`: 22 passed, 0 failed (Playwright browser extension test suite).
+- `uv run pytest -q`: 415 passed, 24 skipped, 365 subtests passed, 0 failed.
+
+### Remaining risks
+
+- Phone number parsing: Relies on regular expressions matching standard 10-digit/E.164 formats without live carrier validation or telecom prefix verification.
+- Transliteration coverage: 100+ rules per language handle high-frequency Romanized vocabulary and scam signals, but informal dialectal transliteration variants with heavy phonetic drift may still yield Romanized fallback.
+
+### Correction history
+
+None.
 
