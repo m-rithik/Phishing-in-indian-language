@@ -1,7 +1,6 @@
 import { analyzeContent } from "./analyzer.mjs";
 import { MAX_INPUT_CHARS } from "./detector.mjs";
 import { MAX_URL_CODE_POINTS } from "./links.mjs";
-import { requestSelectedPageText } from "./selection.mjs";
 
 const SUPPORTED_MODES = new Set(["message", "url", "batch"]);
 const SUPPORTED_BATCH_KINDS = new Set(["message", "url"]);
@@ -58,13 +57,8 @@ const PRESENTATION = {
 };
 
 const SELECTION_FAILURE_REASONS = {
-  empty: "No selected page text was found. Select text or paste it instead.",
   too_long:
     "Selected page text exceeds the 20,000-character limit; nothing was analyzed. Select a shorter excerpt instead.",
-  too_complex:
-    "The selection is too complex to read safely; nothing was analyzed. Paste a shorter excerpt instead.",
-  unavailable:
-    "Selected page text could not be accessed. Paste the text to analyze it instead.",
 };
 
 const EXAMPLES = {
@@ -233,7 +227,6 @@ export function createPopupController({
   documentApi,
   chromeApi,
   analyze = analyzeContent,
-  readSelection = requestSelectedPageText,
   saveReport,
   expandedWorkspace = false,
   yieldTask = () => new Promise((resolve) => setTimeout(resolve, 0)),
@@ -245,7 +238,6 @@ export function createPopupController({
   const counter = documentApi.querySelector("#counter");
   const analyzeButton = documentApi.querySelector("#analyze");
   const analyzeLabel = documentApi.querySelector("#analyze-label");
-  const selectionButton = documentApi.querySelector("#selection");
   const clearButton = documentApi.querySelector("#clear");
   const messageModeButton = documentApi.querySelector("#mode-message");
   const linkModeButton = documentApi.querySelector("#mode-link");
@@ -292,7 +284,6 @@ export function createPopupController({
   let currentMode = "message";
   let currentBatchKind = "message";
   let activeResultContext = currentMode;
-  let selectionBusy = false;
   let batchBusy = false;
   let activeReport;
   let activeBatchLineNumber;
@@ -333,14 +324,6 @@ export function createPopupController({
     batchReview.textContent = "0";
     batchNoMatch.textContent = "0";
     batchCannotAnalyze.textContent = "0";
-  }
-
-  function setSelectionBusy(busy) {
-    selectionBusy = busy;
-    const unavailableInMode = currentMode !== "message" || expandedWorkspace;
-    selectionButton.disabled = busy || unavailableInMode;
-    selectionButton.hidden = unavailableInMode;
-    selectionButton.setAttribute("aria-busy", busy ? "true" : "false");
   }
 
   function setEmptyState(visible) {
@@ -480,7 +463,6 @@ export function createPopupController({
   function supersede() {
     generation += 1;
     invalidateActiveReport();
-    setSelectionBusy(false);
     setBatchBusy(false);
     return generation;
   }
@@ -842,61 +824,6 @@ export function createPopupController({
     }
   }
 
-  async function analyzeSelection() {
-    if (expandedWorkspace) {
-      supersede();
-      hideResult();
-      status.textContent = "Page selection is unavailable in the expanded workspace.";
-      return;
-    }
-    if (currentMode !== "message") {
-      supersede();
-      render({
-        risk: "cannot_analyze",
-        reasons: ["Page selection is available only in Message mode."],
-        nextSteps: ["Switch to Message mode, or paste a link above."],
-      }, "selection");
-      status.textContent = "Selected page text was not read in Link mode.";
-      return;
-    }
-
-    const requestGeneration = supersede();
-    hideResult();
-    setSelectionBusy(true);
-    status.textContent = "Reading only the selected text from this page…";
-    let selected;
-    try {
-      selected = await readSelection(chromeApi);
-    } catch {
-      selected = { status: "unavailable" };
-    }
-    if (requestGeneration !== generation) return;
-    setSelectionBusy(false);
-
-    if (selected?.status === "ok") {
-      try {
-        const analysis = analyze(selected.text, { mode: "message" });
-        render(analysis, "selection");
-        activeReport = buildDownloadReport(analysis, "selection");
-        downloadReportButton.disabled = false;
-        status.textContent =
-          analysis?.risk === "cannot_analyze"
-            ? "Selected text did not produce a result. It was not copied into the draft."
-            : "Selected text analyzed locally. It was not copied into the draft. No input history is saved.";
-      } catch {
-        invalidateActiveReport();
-        renderAnalysisFailure("Selected text", "selection");
-      }
-      return;
-    }
-
-    const reason =
-      SELECTION_FAILURE_REASONS[selected?.status] ??
-      SELECTION_FAILURE_REASONS.unavailable;
-    render({ risk: "cannot_analyze", reasons: [reason] }, "selection");
-    status.textContent = "Selected page text was not analyzed.";
-  }
-
   function handleInput() {
     drafts[currentMode] = message.value;
     supersede();
@@ -951,7 +878,6 @@ export function createPopupController({
     moreExamples.hidden = !messageMode;
     batchOptions.hidden = !batchMode;
     analyzeLabel.textContent = batchMode ? "Analyze batch" : "Analyze locally";
-    setSelectionBusy(selectionBusy);
     updateInputValidation();
     return true;
   }
@@ -1011,9 +937,6 @@ export function createPopupController({
   }
 
   analyzeButton.addEventListener("click", analyzePastedText);
-  selectionButton.addEventListener("click", () => {
-    void analyzeSelection();
-  });
   clearButton.addEventListener("click", clearResult);
   editInputButton.addEventListener("click", editInput);
   locateBatchLineButton.addEventListener("click", locateBatchLine);
@@ -1057,7 +980,6 @@ export function createPopupController({
     : "message";
   batchKind.value = currentBatchKind;
   updateInputValidation();
-  setSelectionBusy(false);
   setBatchBusy(false);
   clearBatchPresentation();
   hideResult();
@@ -1113,7 +1035,6 @@ export function createPopupController({
 
   return {
     analyzePastedText,
-    analyzeSelection,
     editInput,
     clearResult,
     handleInput,
