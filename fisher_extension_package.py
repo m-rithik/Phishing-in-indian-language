@@ -205,6 +205,7 @@ def _inventory(
     if set(root) != ROOT_ENTRIES or set(tests) != {
         "analyzer.test.mjs",
         "detector.test.mjs",
+        "realistic_messages.test.mjs",
         "selection.test.mjs",
     }:
         raise PackagingError(message)
