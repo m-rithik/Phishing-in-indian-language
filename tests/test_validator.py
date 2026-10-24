@@ -994,6 +994,7 @@ class ValidatorTestCase(unittest.TestCase):
         size_report = validate_files(oversized, self.write_records("size_items.jsonl", []), self.write_records("size_annotations.jsonl", []), "draft")
         self.assertIn("file_size_limit", self.codes(size_report))
 
+    @unittest.skipIf(sys.platform == "win32", "POSIX-only filesystem feature")
     def test_only_regular_files_are_opened_without_path_echo(self) -> None:
         items_path = self.write_records("safe_items.jsonl", [])
         annotations_path = self.write_records("safe_annotations.jsonl", [])

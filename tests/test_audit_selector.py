@@ -558,6 +558,7 @@ class ValidationSafetyTests(unittest.TestCase):
         self.assertIn("duplicate_json_key", diagnostic_codes(report))
         self.assertNotIn("unsafe.example", rendered)
 
+    @unittest.skipIf(sys.platform == "win32", "POSIX-only filesystem feature")
     def test_non_regular_inputs_are_rejected_before_reading(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

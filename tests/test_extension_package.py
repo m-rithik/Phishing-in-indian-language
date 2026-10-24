@@ -229,7 +229,7 @@ class ExtensionPackageTests(unittest.TestCase):
         self.assertIn('type="module"', html)
         self.assertIn('id="analyze"', html)
         self.assertIn('id="selection"', html)
-        self.assertIn("Analyze selected text", html)
+        self.assertIn("Selection mode", html)
         self.assertIn('role="region"', html)
         self.assertIn('aria-labelledby="risk"', html)
         self.assertIn('aria-atomic="true"', html)
@@ -269,6 +269,7 @@ class ExtensionPackageTests(unittest.TestCase):
         self.assertNotIn("querySelector", selection)
 
 
+@unittest.skipIf(sys.platform == "win32", "POSIX-only filesystem feature")
 @unittest.skipIf(package is None, "packaging module not implemented")
 class DeterministicDistributionTests(unittest.TestCase):
     def test_exact_archive_bytes_metadata_and_runtime_only_members(self) -> None:

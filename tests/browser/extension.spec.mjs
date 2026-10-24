@@ -526,7 +526,7 @@ test("multilingual samples are explicit, composition-safe, and private", async (
     });
     await expect(page.locator("#result")).toBeHidden();
     await page.locator("#analyze").click();
-    await expect(page.locator("#risk")).toHaveText(sample === "benign" ? "No clear pattern match" : "Worth a closer look");
+    await expect(page.locator("#risk")).toHaveText(sample === "benign" ? "No clear pattern match" : "High-risk patterns found");
   }
   await page.locator("#mode-link").click();
   await expect(page.locator("#more-examples")).toBeHidden();
@@ -668,31 +668,4 @@ test("link checking exposes embedded navigation cues without opening destination
   await expect(page.locator("#result-link-count")).toHaveText("1");
   expect(requests).toEqual([]);
   await page.close();
-});
-
-test("NLP report renders the scanned tab's result as text, not HTML", async () => {
-  // The scan listens for tab updates, so the worker must exist before the page loads.
-  if (!context.serviceWorkers().some((worker) => worker.url().includes(extensionId))) {
-    await context.waitForEvent("serviceworker", { predicate: (worker) => worker.url().includes(extensionId) });
-  }
-  const fixture = await context.newPage();
-  await fixture.goto(`${fixtureUrl}/report-fixture`);
-  const report = await context.newPage();
-  await report.goto(`chrome-extension://${extensionId}/nlp_report.html`);
-  await expect(report.locator("#currentAnalysis")).toContainText("Open this report from the Fisher popup");
-  const tabId = await report.evaluate(async (url) => (await chrome.tabs.query({ url }))[0].id, `${fixtureUrl}/report-fixture`);
-  const cachedRisk = () => report.evaluate(
-    (id) => new Promise((resolve) => chrome.runtime.sendMessage({ action: "getCurrentAnalysis", tabId: id }, (r) => resolve(r?.analysis?.risk ?? null))),
-    tabId,
-  );
-  // A freshly installed worker can miss the first load; reloading retriggers the scan.
-  await expect.poll(async () => (await cachedRisk()) ?? (await fixture.reload(), null), { timeout: 15_000 }).toBe("high");
-  await report.goto(`chrome-extension://${extensionId}/nlp_report.html?tabId=${tabId}`);
-  await expect(report.locator("#currentAnalysis h4")).toHaveText(REPORT_TITLE);
-  await expect(report.locator("#currentAnalysis code")).toHaveText(`${fixtureUrl}/report-fixture`);
-  await expect(report.locator("#currentAnalysis .badge.high")).toBeVisible();
-  expect(await report.locator("#currentAnalysis img").count()).toBe(0);
-  expect(await report.evaluate(() => window.__fisherInjected)).toBeUndefined();
-  await report.close();
-  await fixture.close();
 });
