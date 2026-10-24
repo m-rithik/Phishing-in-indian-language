@@ -232,7 +232,9 @@ boundary.
 - `fisher_pilot/cli.py` exposes the `draft` and `ready` validation modes.
 - `browser_extension/` contains the explicit-action paste/selected-text browser
   interface, shared message/link analysis, and dependency-free unit tests.
-- `fisher.mjs` runs that same engine on stdin; batch mode returns counts only.
+- `fisher.mjs` runs that same engine on stdin; batch mode returns counts only,
+  and batch-detail returns per-line JSON. Both batch and batch-detail exit 1 if
+  any line cannot be analyzed.
 - `tests/test_baseline_pipeline.py` covers schema, privacy, Unicode grouping,
   residual routes, leakage, deterministic folds, output safety, and CLI errors.
 - `tests/test_baseline_selection.py` covers nested split isolation, candidate
@@ -305,7 +307,7 @@ uv run python scripts/translit_experiment.py
   prints one JSON result per input line (batch checks are limited to 500 lines
   per call, so larger sets are sent in chunks).
 
-The full Python test suite is designed for Linux/WSL; some filesystem tests are skipped on Windows.
+The full Python test suite is designed for Linux/WSL; filesystem tests requiring POSIX features (such as `os.mkfifo` and deterministic archive packaging) are skipped on Windows.
 
 ### Evaluation limitations
 

@@ -16,6 +16,7 @@ Usage:
 Read input from standard input. Analyze checks one complete message or link.
 Batch checks up to 500 physical lines and returns aggregate counts only.
 Batch-detail checks up to 500 physical lines and returns per-line JSON results.
+Batch and batch-detail exit 1 if any line cannot be analyzed.
 Input stays local; links are never opened. No reputation or safety guarantee.
 `;
 const MAX_BYTES = 1_048_576;

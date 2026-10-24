@@ -1,12 +1,12 @@
-# Fisher v0.5.0 Release Notes
+# Fisher v0.6.0 Release Notes
 
-**Release Date**: October 11, 2026
+**Release Date**: October 2026
 
 ---
 
 ## Summary
 
-Fisher v0.5 adds workspace, bulk-check, and comprehensive governance infrastructure to establish a reproducible foundation for the Phase 1 feasibility pilot.
+Fisher v0.6 adds multi-candidate Indic transliteration, expanded native-script detector rules, and held-out evaluation alongside workspace and bulk-check infrastructure.
 
 ---
 
@@ -229,7 +229,8 @@ Report bugs, feature requests, or governance concerns:
 
 | Version | Release | Status |
 |---------|---------|--------|
-| v0.5.0 | Oct 2026 | Current (rule-based prototype, no trained model) |
+| v0.6.0 | Oct 2026 | Current (rule-based prototype, no trained model) |
+| v0.5.0 | Oct 2026 | Superseded |
 | v0.4.0 | Aug 2026 | End of support |
 | v0.3.0 | Jun 2026 | End of support |
 | v0.1.0 | May 2026 | End of support |

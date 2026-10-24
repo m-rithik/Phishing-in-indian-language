@@ -1,11 +1,11 @@
-# Fisher Model Card v0.5
+# Fisher Model Card v0.6
 
 ## Model Details
 
 ### Model Description
 **Fisher** is a **local, rule-based phishing-signal detector** for Hindi, Tamil, Telugu, and English messages. It is **not** a trained machine learning model.
 
-- **Version**: 0.5.0
+- **Version**: 0.6.0
 - **Type**: Transparent rule-based system (no ML)
 - **Languages**: Hindi (Devanagari, Romanized), Tamil, Telugu, English-Indic code-mixed
 - **Input**: Text messages (20K character max) or URLs (2K character max)
@@ -204,7 +204,7 @@ Blind annotation by 3 independent reviewers; phishing vs. benign labels.
 | Version | Date | Changes |
 |---------|------|---------|
 | 0.5.0 | October 2026 | Initial model card (rule-based, no trained model) |
-| 0.6.0 | Planned | Multi-candidate transliteration support (Fisher v0.6) |
+| 0.6.0 | October 2026 | Multi-candidate transliteration support, expanded detector rules, held-out evaluation (Fisher v0.6) |
 | 1.0.0 | Planned | Trained phishing classifier (Fisher v1.0, post-pilot) |
 
 ---
@@ -222,7 +222,7 @@ Blind annotation by 3 independent reviewers; phishing vs. benign labels.
   author={[Name]},
   url={https://github.com/m-rithik/Phishing-in-indian-language},
   year={2026},
-  note={v0.5.0, rule-based prototype}
+  note={v0.6.0, rule-based prototype}
 }
 ```
 
@@ -230,7 +230,7 @@ Blind annotation by 3 independent reviewers; phishing vs. benign labels.
 
 ## Disclaimer
 
-**Fisher v0.5 is an unvalidated research prototype.**
+**Fisher v0.6 is an unvalidated research prototype.**
 
 - No phishing performance has been measured
 - Rules are transparent heuristics, not trained on authentic data

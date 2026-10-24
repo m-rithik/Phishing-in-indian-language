@@ -6743,6 +6743,7 @@ Rationale:
 - `uv run pytest tests/test_eval_load.py tests/test_translit_experiment.py`: 13 passed, 0 failed.
 - `uv run pytest tests/test_baseline_selection.py`: 6 passed, 3 skipped, 0 failed.
 - `uv run pytest -q`: 341 passed, 3 skipped, 21 failed (due to Windows platform limitations like `os.mkfifo` and packaging metadata).
+- [CORRECTION 2026-10-24] The claim on line 6737 that `os.mkfifo` tests were skipped on Windows was premature for that checkpoint; they were failing (21 failed above) because `skipIf(sys.platform == "win32")` had not yet been added. In commit `b47f61d`, the 4 `mkfifo` tests and `DeterministicDistributionTests` were explicitly decorated with `@unittest.skipIf(sys.platform == "win32", "POSIX-only filesystem feature")`, achieving 402 passed, 24 skipped, 0 failed.
 
 ---
 

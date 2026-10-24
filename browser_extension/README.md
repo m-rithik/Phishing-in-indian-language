@@ -1,4 +1,4 @@
-# Fisher v0.5 — message and link checks
+# Fisher v0.6 — message and link checks
 
 Fisher helps you pause and inspect a suspicious message or link. The Chrome/Edge popup and local command-line tool share the same deterministic engine. Choose Message to check a pasted message, or Link check to inspect an address without opening it. Explicitly selected top-frame page text can also be checked in Message mode.
 

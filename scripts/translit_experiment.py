@@ -344,8 +344,8 @@ def main():
     metrics_path = results_dir / "translit_metrics.json"
     examples_path = results_dir / "translit_examples.jsonl"
 
-    metrics_path.write_text(json.dumps(metrics, indent=2) + "\n", encoding="utf-8")
-    with examples_path.open("w", encoding="utf-8") as f:
+    metrics_path.write_text(json.dumps(metrics, indent=2) + "\n", encoding="utf-8", newline="\n")
+    with examples_path.open("w", encoding="utf-8", newline="\n") as f:
         for ex in examples:
             f.write(json.dumps(ex, ensure_ascii=False) + "\n")
 
