@@ -23,6 +23,19 @@ function loadMessages(filePath) {
   });
 }
 
+function getSourceGroup(source) {
+  if (typeof source === "string" && source.startsWith("public:UCI")) {
+    return "public UCI";
+  }
+  if (typeof source === "string" && source.startsWith("public:Dakshina")) {
+    return "public Dakshina";
+  }
+  if (source === "synthetic" || source === "consented") {
+    return "synthetic";
+  }
+  return source || "unknown";
+}
+
 function computeMetrics(items, isPositive) {
   let tp = 0;
   let fp = 0;
@@ -112,7 +125,7 @@ function main() {
     engine_version: ENGINE_VERSION,
     total_messages: evaluated.length,
     cannot_analyze: cannotAnalyzeCount,
-    note: "Rule-based detector; cannot_analyze counts as not positive. Small or synthetic data gives no real-world accuracy claim.",
+    note: "Rule-based detector; cannot_analyze counts as not positive. Metrics reported per source group without a single merged headline F1.",
     settings: {},
   };
 
@@ -123,8 +136,25 @@ function main() {
     console.log(`Setting: ${setting.label}`);
     console.log(`################################################`);
 
-    // Overall
-    const overall = computeMetrics(evaluated, setting.isPositive);
+    // Per Source Group
+    const bySource = {};
+    const sourceOrder = ["public UCI", "public Dakshina", "synthetic"];
+    const presentSources = [...new Set(evaluated.map((m) => getSourceGroup(m.source)))];
+    const sortedSources = presentSources.sort((a, b) => {
+      const idxA = sourceOrder.indexOf(a);
+      const idxB = sourceOrder.indexOf(b);
+      if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+      if (idxA !== -1) return -1;
+      if (idxB !== -1) return 1;
+      return a.localeCompare(b);
+    });
+
+    for (const src of sortedSources) {
+      bySource[src] = computeMetrics(
+        evaluated.filter((m) => getSourceGroup(m.source) === src),
+        setting.isPositive
+      );
+    }
 
     // Per Language
     const byLang = {};
@@ -146,13 +176,13 @@ function main() {
       );
     }
 
-    formatTable("Overall", { overall });
+    formatTable("Per Source Group", bySource);
     formatTable("Per Language", byLang);
     formatTable("Per Script", byScript);
 
     results.settings[setting.id] = {
       positive_risks: setting.positiveRisks,
-      overall,
+      per_source_group: bySource,
       per_language: byLang,
       per_script: byScript,
     };
