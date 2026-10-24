@@ -186,9 +186,9 @@
             color: #e65100;
         }
 
-        .badge.safe {
-            background: #e8f5e9;
-            color: #2e7d32;
+        .badge.no-match {
+            background: #eceff1;
+            color: #37474f;
         }
 
         .language-tag {
@@ -308,7 +308,7 @@
         </div>
 
         <div class="content">
-            <button class="back-btn" onclick="window.close()">← Back to Extension</button>
+            <button id="back-button" class="back-btn" type="button">← Back to Extension</button>
 
             <!-- Current Page Analysis Section -->
             <div class="section">
@@ -580,81 +580,6 @@ else {
         </div>
     </div>
 
-    <script>
-        // Analyze current active tab and display results
-        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-            const currentTab = tabs[0];
-            const analysisDiv = document.getElementById('currentAnalysis');
-
-            // Get analysis data from background script
-            chrome.runtime.sendMessage(
-                { action: 'getCurrentAnalysis', tabId: currentTab.id },
-                (response) => {
-                    if (response && response.analysis) {
-                        const analysis = response.analysis;
-                        let html = `
-                            <div>
-                                <h4>${currentTab.title}</h4>
-                                <p style="font-size: 12px; color: #666; margin: 5px 0 15px 0;">
-                                    URL: <code>${currentTab.url}</code>
-                                </p>
-                        `;
-
-                        // Risk badge
-                        let riskBadge = '';
-                        if (analysis.risk === 'high') {
-                            riskBadge = '<span class="badge high">🚨 HIGH-RISK</span>';
-                        } else if (analysis.risk === 'review') {
-                            riskBadge = '<span class="badge review">⚠️ REVIEW</span>';
-                        } else {
-                            riskBadge = '<span class="badge safe">✓ SAFE</span>';
-                        }
-
-                        html += `<div style="margin: 10px 0;">Risk Level: ${riskBadge}</div>`;
-
-                        // Language
-                        if (analysis.language) {
-                            const langMap = { hindi: 'Hindi 🇮🇳', tamil: 'Tamil 🇱🇰', telugu: 'Telugu', english: 'English 🇬🇧' };
-                            html += `<div>Language: <span class="language-tag ${analysis.language}">${langMap[analysis.language] || analysis.language}</span></div>`;
-                        }
-
-                        // Triggered patterns
-                        if (analysis.triggered && analysis.triggered.length > 0) {
-                            html += `<div style="margin-top: 15px;">
-                                <strong>Detected Patterns:</strong>
-                                <ul class="detected-list">`;
-                            analysis.triggered.forEach(pattern => {
-                                html += `<li>${pattern}</li>`;
-                            });
-                            html += `</ul></div>`;
-                        }
-
-                        // Stats
-                        if (analysis.stats) {
-                            html += `<div class="stats-box" style="margin-top: 15px;">
-                                <div class="stat-card">
-                                    <div class="number">${analysis.stats.urgencyCount}</div>
-                                    <div class="label">Urgency Keywords</div>
-                                </div>
-                                <div class="stat-card">
-                                    <div class="number">${analysis.stats.credentialCount}</div>
-                                    <div class="label">Credential Keywords</div>
-                                </div>
-                                <div class="stat-card">
-                                    <div class="number">${analysis.stats.phoneCount}</div>
-                                    <div class="label">Phone Keywords</div>
-                                </div>
-                            </div>`;
-                        }
-
-                        html += `</div>`;
-                        analysisDiv.innerHTML = html;
-                    } else {
-                        analysisDiv.innerHTML = `<p style="color: #999;">No analysis data available for this page. Visit a website and return here to see results.</p>`;
-                    }
-                }
-            );
-        });
-    </script>
+    <script src="nlp_report.js"></script>
 </body>
 </html>

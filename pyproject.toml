@@ -39,7 +39,6 @@ include = [
   "/fisher_transliteration",
   "/tests",
   "/fisher.mjs",
-  "/fisher_extension_package.py",
   "/package.json",
   "/package-lock.json",
   "/playwright.config.mjs",
