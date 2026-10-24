@@ -1114,7 +1114,11 @@ export function createPopupController({
   }
   if (nlpReportButton) {
     nlpReportButton.addEventListener("click", () => {
-      chrome.tabs.create({ url: chrome.runtime.getURL('nlp_report.html') });
+      // The report opens in a new tab, so tell it which page's cached result to show.
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        const query = Number.isInteger(tabs?.[0]?.id) ? `?tabId=${tabs[0].id}` : "";
+        chrome.tabs.create({ url: chrome.runtime.getURL(`nlp_report.html${query}`) });
+      });
     });
   }
   clearButton.addEventListener("click", clearResult);
@@ -1226,6 +1230,11 @@ if (typeof document !== "undefined") {
     expandedWorkspace = false;
   }
   if (expandedWorkspace) document.documentElement.dataset.view = "workspace";
+  // A toolbar popup sizes itself from its content, so it keeps the fixed width.
+  // The same page opened in a tab may shrink with a narrow window instead.
+  else if (!globalThis.chrome?.extension?.getViews?.({ type: "popup" })?.includes(globalThis)) {
+    document.documentElement.dataset.host = "tab";
+  }
   createPopupController({
     documentApi: document,
     chromeApi: globalThis.chrome,

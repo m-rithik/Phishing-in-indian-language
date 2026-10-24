@@ -6702,3 +6702,581 @@ Rationale: [OBSERVED] The staged audit found 5,649 insertions and 727 deletions 
 ### Correction history
 
 None. This is an append-only commit-preparation record; the commit SHA remains Pending until a later substantive Luna update can match the trailer and backfill it.
+
+## Decision record - LUNA-20261024-001
+
+### Held-out rules-versus-calibrated-lexical-model comparison checkpoint (v0.3)
+
+- Lifecycle: `IMPLEMENTED_LOCAL_UNCOMMITTED`; working tree uncommitted; no staging, commit, push, release, or publication performed or approved
+- Recorded: 24 October 2026; responsible agent: luna; branch: `main`
+- Planned commit subject: none — no commit requested or planned yet
+- Required trailer: a future commit, if approved, needs its own commit-preparation Luna record and trailer
+- Commit SHA: Not applicable — no commit planned
+- Parent SHA: `baf5feef12ca3dab6d96077b6696438c413becdb` (current `HEAD`)
+- Affected paths: `fisher_baselines/holdout.py` (new, untracked), `tests/test_holdout.py` (new, untracked), `fisher_baselines/cli.py`, `README.md`, `docs/research/SMSDHL_DATASET_AUDIT.md`, and this register
+- Ignored generated outputs (not tracked): `outputs/smsdhl_dravidian/holdout_seed_1729_a.json`, `outputs/smsdhl_dravidian/holdout_seed_1729_b.json`
+
+### Objective and starting gaps
+
+[OBSERVED - parent-supplied] The user requested a robust, validated model for the repository scenario. Phishing-labelled data remains blocked by governance, so the only trainable evidence is the user-supplied Dravidian spam/ham workbook (SHA-256 `24ca099ac1ffabc0b02fd491f57d577c56afb932bc81c5964a40e32eab9a023b`, verified identical across the two local Downloads copies). The workbook stays outside Git.
+
+[OBSERVED - parent-supplied] Gaps found before this change: the shipped v0.5 rule engine had never been measured on any labelled data; prior ML runs were out-of-fold only with default thresholds, with no held-out test, no calibration, no low-FPR operating point, and no robustness test.
+
+### Change inventory
+
+[OBSERVED - Luna inspection of `git status --short`, `git diff`, and the two untracked files]
+
+- `fisher_baselines/holdout.py` (350 lines, new): held-out protocol; rule-engine scoring through a `node` subprocess importing `browser_extension/analyzer.mjs` `analyzeContent`; `normalize_model_input` (NFKC + Unicode `Cf` removal); Platt calibration on grouped development out-of-fold scores; `threshold_for_fpr`; expected calibration error; script and length slices; template-group paired bootstrap; four perturbations; selection rule; `write_holdout_output`, which refuses an existing destination or a missing parent directory.
+- `tests/test_holdout.py` (105 lines, new): 10 tests covering the FPR threshold budget, calibration error, normalization, ordinal rule scores, group-disjoint split, approach set and ablation exclusion, aggregate-only and deterministic output, invalid FPR rejection, destination refusal, and CLI safe failure.
+- `fisher_baselines/cli.py`: new `holdout-evaluate` subcommand with `--workbook`, `--output`, `--sheet`, `--seed` (default 1729), and `--max-ham-fpr` (default 0.01, parsed by a new `_float` helper).
+- `README.md`: v0.3 held-out summary, example command, and module layout bullet for `fisher_baselines/holdout.py`.
+- `docs/research/SMSDHL_DATASET_AUDIT.md`: new section "Held-out comparison v0.3: rules versus calibrated lexical models" with protocol, result tables, robustness table, slices, reproducibility, and interpretation boundary.
+
+[OBSERVED - Luna inspection] `.gitignore` line 8 (`outputs/`) ignores the generated JSON outputs.
+
+### Decisions
+
+#### Decision D-218 - Add a once-scored group-disjoint held-out protocol
+
+Decision: Use `StratifiedGroupKFold(5)` over label+script strata and template groups; fold 0 is the held-out test partition (1,287 rows, 221 spam) and the remaining 5,146 rows are development. All calibration, threshold, and selection choices use development data only; the test partition is scored once.
+
+Rationale: [OBSERVED - parent-supplied and Luna spot-check of `holdout_seed_1729_a.json`] The split reports 0 development/test template-group crossings, 1,287 test rows, 221 test spam, and 5,146 development rows. [OBSERVED - code] `holdout_evaluate_prepared` raises `EvaluationError` if any group crosses the boundary. [DERIVED] A once-scored untouched partition is required to report an operating point that was not tuned on the scored data.
+
+Alternatives not selected:
+
+- Reuse out-of-fold-only cross-validation: rejected because it provides no untouched test partition.
+- Random split: rejected because it is prohibited by the project's duplicate/template leakage rules.
+- Nested cross-validation only: rejected because it was already done in v0.2 and does not yield a single once-scored test for an operating point.
+
+#### Decision D-219 - Compare three approaches with development-only calibration and a 1% ham-FPR operating point
+
+Decision: Baseline = shipped v0.5 rule engine (positive when risk is `review` or `high`); intermediate = character TF-IDF + class-balanced logistic regression; advanced = word+character TF-IDF + linear SVM. Each ML model receives Platt calibration fitted on grouped four-fold development out-of-fold scores; the threshold is the lowest whose development out-of-fold ham FPR is at most 1%; the model is then refitted on all development rows. Selection uses development out-of-fold spam recall at that threshold, then AP.
+
+Rationale: [OBSERVED - code] The selection key is `(spam_recall, average_precision)` on development out-of-fold metrics and is restricted to the two ML models. [ASSUMED - parent-supplied] The 1% ham-FPR operating point is a development design assumption, not a product claim. [DERIVED] Calibrated probabilities support a chosen low-false-alarm operating point and tiered warnings.
+
+Alternatives not selected:
+
+- Multilingual transformer encoder: rejected for this checkpoint. [OBSERVED - parent-supplied] `torch` is not installed (`ModuleNotFoundError: No module named 'torch'`); the large dependency and CPU cost are not justified before phishing data exists.
+- `CalibratedClassifierCV` ensemble: rejected because it needs more fits with no clear benefit.
+- Transliteration multi-candidate aggregation: rejected because the README defers it until the pilot, `fisher_transliteration` rule coverage is sparse, and the corpus has no language labels for Latin rows.
+
+#### Decision D-220 - Normalize ML model inputs with NFKC and Unicode Cf removal
+
+Decision: Apply NFKC plus removal of Unicode format controls (`Cf`), the same folding as the duplicate key, to ML model inputs. Keep the unnormalized word+character SVM as an ablation excluded from selection and bootstrap comparisons.
+
+Rationale: [OBSERVED - parent-supplied] With zero-width joiners inserted between characters, the unnormalized model's test spam recall fell to 0.000; the normalized model's stayed 0.923. The clean-test cost was one extra false positive (10 to 11). [OBSERVED - Luna spot-check] The ablation's clean-test confusion matrix is FP 10 / FN 17 and the selected model's is FP 11 / FN 17. [OBSERVED - code] The ablation is excluded from `ML_MODELS` selection and from `paired_bootstrap` keys.
+
+Caveat: [OBSERVED - parent-supplied] This decision was informed by test-partition perturbation, so the normalized result is not a fully blind estimate of the design choice.
+
+Alternatives not selected:
+
+- Also fold Cyrillic homoglyphs: deferred. [OBSERVED - parent-supplied] The measured homoglyph drop is small (0.923 to 0.910 recall).
+- No normalization: rejected because format-control insertion defeats the lexical model.
+
+#### Decision D-221 - Do not persist trained models or vocabularies
+
+Decision: The command writes one aggregate-only JSON file; no text, prediction, model, or vocabulary is persisted. The writer refuses an existing destination or a missing parent directory.
+
+Rationale: [DERIVED - parent-supplied] Vocabularies contain message fragments, so persisting them would cross the existing privacy boundary. [OBSERVED - code and tests] `write_holdout_output` raises on an existing path, symlink, or missing parent; `test_output_is_aggregate_only_and_deterministic` asserts that no input message appears in the serialized result.
+
+Alternatives not selected:
+
+- Persist the trained model for extension integration: deferred to a governance decision; no inference artifact exists as a result.
+
+### Measured results (seed 1729, test partition, at operating threshold)
+
+[OBSERVED - parent-supplied; F1 and confusion matrices also spot-checked by Luna from `holdout_seed_1729_a.json`]
+
+- Rules v0.5: precision 0.9375, recall 0.0679, F1 0.1266, ham FPR 0.0009, AP 0.2237, ROC AUC 0.5335, FP 1, FN 206; `high` returned for no test message.
+- Character LR, calibrated: precision 0.9507, recall 0.8733, F1 0.9104, ham FPR 0.0094, AP 0.9585, ROC AUC 0.9906, FP 10, FN 28.
+- Word+character linear SVM, calibrated (selected): precision 0.9488, recall 0.9231, F1 0.9358, ham FPR 0.0103, AP 0.9642, ROC AUC 0.9937, FP 11, FN 17; Brier 0.0175; ECE (10 bins) 0.0076.
+- Paired template-group bootstrap (1,000 resamples): selected minus rules F1 +0.809 [0.743, 0.870], recall +0.855 [0.807, 0.902]; selected minus character LR F1 +0.025 [-0.001, 0.052] (interval includes zero), recall +0.050 [0.018, 0.082].
+- Robustness, selected model (spam recall / ham FPR): uppercase 0.923 / 0.0103; Cyrillic homoglyphs 0.910 / 0.0084; zero-width joiners 0.923 / 0.0103; truncate to 64 code points recall 0.665.
+- Weak slices: Telugu spam recall 0.833 (18 spam); Latin-script ham FPR 0.029 (175 ham); both of the 2 short (at most 40 code points) spam messages missed.
+- Reproducibility: [OBSERVED - Luna check] the two same-seed outputs are identical after removing the per-approach `cost` timing fields; `holdout_seed_1729_a.json` SHA-256 is `d6f7c9622fb3d9a34c7284401ff7bbf4f7d5a06f4b930cded6f5a3b29e511a91` (the `_b` file hash differs only because of timing fields).
+- Cost on one local machine: [OBSERVED - parent-supplied] wall time 20–28 s; peak RSS 469–512 MB; selected model fit about 1.5 s, about 0.14 ms per message, about 4.8 MB pickled in memory (not saved).
+
+### Interpretation boundary and impacts
+
+- [OBSERVED] Task scope is spam/ham only. These results are not phishing performance, not campaign-disjoint, not per-language, and not a deployment false-positive rate.
+- [DERIVED] The rule engine's low spam recall is consistent with its phishing/credential-cue design and is not evidence about its phishing recall.
+- [OBSERVED - code] The rule engine is scored on `model_text`, which `fisher_baselines/data.py` produces with `defang_text`; [DERIVED] link-structure rules therefore cannot fire, so the comparison understates the rules' link checks.
+- Privacy: [OBSERVED - code] output is aggregate-only; the workbook and generated outputs stay outside Git.
+- Dependencies: [OBSERVED - diff] no dependency or extension change; the new module requires `node` at runtime for rule scoring.
+- Compatibility: [OBSERVED - diff] existing `audit`, `evaluate`, and `nested-evaluate` commands are unchanged; one subcommand is added.
+
+### Verification
+
+- [OBSERVED - parent-supplied] `uv run python -m unittest tests.test_holdout -v` — 10 tests OK. [OBSERVED - Luna] The file defines exactly 10 test methods.
+- [OBSERVED - parent-supplied] `uv run python -m unittest discover -s tests -p 'test_*.py'` — Ran 348, FAILED (failures=5, skipped=17). All 5 failures are in `tests/test_extension_package.py` (version 0.5.0 vs 0.5.2 drift, missing packaging module, popup text "Analyze selected text" not found, package allowlist) and were pre-existing: the same 5 failed on the unmodified tree (338 tests) before this change. Not addressed (out of scope).
+- [OBSERVED - parent-supplied] `npm test` — 148 pass, 0 fail.
+- [OBSERVED - Luna] `git status --short`, `git diff`, untracked-file reads, output SHA-256, same-seed comparison, and aggregate spot-check of split counts, F1, and confusion matrices.
+- Not run: Playwright browser tests (no extension change); Python lint/type checks (none configured); independent reviewer; multi-seed repetition.
+
+### Remaining risks and follow-up
+
+- [OBSERVED] Single seed and single split; small slices give unstable estimates.
+- [DERIVED] Defanged `model_text` understates the rule engine's link checks.
+- [OBSERVED - parent-supplied] The normalization choice was partly test-informed.
+- [OBSERVED - parent-supplied] Five pre-existing `tests/test_extension_package.py` failures remain; the full Python suite does not pass.
+- [OBSERVED] No persisted inference artifact; the learned model cannot be integrated into the extension yet.
+- [UNKNOWN] No independent review of the holdout protocol or code has been performed.
+- Follow-ups (owner: project owner): fix extension package test drift; repeat the holdout over multiple seeds; evaluate homoglyph folding; make a governance decision on persisting a model for extension integration; the phishing pilot remains the primary blocker.
+
+### Correction history
+
+None. This is an append-only checkpoint record; no commit SHA applies.
+
+## Decision record - LUNA-20261024-002
+
+### Extension test-contract alignment with v0.5.2 auto-scan and packager removal checkpoint
+
+- Lifecycle: `IMPLEMENTED_LOCAL_UNCOMMITTED`; working tree uncommitted; no staging, commit, push, release, or publication performed or approved
+- Recorded: 24 October 2026; responsible agent: luna; branch: `main`
+- Planned commit subject: none — no commit requested or planned yet
+- Required trailer: a future commit, if approved, needs its own commit-preparation Luna record and trailer
+- Commit SHA: Not applicable — no commit planned
+- Parent SHA: `baf5feef12ca3dab6d96077b6696438c413becdb` (current `HEAD`)
+- Affected paths: `tests/test_extension_package.py`, `package.json`, `package-lock.json`, `browser_extension/analyzer.mjs`, `browser_extension/tests/analyzer.test.mjs`, `browser_extension/tests/selection.test.mjs`, `tests/test_performance.mjs`, `pyproject.toml`, `.github/workflows/quality.yml`, `README.md`, `browser_extension/README.md`, and this register
+- Shared-path note: [OBSERVED] `README.md` also carries the uncommitted v0.3 holdout changes recorded in LUNA-20261024-001; this record covers only its extension, packager, and permissions edits
+
+### Objective and root cause
+
+[OBSERVED - parent-supplied user request] "Fix the 5 pre-existing failures in tests/test_extension_package.py (version drift 0.5.0 vs 0.5.2, missing packager module, popup text)." These are the five failures recorded as a remaining risk in LUNA-20261024-001.
+
+[OBSERVED - parent-supplied, consistent with Luna inspection of `git log` and `git show --stat baf5fee`] The user's own commits through `4d986b4` and later commits up to `9cb282b` deliberately expanded the extension: an auto-scan content script on `<all_urls>`, a background service worker, `tabs` and `notifications` permissions, `http`/`https` host permissions, the NLP report page, and manifest version 0.5.2. Commit `baf5fee` explicitly removed `fisher_extension_package.py` ("build packaging"). The tests still encoded the earlier explicit-action-only contract.
+
+[OBSERVED - Luna inspection] `browser_extension/manifest.json` (unchanged by this checkpoint) declares version `0.5.2`, permissions `activeTab`, `scripting`, `tabs`, `notifications`, host permissions `http://*/*` and `https://*/*`, a `<all_urls>` content script `content.js` at `document_end`, and service worker `background.js`. `fisher_extension_package.py` does not exist in the working tree. `git diff HEAD --stat` shows no change to `manifest.json`, `background.js`, `content.js`, `nlp_report.html`, or `popup.html`.
+
+### Change inventory
+
+[OBSERVED - Luna inspection of `git diff`]
+
+- `tests/test_extension_package.py` (223 lines; 820-line diff, mostly deletions): 26 test methods at `HEAD` reduced to 8. Removed the packager import, `RepositoryFixture`, `temporary_umask`, `test_packaging_module_is_present`, and the `DeterministicDistributionTests` class. `EXPECTED_FILES` and `RUNTIME_FILES` now include `background.js`, `content.js`, and `nlp_report.html`. `test_manifest_permissions_and_page_access_are_exact` asserts the exact v0.5.2 permissions, host permissions, content script, and service worker; the parent reports it still asserts no `optional_host_permissions`, `externally_connectable`, or `web_accessible_resources` and an unchanged CSP. The remote-code, network, storage, and eval checks now run per file over all text runtime files. The unsafe-HTML check exempts only `UNSAFE_HTML_EXCEPTIONS = {"background.js", "nlp_report.html"}`, with an inline comment giving the reason. `test_popup_labels_actions_and_non_claims` asserts `Selection mode`, `id="page-content"`, and `id="nlp-report"`.
+- Version coordination to `0.5.2`: `package.json`, `package-lock.json` (root and `packages[""]`), `browser_extension/analyzer.mjs` `ENGINE_VERSION`, `browser_extension/tests/analyzer.test.mjs`, `browser_extension/tests/selection.test.mjs`, and the `tests/test_performance.mjs` banner.
+- `pyproject.toml`: removed `/fisher_extension_package.py` from the sdist `include` list.
+- `.github/workflows/quality.yml`: removed the `uv run python -B -m fisher_extension_package` step.
+- `README.md` and `browser_extension/README.md`: replaced the claims "only `activeTab` and `scripting`" and "no standing host access, background worker, content scripts, messaging" with a description of v0.5.2 auto-scan. The new text covers the standing page access, the text and URL sent to the worker, the separate keyword rules, the badge and banner, console logging, and the blocked inline script in `nlp_report.html`. Removed "automatic page scanning, notifications" from the deferred list, removed the ZIP packager section and references, and updated button references to **Selection mode**.
+
+### Decisions
+
+#### Decision D-222 - Keep the v0.5.2 auto-scan behavior and update tests and documentation to match
+
+Decision: [OBSERVED - parent-supplied user answer "Keep new behavior"] Update the extension contract tests and documentation to the v0.5.2 auto-scan extension rather than reverting the extension.
+
+Rationale: [DERIVED] The user's commits made the expansion deliberately, so the tests were stale rather than the runtime being wrong. Exact assertions on the new permissions, host access, content script, and worker keep any further expansion detectable.
+
+Alternatives not selected:
+
+- Restore the old explicit-action-only contract: rejected by the user because it would remove auto-scan, the banner, and the NLP report.
+
+#### Decision D-223 - Drop the ZIP packager permanently
+
+Decision: [OBSERVED - parent-supplied user answer "Drop it for good"] Remove packager tests, the sdist include entry, the CI packaging step, and documentation of the ZIP build.
+
+Rationale: [OBSERVED] `baf5fee` removed `fisher_extension_package.py`. [DERIVED] Leaving the CI step would fail in CI, and leaving the sdist entry and documentation would reference a missing module.
+
+Alternatives not selected:
+
+- Restore the packager from history and update its allowlist: rejected by the user.
+
+#### Decision D-224 - Coordinate the product version at 0.5.2
+
+Decision: Align the npm package, lockfile, engine version constant, tests, and benchmark banner with the manifest's existing `0.5.2`.
+
+Rationale: [OBSERVED] The manifest was already at `0.5.2` from the user's commits.
+
+Alternatives not selected:
+
+- Revert the manifest to `0.5.0`: rejected because it contradicts the user's deliberate version bump.
+
+Impact: [OBSERVED - parent-supplied] Saved reports' `engineVersion` now reads `0.5.2` although the shared engine rules are unchanged.
+
+#### Decision D-225 - Exempt only two known files from the unsafe-HTML check
+
+Decision: Exempt `background.js` and `nlp_report.html` from the unsafe-HTML assertion while all other runtime text files remain checked. Keep the remote-code, network, storage, and eval checks applied to every text runtime file, including the three new ones.
+
+Rationale: [OBSERVED - Luna inspection] `background.js` and `nlp_report.html` both use `innerHTML`. [OBSERVED - parent-supplied] The `background.js` banner is built from fixed pattern strings, not page-derived content, so it is low risk. [OBSERVED - parent-supplied] The `nlp_report.html` inline script is blocked by the extension CSP. [DERIVED] A narrow named exemption is reviewable and keeps the check active for every other file.
+
+Alternatives not selected: [UNKNOWN] No alternative was supplied. Fixing the two files was out of the requested scope (see remaining risks).
+
+### Impacts
+
+- Security and privacy: [OBSERVED - documentation diff] The documentation now discloses that the content script sends up to 20,000 characters of visible page text and the page URL to the worker on every page load without user action, and that the worker logs page URLs and results to the extension console. [DERIVED] This is a privacy-relevant behavior change relative to the earlier documented contract. It was introduced by the user's commits and is now documented and asserted, not introduced by this checkpoint.
+- Compatibility: [OBSERVED] No extension runtime file changed except the `ENGINE_VERSION` constant in `analyzer.mjs`.
+- Dependencies: [OBSERVED - diff] No dependency versions changed; only the package version fields changed.
+- Tests: [DERIVED] 18 Python tests were removed: `test_packaging_module_is_present` and the 17 previously skipped `DeterministicDistributionTests` (26 − 8 = 18; 348 − 18 = 330).
+- Operational workflow: [OBSERVED] CI no longer builds a ZIP; the README tells users to load the `browser_extension` folder unpacked.
+
+### Verification
+
+- [OBSERVED - parent-supplied] `uv run python -m unittest tests.test_extension_package -v` — 8 tests OK. [OBSERVED - Luna] The file defines exactly 8 test methods.
+- [OBSERVED - parent-supplied] `uv run python -m unittest discover -s tests -p 'test_*.py'` — Ran 330, OK (0 failures, 0 skipped). Before: 348 run, 5 failures, 17 skipped.
+- [OBSERVED - parent-supplied] `npm test` — 148 pass, 0 fail.
+- [OBSERVED - parent-supplied] `uv build` — sdist and wheel built successfully.
+- [OBSERVED - parent-supplied] `git diff --check` clean.
+- [OBSERVED - parent-supplied] `npm run test:browser` — 18 passed, 4 failed. The same 4 fail on unmodified `HEAD`, verified in a temporary detached worktree that was then removed:
+  - "recommended action precedes evidence and the popup fits 320 pixels" (body width 404 vs 320);
+  - "expanded workspace opens empty...narrow screens" (horizontal overflow);
+  - "dark workspace and popup preserve contrast" and "bulk review..." (axe color-contrast 2.66 and 3.12 for `#315bd6`/`#4168db` on `#20242d`).
+  These are pre-existing, attributed by the parent to the new popup buttons, and not fixed (out of scope).
+- [OBSERVED - Luna] `git status --short`, `git diff` for every listed path, manifest parse, test-method counts at `HEAD` and in the working tree, `git show --stat baf5fee`, and greps of `background.js` and `nlp_report.html` for the defects below.
+- Not run: independent reviewer; manual stock-browser or assistive-technology checks.
+
+### Remaining risks and follow-up
+
+Defects found and not fixed (owner: project owner):
+
+- [OBSERVED - Luna grep, line 583 onward] `nlp_report.html` uses an inline `<script>`, which the `extension_pages` CSP (`script-src 'self'`) blocks, so its live-analysis section never runs [DERIVED from the CSP]. The script interpolates `currentTab.title` and `currentTab.url` into `innerHTML`. [DERIVED] If the script were moved out to make it run, this would become HTML injection into an extension page.
+- [OBSERVED - Luna grep, line 268] `background.js` sets the badge title `PAGE APPEARS SAFE` for `no_match`, contradicting the project rule that no-match is not a safety result.
+- [OBSERVED - Luna grep] `background.js` logs page URLs and full analysis details to the extension console. [OBSERVED - parent-supplied] It uses its own keyword detector rather than the shared engine.
+- [OBSERVED - parent-supplied] The `background.js` banner uses `innerHTML` in world `MAIN` with fixed strings; exempted, low risk.
+- [OBSERVED - Luna grep] `MODEL_CARD.md` and `RELEASE_NOTES.md` still state v0.5.0; left as historical, not updated.
+- [OBSERVED - parent-supplied] Four pre-existing Playwright failures (popup width, narrow-screen overflow, dark-mode contrast) remain.
+- [DERIVED] Removing the packager removes the deterministic distribution check, so no reproducible distributable artifact exists.
+- [UNKNOWN] No independent review of the reduced test contract has been performed.
+
+Supersession note: [OBSERVED] The LUNA-20261024-001 risk "Five pre-existing `tests/test_extension_package.py` failures remain" was accurate when recorded. It is resolved by this checkpoint and LUNA-20261024-001 is left unchanged.
+
+### Correction history
+
+None. This is an append-only checkpoint record; no commit SHA applies.
+
+## Decision record - LUNA-20261024-003
+
+### NLP report text-only rendering and no-match badge correction checkpoint
+
+- Lifecycle: `IMPLEMENTED_LOCAL_UNCOMMITTED`; working tree uncommitted; no staging, commit, push, release, or publication performed or approved
+- Recorded: 24 October 2026; responsible agent: luna; branch: `main`
+- Planned commit subject: none — no commit requested or planned yet
+- Required trailer: a future commit, if approved, needs its own commit-preparation Luna record and trailer
+- Commit SHA: Not applicable — no commit planned
+- Parent SHA: `baf5feef12ca3dab6d96077b6696438c413becdb` (current `HEAD`)
+- Affected paths: `browser_extension/nlp_report.js` (new, untracked), `browser_extension/nlp_report.html`, `browser_extension/popup.js`, `browser_extension/background.js`, `tests/test_extension_package.py`, `tests/browser/extension.spec.mjs`, `browser_extension/README.md`, and this register
+- Shared-path note: [OBSERVED] `tests/test_extension_package.py` and `browser_extension/README.md` also carry the uncommitted changes recorded in LUNA-20261024-002; this record covers only the edits described below
+
+### Objective
+
+[OBSERVED - parent-supplied user request] "Fix the extension defects: move nlp_report.html's inline script to a file and build it with textContent, and change the 'PAGE APPEARS SAFE' badge text so no-match isn't presented as safe." These are two of the defects listed as remaining risks in LUNA-20261024-002.
+
+### Change inventory
+
+[OBSERVED - Luna inspection of `git diff` and of untracked `browser_extension/nlp_report.js`]
+
+- `browser_extension/nlp_report.js` (102 lines, new): builds the report with `createElement`, `textContent`, `append`, and `replaceChildren` only, with no `innerHTML`. The page title, URL, triggered patterns, language, and stats are inserted as text. A language CSS class is applied only for keys in a fixed `LANGUAGES` map (`Object.hasOwn`). Stats are coerced with `Number(...) || 0`. Unknown risk values fall back to the `no_match` badge. `tabId` is read from the query string and accepted only if it matches `/^\d{1,15}$/`. The script calls `chrome.tabs.get`, then sends the runtime message `getCurrentAnalysis`. It shows explicit messages for a missing `tabId`, a closed tab, or no cached data. The Back button listener now lives here.
+- `browser_extension/nlp_report.html`: the inline `<script>` block (75 lines, which interpolated `currentTab.title`/`currentTab.url` into `innerHTML`) is replaced by `<script src="nlp_report.js"></script>`. Inline `onclick="window.close()"` is replaced by `id="back-button"` with `type="button"`. `.badge.safe` (green) is replaced by a neutral grey `.badge.no-match`. The `no_match` label changes from `✓ SAFE` to `NO CLEAR MATCH — not a safety result`. [OBSERVED - grep] No inline script or `on*=` handler remains in `nlp_report.html` or `popup.html`.
+- `browser_extension/popup.js`: the NLP Report button queries the active tab and opens `nlp_report.html?tabId=<id>`, adding the parameter only when `Number.isInteger(tabs[0].id)`.
+- `browser_extension/background.js`: in the `no_match` badge configuration, badge text changes from `✓` to `''` (no badge), colour from `#388e3c` to `#607d8b`, emoji from `✓` to `ℹ️`, and title from `PAGE APPEARS SAFE` to `No clear pattern match (not a safety result)`.
+- `tests/test_extension_package.py`: `nlp_report.js` is added to `EXPECTED_FILES` and `RUNTIME_FILES`, so it is subject to the no-network/storage/eval/remote-code/unsafe-HTML checks. `UNSAFE_HTML_EXCEPTIONS` is reduced to `{"background.js"}`. New tests: `test_extension_pages_have_no_inline_script_or_handlers` and `test_no_match_is_never_presented_as_safe`. [OBSERVED - Luna] The file now defines 10 test methods.
+- `tests/browser/extension.spec.mjs`: the fixture server serves `/report-fixture`, whose title contains a literal `<img src=x onerror="window.__fisherInjected=1">` string, plus phishing text. The new test "NLP report renders the scanned tab's result as text, not HTML":
+  - waits for the extension service worker;
+  - asserts the no-`tabId` message;
+  - polls the background cache until risk is `high`, reloading the fixture on a miss;
+  - opens `nlp_report.html?tabId=...`;
+  - asserts that `h4` equals the literal title, `code` equals the URL, `.badge.high` is visible, there are zero `img` elements, and `window.__fisherInjected` is undefined.
+- `browser_extension/README.md`: replaces the sentence saying the inline script is blocked and does not run with the current behaviour (the tab-scoped report, text-only rendering, no badge for no-match, and the worker-memory cache limitation).
+
+### Decisions
+
+#### Decision D-226 - Render the NLP report from an external script using text-only DOM construction
+
+Decision: Move the report logic to `nlp_report.js` and build all page-derived and analysis-derived content with `textContent` and DOM node construction, never `innerHTML`.
+
+Rationale: [OBSERVED - code at `HEAD`] The inline script was blocked by the `extension_pages` CSP (`script-src 'self'`), and it interpolated the tab title and URL into `innerHTML`. [DERIVED] An external file satisfies the CSP, and text-only construction removes the HTML-injection class that would have appeared once the script could run. [OBSERVED - parent-supplied] The browser test confirms that a title containing an `<img onerror>` payload renders as literal text with no `img` element and no injected global.
+
+Alternatives not selected:
+
+- Keep `innerHTML` with an HTML-escaping helper: rejected because `textContent` removes the injection class entirely and is what the user asked for.
+
+#### Decision D-227 - Pass the scanned tab's id to the report explicitly
+
+Decision: The popup opens `nlp_report.html?tabId=<id>`, and the report accepts only a 1–15 digit `tabId`.
+
+Rationale: [OBSERVED - parent-supplied, consistent with the `HEAD` code removed in the diff] The old report queried the active tab from inside itself. Because it opens in a new tab, it would look up its own tab and never find the scanned page's result. [OBSERVED - parent-supplied] Two validation bugs were caught by the new browser test and fixed before the final runs:
+- `Number(null) === 0` accepted a missing `tabId` as tab 0, so the check was replaced with a digit regex.
+- The first regex, `\d{1,9}`, rejected real Chrome tab ids, which were observed to be 10 digits (for example `1253206578`), so it was widened to `\d{1,15}`.
+
+Alternatives not selected: [UNKNOWN] No alternative was supplied for the tab-passing mechanism.
+
+#### Decision D-228 - Show no badge for no-match and label it as not a safety result
+
+Decision: For `no_match`, the toolbar badge text is empty and the title reads `No clear pattern match (not a safety result)`. The report shows a neutral grey `NO CLEAR MATCH — not a safety result` label.
+
+Rationale: [OBSERVED - project rule restated in README] No-match is explicitly not a safety result. [DERIVED] A green check mark or "SAFE" wording contradicted that rule.
+
+Alternatives not selected:
+
+- Keep a neutral no-match badge such as `?`: rejected because any badge on quiet pages invites a "checked and fine" reading, and no badge matches the popup's "no clear match" stance.
+
+#### Decision D-229 - Keep the analysis cache in service-worker memory
+
+Decision: Do not move the per-tab cache to persistent or session storage in this checkpoint.
+
+Rationale: [OBSERVED - parent-supplied] The package tests prohibit storage APIs, and the user did not ask for persistence.
+
+Alternatives not selected:
+
+- Store the analysis in `chrome.storage.session` so it survives worker shutdown: rejected for now for the reasons above.
+
+### Impacts
+
+- Security: [DERIVED] The HTML-injection path in the report is removed, and the report now runs under the existing CSP. [OBSERVED] `background.js` remains the only file exempted from the unsafe-HTML check, for its fixed-string banner.
+- User-facing behaviour: [OBSERVED - diff] Quiet pages no longer show a green toolbar check mark. The report now renders, previously it was blocked, and shows the result for the page the popup was opened on.
+- Privacy: [OBSERVED - diff] No new data flow. The report reads the existing in-memory cache through the existing `getCurrentAnalysis` message.
+- Permissions and dependencies: [OBSERVED - Luna inspection] There is no manifest or dependency change in this checkpoint.
+
+### Verification
+
+- [OBSERVED - parent-supplied] `uv run python -m unittest discover -s tests -p 'test_*.py'` — Ran 332, OK.
+- [OBSERVED - parent-supplied] `uv run python -m unittest tests.test_extension_package` — 10 tests OK. [OBSERVED - Luna] The file defines exactly 10 test methods.
+- [OBSERVED - parent-supplied] `npm test` — 148 pass, 0 fail.
+- [OBSERVED - parent-supplied] `npx playwright test -g "NLP report"` — passed in 8 of 8 consecutive runs after the regex fix.
+- [OBSERVED - parent-supplied] `npm run test:browser` — 19 passed, 4 failed. The 4 failures are the same pre-existing ones as on `HEAD`: popup width 404 vs 320, narrow-screen overflow, and dark-mode contrast (two tests).
+- [OBSERVED - parent-supplied] `git diff --check` clean.
+- [OBSERVED - Luna] `git status --short`; `git diff` for each listed path; full read of `nlp_report.js`; greps confirming no inline script or `on*=` handlers in `nlp_report.html`/`popup.html`, no `innerHTML` or `SAFE` text in `nlp_report.js`, and that `background.js` emits only `no_match`, `review`, and `high` risk values.
+- Not run: manual check in a real installed Chrome profile; independent review.
+
+### Remaining risks and follow-up
+
+- [ASSUMED - parent-supplied, based on the MV3 worker lifecycle, not observed here] The cache lives in service-worker memory, so after Chrome stops an idle worker the report shows "No analysis data" until the page is reloaded.
+- [OBSERVED - test code] The browser test reloads the fixture when the cache is empty, so it does not measure how often a freshly installed worker misses the first page load.
+- [DERIVED - parent-supplied] If the popup is opened as the workspace tab, the report button passes that extension tab's id and the report shows no data.
+- [OBSERVED] `background.js` still logs page URLs and analysis to the extension console and uses its own keyword detector rather than the shared engine.
+- [OBSERVED - grep, line 333] The `background.js` in-page banner still uses `innerHTML`; the parent reports it is built from fixed strings.
+- [OBSERVED - parent-supplied] The four pre-existing Playwright failures remain.
+- [UNKNOWN] Real-profile Chrome behaviour and an independent review are not established.
+- Follow-up owner: project owner.
+
+Status note on LUNA-20261024-002: [OBSERVED] Two defects listed under its remaining risks are addressed by this checkpoint and LUNA-20261024-002 is left unchanged:
+- the `nlp_report.html` inline-script and `innerHTML` interpolation defect;
+- the `PAGE APPEARS SAFE` no-match badge.
+
+### Correction history
+
+None. This is an append-only checkpoint record; no commit SHA applies.
+
+## Decision record - LUNA-20261024-004
+
+### Popup host-aware width and dark-mode transition fix for the four Playwright failures checkpoint
+
+- Lifecycle: `IMPLEMENTED_LOCAL_UNCOMMITTED`; working tree uncommitted; no staging, commit, push, release, or publication performed or approved
+- Recorded: 24 October 2026; responsible agent: luna; branch: `main`
+- Planned commit subject: none — no commit requested or planned yet
+- Required trailer: a future commit, if approved, needs its own commit-preparation Luna record and trailer
+- Commit SHA: Not applicable — no commit planned
+- Parent SHA: `baf5feef12ca3dab6d96077b6696438c413becdb` (current `HEAD`)
+- Affected paths: `browser_extension/styles.css`, `browser_extension/popup.js`, `tests/browser/extension.spec.mjs`, and this register
+- Shared-path note: [OBSERVED] `browser_extension/popup.js` (the NLP Report `tabId` change) and `tests/browser/extension.spec.mjs` (the report fixture and test) also carry the uncommitted changes recorded in LUNA-20261024-003; this record covers only the edits described below
+- Generated evidence (ignored, not tracked): `outputs/browser_extension/workspace-light.png` and `outputs/browser_extension/v0.5-320-result.png` [OBSERVED - Luna: both exist and are ignored by `.gitignore`]
+
+### Objective and root causes
+
+[OBSERVED - parent-supplied user request] "Fix the 4 failing Playwright tests: popup width 404 vs 320, narrow-screen overflow, and dark-mode button contrast." These are the four pre-existing failures listed in LUNA-20261024-002 and LUNA-20261024-003.
+
+Root cause 1, dark-mode contrast. Affected tests: "dark workspace and popup preserve contrast…" and "bulk review…".
+- [OBSERVED - parent-supplied] axe flagged `#page-content` and the other new page-analysis buttons. Computed steady-state dark colours were compliant (`#19264b` on `#adc0ff`; `#adc0ff` on transparent).
+- [OBSERVED - parent-supplied] The rule `.page-analysis-buttons button { transition: all 140ms ease }` animated colour and background when the test switched colour scheme. axe sampled mid-transition (`#315bd6`, the light accent, and `#4168db`, a blend, on `#20242d`).
+- [OBSERVED - Luna diff] The `transition: all` rule existed at `HEAD`.
+
+Root cause 2, popup width and narrow-screen overflow. Affected tests: "…popup fits 320 pixels" and "expanded workspace…adapts to narrow screens".
+- [OBSERVED - Luna inspection of `git show a42e8bf` and `styles.css`] The user's commit `a42e8bf` replaced `body { … width: 404px; … max-width: 100vw; … }` with `html, body { … width: 404px; … }` and added `.shell { width: 404px; … }`. The parent also attributes the change to `03010e2` and `ada851f`.
+- [OBSERVED - parent-supplied] At a 320px viewport the body stayed 404px. In the workspace, `html` and `.shell` were also stuck at 404px because the workspace rule only reset `body`. That caused overflow at 768, 640, and 320px and confined the workspace shell to 404px even at 1440px.
+
+### Change inventory
+
+[OBSERVED - Luna inspection of `git diff`]
+
+- `browser_extension/popup.js` bootstrap: when the page is not the workspace view and `globalThis.chrome?.extension?.getViews?.({ type: "popup" })?.includes(globalThis)` is not true, it sets `document.documentElement.dataset.host = "tab"`.
+- `browser_extension/styles.css`:
+  - adds `:root[data-host="tab"] { width: auto; }` and `:root[data-host="tab"] body, :root[data-host="tab"] .shell { width: auto; max-width: 404px; }`;
+  - workspace rules now set `width: auto` on `html`, `body`, and `.shell`, and `body` keeps `max-width: 1200px`;
+  - the page-analysis button transition is narrowed to `transform`, `box-shadow`, and `filter`.
+
+  The toolbar popup keeps the user's fixed `html, body` and `.shell` width of 404px. [OBSERVED - Luna grep] The rejected `@media (max-width: 403px)` rule is not present.
+- `tests/browser/extension.spec.mjs`: the real-toolbar test now polls `document.body.getBoundingClientRect().width` and expects `404`. No existing assertion was loosened or removed in this checkpoint.
+
+### Decisions
+
+#### Decision D-230 - Restrict button transitions to non-colour properties
+
+Decision: Animate only `transform`, `box-shadow`, and `filter` on `.page-analysis-buttons button`.
+
+Rationale: [OBSERVED - parent-supplied] Steady-state dark colours pass contrast. The failure came from colour and background being sampled mid-transition. [DERIVED] Excluding colour properties from the transition makes a colour-scheme switch apply immediately while keeping the hover lift and shadow effects.
+
+Alternatives not selected:
+
+- Loosen or delete the contrast assertions: rejected because it would hide real accessibility defects.
+
+#### Decision D-231 - Size the page by host: fixed in the toolbar popup, shrinkable in a tab
+
+Decision: Detect at bootstrap whether the page is the toolbar popup. The toolbar popup keeps the fixed 404px width. A tab-hosted page gets `data-host="tab"` and may shrink to the viewport up to 404px. The workspace view uses `width: auto` throughout.
+
+Rationale:
+- [OBSERVED - parent-supplied] A first attempt, `@media (max-width: 403px) { html, body, .shell { width: 100% } }`, made the four tests pass. A new assertion in the real toolbar test then measured the real toolbar popup body at 235px instead of 404px.
+- [DERIVED - parent-supplied] Viewport-relative sizing collapses a toolbar popup, which is consistent with the user's removal of `max-width: 100vw` in `a42e8bf`.
+- [OBSERVED - parent-supplied] The new 404px toolbar assertion guards against reintroducing that collapse.
+- [OBSERVED - parent-supplied] `chrome.extension.getViews` gives a synchronous answer before layout assertions run.
+
+Alternatives not selected:
+
+- Restore `max-width: 100vw`: rejected because it reintroduces the popup collapse the user fixed.
+- CSS media query: rejected because the real popup collapsed to a measured 235px.
+- Asynchronous `chrome.tabs.getCurrent` detection: rejected because it is asynchronous and could race with the layout assertions.
+- Loosen or delete the 320px and overflow assertions: rejected because it would hide real layout defects.
+
+### Impacts
+
+- User-facing behaviour: [DERIVED - diff] The toolbar popup width is unchanged at 404px. The popup page opened in a narrow tab now fits the viewport instead of overflowing. The expanded workspace now uses the available width up to 1200px instead of being confined to 404px. Dark-mode colour changes apply without a transition.
+- Permissions, privacy, dependencies: [OBSERVED - diff] No manifest, data-flow, or dependency change.
+- Compatibility: [ASSUMED - parent-supplied] `chrome.extension.getViews` is available to MV3 extension pages. If it is unavailable, the optional chaining treats every non-workspace page as a tab-hosted page.
+
+### Verification
+
+- [OBSERVED - parent-supplied] `npm run test:browser` — 23 passed, 0 failed, in three consecutive runs. Before: 19 passed, 4 failed.
+- [OBSERVED - parent-supplied] `npm test` — 148 pass, 0 fail.
+- [OBSERVED - parent-supplied] `uv run python -m unittest discover -s tests -p 'test_*.py'` — Ran 332, OK.
+- [OBSERVED - parent-supplied] `git diff --check` clean.
+- [OBSERVED - parent-supplied] Test screenshots were inspected visually. `outputs/browser_extension/workspace-light.png` shows the workspace at full width with a two-column layout. `outputs/browser_extension/v0.5-320-result.png` fits the 320px width with no horizontal overflow. [OBSERVED - Luna] Both files exist (modified 24 October 06:07). Luna did not view them.
+- [OBSERVED - Luna] `git status --short`, `git diff` for the three paths, `git show a42e8bf` for the width history, and greps of `styles.css` for the fixed widths and the absence of the rejected media query.
+- Not run: manual check in an installed headed Chrome/Edge toolbar popup; independent review.
+
+### Remaining risks and follow-up
+
+- [ASSUMED - parent-supplied] `chrome.extension.getViews` worked in the headless Chromium used here (Playwright 1.63.0). If it is unavailable in some browser, every non-workspace page counts as a tab. The popup would still render at up to 404px but could shrink if Chrome gives it a narrow viewport.
+- [UNKNOWN] Headless popup sizing may differ from a headed browser.
+- [OBSERVED - Luna, `styles.css` line 26] `.shell` keeps `max-height: 600px` in a tab, so a 320px tab scrolls inside the shell; this behaviour was already present at `HEAD`.
+- [OBSERVED - Luna diff] The new test comment reads "The narrow-screen media query must not shrink the real toolbar popup", but the media-query approach was rejected. The comment is stale wording, with no behavioural effect.
+- [OBSERVED] Still open from LUNA-20261024-003: `background.js` console logging of URLs and analysis, the separate keyword detector, the fixed-string banner `innerHTML`, and the worker-memory cache.
+- Follow-up owner: project owner.
+
+Status note on LUNA-20261024-002 and LUNA-20261024-003: [OBSERVED - parent-supplied] The four pre-existing Playwright failures listed in both records are resolved by this checkpoint (`npm run test:browser` 23 passed, 0 failed). Both records are left unchanged:
+- popup width 404 vs 320;
+- narrow-screen overflow;
+- dark-mode contrast (two tests).
+
+### Correction history
+
+None. This is an append-only checkpoint record; no commit SHA applies.
+
+## Decision record - LUNA-20261024-005
+
+### Held-out evaluation and v0.5.2 extension fixes commit-preparation checkpoint
+
+- Lifecycle: `COMMIT_PREPARED_PENDING_APPROVAL`; staged and uncommitted; no commit, push, pull request, release, or publication performed
+- Recorded: 24 October 2026; responsible agent: luna; branch: `feat/holdout-eval-and-extension-fixes`
+- Planned commit subject: `feat: held-out model evaluation and v0.5.2 extension fixes`
+- Required trailer: `Luna-ID: LUNA-20261024-005`
+- Co-author trailer: [OBSERVED - parent-supplied user instruction "creat a PR without co authored by and mention the stats also"] The commit message will not contain a `Co-Authored-By` trailer
+- Commit SHA: Pending — commit has not been created
+- Parent SHA: `baf5feef12ca3dab6d96077b6696438c413becdb`
+- Branch provenance: [OBSERVED - Luna] the current branch is `feat/holdout-eval-and-extension-fixes`, and `HEAD` and `origin/main` both resolve to `baf5feef12ca3dab6d96077b6696438c413becdb`. [OBSERVED - parent-supplied] The branch was newly created from `main` at that SHA, and `origin/main` was verified after `git fetch`. Records LUNA-20261024-001 to 004 were written on `main` at the same SHA.
+- Intended publication: [OBSERVED - parent-supplied] push to remote `origin` (`https://github.com/m-rithik/Phishing-in-indian-language.git`, private, default branch `main`), branch `feat/holdout-eval-and-extension-fixes`, then a pull request into `main`. [OBSERVED - Luna] `git remote -v` shows that `origin` URL.
+- Approval boundary: the exact commit, the push to `origin feat/holdout-eval-and-extension-fixes`, and the pull request each require separate explicit user approval under AGENTS.md; none has been given
+
+### Staged change inventory
+
+[OBSERVED - Luna `git diff --cached --stat` and `git status --short`] The index holds exactly 21 non-register paths: 848 insertions and 942 deletions, with 18 modified paths and 3 added paths. The register is unstaged. `git diff --name-only` shows the register is the only unstaged path, so the staged content of every other path equals the working tree.
+
+- `.github/workflows/quality.yml`
+- `README.md`
+- `browser_extension/README.md`
+- `browser_extension/analyzer.mjs`
+- `browser_extension/background.js`
+- `browser_extension/nlp_report.html`
+- `browser_extension/nlp_report.js` (added)
+- `browser_extension/popup.js`
+- `browser_extension/styles.css`
+- `browser_extension/tests/analyzer.test.mjs`
+- `browser_extension/tests/selection.test.mjs`
+- `docs/research/SMSDHL_DATASET_AUDIT.md`
+- `fisher_baselines/cli.py`
+- `fisher_baselines/holdout.py` (added)
+- `package-lock.json`
+- `package.json`
+- `pyproject.toml`
+- `tests/browser/extension.spec.mjs`
+- `tests/test_extension_package.py`
+- `tests/test_holdout.py` (added)
+- `tests/test_performance.mjs`
+
+### Findings and decision
+
+[OBSERVED - Luna, consistent with the prior records] The staged set is the union of the work recorded in LUNA-20261024-001 (held-out evaluation, D-218 to D-221), LUNA-20261024-002 (v0.5.2 test-contract alignment and packager removal, D-222 to D-225), LUNA-20261024-003 (NLP report text-only rendering and no-match badge, D-226 to D-229), and LUNA-20261024-004 (popup host-aware width and transition fix, D-230 and D-231). Those decisions, rationale, and rejected alternatives are not restated here. [OBSERVED - parent-supplied] After record 004, only a test comment changed (the stale media-query wording noted there), and the affected test was rerun.
+
+#### Decision D-232 - Prepare one commit for the four 24 October checkpoints on a feature branch
+
+Decision: Prepare the exact 21-path staged set plus this register as one commit, `feat: held-out model evaluation and v0.5.2 extension fixes`, on `feat/holdout-eval-and-extension-fixes`, for review through a pull request into `main`. The commit carries the `Luna-ID: LUNA-20261024-005` trailer and no `Co-Authored-By` trailer.
+
+Rationale: [OBSERVED - parent-supplied user request] The user asked for a pull request. [DERIVED] A feature branch based on `origin/main` lets the change be reviewed before it reaches `main`. [DERIVED] The four checkpoints share paths (`README.md`, `popup.js`, `extension.spec.mjs`, `test_extension_package.py`, `browser_extension/README.md`), so one commit keeps the jointly verified tree together. [OBSERVED - parent-supplied] Omitting the co-author trailer follows the user's explicit instruction.
+
+Alternatives not selected:
+
+- Split into separate commits per checkpoint: rejected because overlapping hunks in shared files were verified only as a combined tree, and no separately verified intermediate tree was supplied.
+- Commit directly to `main`: rejected because the user asked for a pull request.
+- Include a `Co-Authored-By` trailer: rejected per the user's explicit instruction.
+
+### Impacts and claim boundary
+
+- [OBSERVED - Luna] No `outputs/`, workbook (`.xlsx`), pickle, or virtual-environment path is staged. `outputs/` is ignored by `.gitignore`.
+- [OBSERVED - Luna grep of added lines in `git diff --cached`] There are no added lines matching api-key, secret, password, or private-key patterns, and no added `/Users/` paths. [OBSERVED - parent-supplied] A broader scan that included removed lines and `.xlsx` found only placeholder `/path/to/...xlsx` paths in docs, a temp-dir test path, and removed packager test-fixture strings.
+- [OBSERVED] Permissions, data flow, and the privacy boundary are as recorded in records 002–004. This commit adds no new manifest permission beyond the v0.5.2 manifest already at `HEAD`.
+- [OBSERVED] Evaluation claims are spam/ham development evidence only and are not phishing performance; record 001 defines the interpretation boundary.
+- [OBSERVED - parent-supplied] The destination repository is private; no public publication claim is made.
+
+### Planned pull request statistics
+
+[OBSERVED - sourced from LUNA-20261024-001 to 004; parent-supplied]
+
+- Held-out spam/ham test set: 1,287 messages (221 spam).
+- Selected model, calibrated word+character linear SVM: spam precision 0.9488, recall 0.9231, F1 0.9358, ham FPR 0.0103, ROC AUC 0.9937.
+- Character LR, calibrated: F1 0.9104.
+- Rule engine v0.5: F1 0.1266, recall 0.0679.
+- With zero-width joiners inserted between characters, spam recall was 0.000 without normalization and 0.923 with NFKC + Cf normalization.
+- Tests: as listed under Verification.
+
+These figures must be presented as single-seed, single-split spam/ham results, not phishing or deployment performance.
+
+### Verification
+
+[OBSERVED - parent-supplied; run on this exact working tree after the last code change]
+
+- `uv run python -m unittest discover -s tests -p 'test_*.py'` — Ran 332, OK.
+- `npm test` — 148 pass, 0 fail.
+- `npm run test:browser` — 23 passed, 0 failed, three consecutive runs.
+- `npx playwright test -g "real toolbar"` — 1 passed, after the test-comment fix.
+- `git diff --check` clean.
+
+[OBSERVED - Luna]
+
+- `git diff --cached --check` passed.
+- `git diff --cached --stat` showed 21 paths, 848 insertions, and 942 deletions.
+- `HEAD` = `origin/main` = `baf5feef12ca3dab6d96077b6696438c413becdb`.
+- Staged-path artifact and secret greps as above.
+
+Not run or not established:
+
+- Git commit, push, and pull request creation.
+- Manual installed headed Chrome/Edge check.
+- Independent reviewer.
+- Multi-seed evaluation.
+- Python lint/type checks (none configured).
+
+### Remaining risks and follow-up
+
+- [OBSERVED - parent-supplied `git fetch`; Luna inspection] Remote branch `origin/feat/phase1-privacy-and-phase2-eval` exists at `f5088210623c3df01524e30ccfa92b709aa761bb`, 7 commits ahead of `main`, with merge base `baf5feef12ca3dab6d96077b6696438c413becdb`. Its tip commit is titled "Final fixes: test expectations, packaging script, LF fixtures, Windows skips, docs". [OBSERVED - parent-supplied] It has no open PR.
+  - [OBSERVED - Luna `git diff --name-status main...origin/feat/phase1-privacy-and-phase2-eval`] It adds back `fisher_extension_package.py`, which directly contradicts D-223 (drop the packager for good).
+  - [OBSERVED - Luna] It also touches 9 of this commit's staged paths: `README.md`, `browser_extension/analyzer.mjs`, `browser_extension/background.js`, `browser_extension/popup.js`, `browser_extension/tests/analyzer.test.mjs`, `package-lock.json`, `package.json`, `pyproject.toml`, and `tests/test_extension_package.py`.
+  - [UNKNOWN] The actual merge conflicts and the intent of that branch are not inspected. The user should decide which packager decision prevails before either branch merges.
+- [OBSERVED] Open items carried from records 001–004:
+  - single-seed evaluation;
+  - the defanged-text limitation in the rule-engine comparison;
+  - `background.js` console logging, its separate detector, and the fixed-string banner `innerHTML`;
+  - the worker-memory report cache;
+  - the assumed availability of `chrome.extension.getViews`;
+  - no headed-browser or independent review.
+- [OBSERVED] The duplicate `LUNA-20260902-012` heading in this register remains unresolved.
+- Next owner and action: the parent stages `docs/CHANGE_DECISION_LOG.md` and obtains explicit user approval for this exact 22-path commit (21 paths plus the register), with subject `feat: held-out model evaluation and v0.5.2 extension fixes` and trailer `Luna-ID: LUNA-20261024-005`. The parent then requests separate explicit approval to push to `origin feat/holdout-eval-and-extension-fixes` and to open the pull request into `main`.
+
+### Correction history
+
+None. This is an append-only commit-preparation record; the commit SHA remains Pending until a later substantive Luna update can match the trailer and backfill it.

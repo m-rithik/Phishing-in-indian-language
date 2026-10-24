@@ -27,4 +27,3 @@ jobs:
       - run: npm run test:browser
       - run: uv sync --locked
       - run: uv run python -B -m unittest discover -s tests -q
-      - run: uv run python -B -m fisher_extension_package

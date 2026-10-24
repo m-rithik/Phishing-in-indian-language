@@ -262,10 +262,11 @@ function updateBadgeAndNotify(tabId, analysis) {
       priority: 1
     },
     no_match: {
-      emoji: '✓',
-      text: '✓',
-      color: '#388e3c',
-      title: 'PAGE APPEARS SAFE',
+      // No badge: a quiet result is not a safety result.
+      emoji: 'ℹ️',
+      text: '',
+      color: '#607d8b',
+      title: 'No clear pattern match (not a safety result)',
       priority: 0
     }
   };

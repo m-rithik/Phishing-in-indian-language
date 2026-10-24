@@ -39,13 +39,12 @@ Link checks also inspect immediate destinations embedded in common navigation
 query fields, reporting structural cues without opening or following any URL.
 
 See the [extension and local-tool guide](browser_extension/README.md) for
-keyboard shortcuts, limits, installation, testing, and packaging.
+keyboard shortcuts, limits, installation, and testing.
 
-The local v0.5 package was refreshed on 11 October 2026 to include the workspace
-and bulk-checking features. Extract the ZIP before loading its folder, or reload
-an existing unpacked installation. See the
-[current verification record](docs/research/EXECUTION_STATUS.md#current-local-product-snapshot--11-october-2026)
-for the tested scope and package identity.
+The ZIP packager was removed in October 2026. Load the `browser_extension`
+folder unpacked. The
+[11 October 2026 verification record](docs/research/EXECUTION_STATUS.md#current-local-product-snapshot--11-october-2026)
+describes the earlier v0.5.0 package.
 
 ## Research context
 
@@ -90,22 +89,24 @@ Public spam/ham datasets may be used only for development or external analysis
 after license, privacy, duplication, and leakage checks. Their labels must not be
 treated as phishing ground truth without Fisher-specific reannotation.
 
-Voice, conversations, automatic page scanning, notifications, the offline
-registry, the full semantic factorial, patent claims, a 1% false-positive claim,
+Voice, conversations, the offline registry, the full semantic factorial, patent claims, a 1% false-positive claim,
 and the 6,000-message confirmatory design are deferred from the immediate path.
 
 ## Browser extension and shared engine
 
-`browser_extension/` is a Manifest V3 Chrome/Edge prototype that checks text a
-user deliberately pastes or explicitly selects in the active page's top frame.
-It requests only `activeTab` and `scripting`: `activeTab` is temporary permission
-from invoking the extension, and the code reads selected text only after the
-selection button is pressed. It has no standing host access, background worker,
-network, telemetry, messaging, or storage path. Text exists transiently in page,
-browser-transfer, and popup memory; no secure-erasure claim is made. Its four
-results are **High-risk patterns found**, **Worth a closer look**, **No clear
-pattern match**, and **Could not analyze**. No-match is explicitly not a safety
-result.
+`browser_extension/` is a Manifest V3 Chrome/Edge prototype. Since v0.5.2 it
+automatically scans every HTTP(S) page: it requests `activeTab`, `scripting`,
+`tabs`, and `notifications`, plus host access to `http://*/*` and `https://*/*`.
+A content script on `<all_urls>` sends up to 20,000 characters of visible page
+text and the page URL to a background service worker. The worker analyzes that
+text with its own keyword rules (separate from the shared engine), keeps the
+latest result per tab in memory, sets the toolbar badge, and injects a banner
+for `review` or `high` results. The popup still checks pasted messages, links,
+and explicitly selected text with the shared engine, and it links to the
+`nlp_report.html` page. There is no network, telemetry, or storage API. The
+worker logs page URLs to the extension's console. Its four popup results are
+**High-risk patterns found**, **Worth a closer look**, **No clear pattern
+match**, and **Could not analyze**. No-match is explicitly not a safety result.
 
 The v0.5 shared engine performs bounded structural link inspection for embedded
 credentials, IP addresses, internationalized hosts, unusual ports, defanged
@@ -193,6 +194,22 @@ with `0.918090119` for the frozen word+character `C=1` comparator. The
 so the acceptance decision was **false**. This is promising but inconclusive
 auxiliary spam/ham development evidence, not a selected production model.
 
+The v0.3 held-out comparison (`holdout-evaluate`) scores a group-disjoint
+20% test partition once, after development-only Platt calibration, 1% ham-FPR
+threshold selection, and model selection. The selected calibrated word+character
+linear SVM reached spam F1 0.9358 (recall 0.9231, ham FPR 0.0103). Character LR
+reached 0.9104. The shipped rule engine reached 0.1266 (recall 0.0679) on this
+spam/ham data, which it was not designed to detect. NFKC + format-control
+normalization was needed: without it, inserting zero-width joiners dropped the
+lexical model's recall to zero. See the
+[workbook audit](docs/research/SMSDHL_DATASET_AUDIT.md#held-out-comparison-v03-rules-versus-calibrated-lexical-models).
+
+```console
+uv run python -m fisher_baselines holdout-evaluate \
+  --workbook "/path/to/Spam Message Collection (1).xlsx" \
+  --output outputs/smsdhl_dravidian/holdout_seed_1729.json --seed 1729
+```
+
 These are development-only spam/ham measurements on one corpus. The split has
 zero detected outer or inner template-group crossings, but the workbook lacks
 campaign, sender, source, and reliable language metadata. All classifiers used
@@ -210,8 +227,11 @@ boundary.
   writes aggregate-only artifacts.
 - `fisher_baselines/selection.py` runs the fixed nested grouped candidate
   selection and safely publishes one aggregate-only JSON artifact.
-- `fisher_baselines/cli.py` exposes the `audit`, `evaluate`, and
-  `nested-evaluate` commands.
+- `fisher_baselines/holdout.py` compares the shipped rule engine with calibrated
+  lexical models on a held-out grouped partition, including robustness,
+  bootstrap, slice, and cost measurements.
+- `fisher_baselines/cli.py` exposes the `audit`, `evaluate`, `nested-evaluate`,
+  and `holdout-evaluate` commands.
 - `fisher_pilot/validator.py` validates the local 240-message feasibility-pilot
   contract and emits aggregate-only readiness reports.
 - `fisher_pilot/cli.py` exposes the `draft` and `ready` validation modes.
@@ -234,8 +254,8 @@ boundary.
 
 ## Development
 
-Python 3.11 or newer and [uv](https://docs.astral.sh/uv/) run the research tools
-and ZIP packager. Node.js 22+ runs the companion CLI and unit tests. Browser
+Python 3.11 or newer and [uv](https://docs.astral.sh/uv/) run the research
+tools. Node.js 22+ runs the companion CLI and unit tests. Browser
 testing uses development-only Playwright and axe dependencies:
 
 ```console
@@ -249,7 +269,7 @@ npm run test:browser
 
 `uv build` produces two deliberately different artifacts. The source archive
 contains the current Python packages, browser-extension and Node sources,
-packager, tests, examples, and linked Markdown documentation needed to inspect
+tests, examples, and linked Markdown documentation needed to inspect
 and reproduce the repository product. The wheel installs only
 `fisher_baselines` and `fisher_pilot`; it does not install the extension, Node
 CLI, or synthetic research-engine packages.

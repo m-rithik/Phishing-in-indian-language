@@ -9,6 +9,7 @@ let control;
 let extensionId;
 let fixtureServer;
 let fixtureUrl;
+const REPORT_TITLE = `Report <img src=x onerror="window.__fisherInjected=1"> fixture`;
 const extensionPath = fileURLToPath(new URL("../../browser_extension", import.meta.url));
 
 test.beforeAll(async () => {
@@ -24,8 +25,13 @@ test.beforeAll(async () => {
   });
   control = await context.browser().newBrowserCDPSession();
   ({ id: extensionId } = await control.send("Extensions.loadUnpacked", { path: extensionPath }));
-  fixtureServer = createServer((_request, response) => {
+  fixtureServer = createServer((request, response) => {
     response.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+    if (request.url === "/report-fixture") {
+      response.end(`<!doctype html><html lang="en"><title>${REPORT_TITLE.replaceAll("<", "&lt;")}</title>
+        <p>Urgent: verify your account and share the OTP immediately.</p></html>`);
+      return;
+    }
     response.end(`<!doctype html><html lang="en"><title>Fisher synthetic fixture</title>
       <p id="unselected">UNSELECTED_CANARY transfer cryptocurrency now</p>
       <section id="block-selection"><div>Send</div><span hidden>HIDDEN_CANARY reveal password</span><div>OTP immediately at bad.example</div></section>
@@ -326,6 +332,8 @@ test("real toolbar action grants only explicit selected-text access", async () =
   });
   const { evaluate, targetId } = await openToolbarPopup(fixture);
   await expect.poll(() => evaluate("Boolean(document.querySelector('#selection'))")).toBe(true);
+  // The tab-only shrinking rule must not apply to the real toolbar popup.
+  await expect.poll(() => evaluate("document.body.getBoundingClientRect().width")).toBe(404);
   expect(await evaluate("document.querySelector('#result').hidden")).toBe(true);
   await evaluate(`(() => {
     const input = document.querySelector('#message');
@@ -660,4 +668,31 @@ test("link checking exposes embedded navigation cues without opening destination
   await expect(page.locator("#result-link-count")).toHaveText("1");
   expect(requests).toEqual([]);
   await page.close();
+});
+
+test("NLP report renders the scanned tab's result as text, not HTML", async () => {
+  // The scan listens for tab updates, so the worker must exist before the page loads.
+  if (!context.serviceWorkers().some((worker) => worker.url().includes(extensionId))) {
+    await context.waitForEvent("serviceworker", { predicate: (worker) => worker.url().includes(extensionId) });
+  }
+  const fixture = await context.newPage();
+  await fixture.goto(`${fixtureUrl}/report-fixture`);
+  const report = await context.newPage();
+  await report.goto(`chrome-extension://${extensionId}/nlp_report.html`);
+  await expect(report.locator("#currentAnalysis")).toContainText("Open this report from the Fisher popup");
+  const tabId = await report.evaluate(async (url) => (await chrome.tabs.query({ url }))[0].id, `${fixtureUrl}/report-fixture`);
+  const cachedRisk = () => report.evaluate(
+    (id) => new Promise((resolve) => chrome.runtime.sendMessage({ action: "getCurrentAnalysis", tabId: id }, (r) => resolve(r?.analysis?.risk ?? null))),
+    tabId,
+  );
+  // A freshly installed worker can miss the first load; reloading retriggers the scan.
+  await expect.poll(async () => (await cachedRisk()) ?? (await fixture.reload(), null), { timeout: 15_000 }).toBe("high");
+  await report.goto(`chrome-extension://${extensionId}/nlp_report.html?tabId=${tabId}`);
+  await expect(report.locator("#currentAnalysis h4")).toHaveText(REPORT_TITLE);
+  await expect(report.locator("#currentAnalysis code")).toHaveText(`${fixtureUrl}/report-fixture`);
+  await expect(report.locator("#currentAnalysis .badge.high")).toBeVisible();
+  expect(await report.locator("#currentAnalysis img").count()).toBe(0);
+  expect(await report.evaluate(() => window.__fisherInjected)).toBeUndefined();
+  await report.close();
+  await fixture.close();
 });
