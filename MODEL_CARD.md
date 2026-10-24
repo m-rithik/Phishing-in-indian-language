@@ -98,6 +98,12 @@ Output Report (risk, reasons, checks, next steps)
 9. **False positives possible**: Legitimate bank warnings ("verify account") may trigger high risk
 10. **No voice/conversation support**: Text messages only
 
+### Known Misses
+
+- Customs-fee messages ("package held at customs, pay a fee") and friend-in-need messages ("I am stuck, send money") are not detected.
+- Promotional spam on UCI almost never reaches high (recall 0.005).
+- Real bank notices and OTP warnings get review.
+
 ---
 
 ## Model Behavior

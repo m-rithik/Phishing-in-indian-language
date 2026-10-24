@@ -324,6 +324,13 @@ The full Python test suite is designed for Linux/WSL; filesystem tests requiring
   language first, so those results are optimistic.
 - Evaluation data is small or synthetic, so metrics (and p-values) describe
   that data only. This project makes **no claim of real-world accuracy**.
+
+### Known misses
+
+- Customs-fee messages ("package held at customs, pay a fee") and friend-in-need messages ("I am stuck, send money") are not detected.
+- Promotional spam on UCI almost never reaches high (recall 0.005).
+- Real bank notices and OTP warnings get review.
+
 ## Research boundary and next iteration
 
 The implemented baseline and pilot validator establish a reproducible technical
