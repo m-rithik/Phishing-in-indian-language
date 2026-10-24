@@ -7372,3 +7372,46 @@ Not run or not established:
 ### Correction history
 
 None. This is an append-only commit-preparation record; the commit SHA remains Pending until a later substantive Luna update can match the trailer and backfill it.
+
+---
+
+## Record LUNA-20261024-006
+
+- Lifecycle state: Finalized
+- Date/time: 2026-10-24 09:15 IST
+- Branch: `feat/phase1-privacy-and-phase2-eval`
+- Planned commit subject: `Update change log`
+- Required trailer: `Luna-ID: LUNA-20261024-006`
+- Commit SHA: Pending
+- Prior commit SHAs in cycle: `c0eb4d3`, `1742cfe`, `b47f61d`, `347392d`
+- Parent SHA: `347392d`
+- Affected paths:
+  - `docs/CHANGE_DECISION_LOG.md`
+
+### Significant changes & decisions
+
+Decision: Complete full cleanup pass on branch `feat/phase1-privacy-and-phase2-eval` across Steps 1 to 6, integrating transliteration, detector, test, and documentation improvements.
+
+1. **Step 1 ("Remove full-page scan")**: Removed `#page-content` button, `analyzePageContent()`, `pageContentButton`, and associated styles from `browser_extension/popup.html`, `popup.js`, and `styles.css`. Align extension behavior strictly with the privacy guarantee that only pasted or explicitly selected text is read.
+2. **Step 2 ("Detect native-script requests with Latin OTP; Hindi electricity scam")**: Verified native-script request detection accepting Latin OTP/PIN terms, negation scoping, and Hindi electricity scam signals.
+3. **Step 3 ("Transliteration: retroflex, anusvara and scam lexicon")**: Added retroflex alternatives for t/d (Tamil, Telugu), anusvara rules before stop consonants (Telugu, Hindi, Tamil ng -> ங்), expanded Indic scam vocabulary in lexicons, and ensured native-script input is tagged `script="native"`.
+4. **Step 4 ("Fix stale tests; skip POSIX-only tests on Windows")**: Updated browser tests to match high-risk classification on native samples with Latin OTP, deleted obsolete NLP report browser test, updated `test_extension_package.py` label expectation to "Selection mode", and decorated the 4 `os.mkfifo` tests and `DeterministicDistributionTests` class with `@unittest.skipIf(sys.platform == "win32", "POSIX-only filesystem feature")`.
+5. **Step 5 ("Docs and minor fixes")**: Added `newline="\n"` to `scripts/translit_experiment.py`, documented that `batch` and `batch-detail` exit 1 if any line cannot be analyzed in `fisher.mjs` and `README.md`, updated version references to 0.6.0 in `MODEL_CARD.md`, `RELEASE_NOTES.md`, and `browser_extension/README.md`, and added dated correction note in change log.
+6. **Step 6 ("Verification")**: Verified test suites and `holdout-evaluate` CLI.
+
+### Verification
+
+- `npm test`: 164 passed, 0 failed.
+- `npm run test:browser`: 22 passed, 0 failed.
+- `uv run pytest -q`: 402 passed, 24 skipped, 365 subtests passed, 0 failed.
+- `uv run python -m fisher_baselines.cli holdout-evaluate`: verified on holdout data with zero crossings.
+
+### Remaining risks
+
+- Operating system differences: POSIX filesystem tests (`os.mkfifo` and archive permission bit preservation) are skipped under native Windows `win32` runtime.
+- Authenticated authentic phishing dataset collection remains a future milestone per research boundaries.
+
+### Correction history
+
+None.
+
