@@ -124,6 +124,11 @@ class ExtensionPackageTests(unittest.TestCase):
         }
         self.assertEqual(actual, EXPECTED_FILES)
 
+    def test_source_inventory_accepts_every_allowlisted_extension_test(self) -> None:
+        # The POSIX inventory check must agree with the real tests directory on every platform.
+        actual = {path.name for path in (EXTENSION / "tests").iterdir()}
+        self.assertEqual(package.TEST_ENTRIES, actual)
+
     def test_manifest_has_exact_temporary_permissions_and_no_standing_page_access(self) -> None:
         manifest = json.loads((EXTENSION / "manifest.json").read_text(encoding="utf-8"))
         self.assertEqual(manifest["manifest_version"], 3)
