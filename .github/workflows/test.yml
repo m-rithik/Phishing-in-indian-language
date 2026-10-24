@@ -174,7 +174,7 @@ jobs:
     - name: Run Python tests with coverage
       run: |
         uv pip install coverage
-        uv run coverage run -m unittest discover -s tests -p 'test_*.py'
+        uv run coverage run -m pytest -q
         uv run coverage report --fail-under=70
       continue-on-error: true
 
