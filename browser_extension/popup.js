@@ -1061,6 +1061,55 @@ export function createPopupController({
   setBatchBusy(false);
   clearBatchPresentation();
   hideResult();
+  let pendingProcessed = false;
+  function processPendingSelection(reply) {
+    if (pendingProcessed || !reply) return;
+    if (reply.status === "ok" && typeof reply.text === "string") {
+      pendingProcessed = true;
+      try {
+        const analysis = analyze(reply.text, { mode: "message" });
+        render(analysis, "selection");
+        activeReport = buildDownloadReport(analysis, "selection");
+        downloadReportButton.disabled = false;
+        status.textContent =
+          analysis?.risk === "cannot_analyze"
+            ? "Selected text did not produce a result. It was not copied into the draft."
+            : "Selected text analyzed locally. It was not copied into the draft. No input history is saved.";
+      } catch {
+        invalidateActiveReport();
+        renderAnalysisFailure("Selected text", "selection");
+      }
+    } else if (reply.status === "too_long") {
+      pendingProcessed = true;
+      render(
+        { risk: "cannot_analyze", reasons: [SELECTION_FAILURE_REASONS.too_long] },
+        "selection",
+      );
+      status.textContent = "Selected page text was not analyzed.";
+    }
+  }
+
+  let pendingSelectionOperation;
+  if (chromeApi?.runtime?.sendMessage) {
+    try {
+      const response = chromeApi.runtime.sendMessage(
+        { type: "fisher-pending-selection" },
+        (reply) => {
+          if (chromeApi.runtime?.lastError) return;
+          processPendingSelection(reply);
+        },
+      );
+      if (response && typeof response.then === "function") {
+        pendingSelectionOperation = response
+          .then((reply) => {
+            processPendingSelection(reply);
+          })
+          .catch(() => {});
+      }
+    } catch {
+      // Ignore error silently
+    }
+  }
 
   return {
     analyzePastedText,
@@ -1080,6 +1129,7 @@ export function createPopupController({
     locateBatchLine,
     downloadReport,
     downloadBatchReport,
+    pendingSelectionOperation,
   };
 }
 
