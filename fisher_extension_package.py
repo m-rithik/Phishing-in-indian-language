@@ -11,7 +11,7 @@ import stat
 import sys
 import zipfile
 
-DISTRIBUTION_NAME = "fisher-scam-signal-prototype-v0.5.0"
+DISTRIBUTION_NAME = "fisher-scam-signal-prototype-v0.6.0"
 ARCHIVE_FILENAME = f"{DISTRIBUTION_NAME}.zip"
 OUTPUT_RELATIVE = Path("outputs/browser_extension")
 SOURCE_FILES = (
@@ -31,6 +31,7 @@ SOURCE_FILES = (
     "styles.css",
     "tests/analyzer.test.mjs",
     "tests/detector.test.mjs",
+    "tests/realistic_messages.test.mjs",
     "tests/selection.test.mjs",
 )
 RUNTIME_FILES = (
@@ -55,7 +56,7 @@ EXPECTED_CSP = (
 EXPECTED_MANIFEST = {
     "manifest_version": 3,
     "name": "Fisher Scam Signal Prototype",
-    "version": "0.5.0",
+    "version": "0.6.0",
     "description": "Locally checks pasted messages, links, and explicitly selected text for scam signals.",
     "permissions": ["activeTab", "scripting"],
     "icons": {

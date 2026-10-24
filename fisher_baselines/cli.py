@@ -11,6 +11,7 @@ from fisher_baselines.evaluation import (
     write_evaluation_outputs,
     write_json_file,
 )
+from fisher_baselines.holdout import holdout_evaluate_workbook, write_holdout_output
 from fisher_baselines.selection import nested_evaluate_workbook, write_selection_output
 
 
@@ -19,6 +20,13 @@ def _integer(value: str) -> int:
         return int(value)
     except ValueError as exc:
         raise argparse.ArgumentTypeError("invalid integer") from exc
+
+
+def _float(value: str) -> float:
+    try:
+        return float(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError("invalid number") from exc
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -46,6 +54,16 @@ def build_parser() -> argparse.ArgumentParser:
     nested.add_argument("--seed", type=_integer, default=1729)
     nested.add_argument("--outer-folds", type=_integer, default=3)
     nested.add_argument("--inner-folds", type=_integer, default=3)
+
+    holdout = subparsers.add_parser(
+        "holdout-evaluate",
+        help="compare the rule engine with calibrated models on a held-out grouped partition",
+    )
+    holdout.add_argument("--workbook", required=True)
+    holdout.add_argument("--output", required=True)
+    holdout.add_argument("--sheet", default=DEFAULT_SHEET)
+    holdout.add_argument("--seed", type=_integer, default=1729)
+    holdout.add_argument("--max-ham-fpr", type=_float, default=0.01)
     return parser
 
 
@@ -68,6 +86,17 @@ def main(argv: Sequence[str] | None = None) -> int:
             )
             write_evaluation_outputs(result, arguments.output_dir)
             print("Development evaluation completed.")
+            return 0
+
+        if arguments.command == "holdout-evaluate":
+            result = holdout_evaluate_workbook(
+                arguments.workbook,
+                sheet=arguments.sheet,
+                seed=arguments.seed,
+                max_ham_fpr=arguments.max_ham_fpr,
+            )
+            write_holdout_output(result, arguments.output)
+            print("Held-out development evaluation completed.")
             return 0
 
         selection = nested_evaluate_workbook(

@@ -1111,6 +1111,7 @@ export function createPopupController({
       void analyzePageContent();
     });
   }
+
   clearButton.addEventListener("click", clearResult);
   editInputButton.addEventListener("click", editInput);
   locateBatchLineButton.addEventListener("click", locateBatchLine);
@@ -1190,6 +1191,11 @@ if (typeof document !== "undefined") {
     expandedWorkspace = false;
   }
   if (expandedWorkspace) document.documentElement.dataset.view = "workspace";
+  // A toolbar popup sizes itself from its content, so it keeps the fixed width.
+  // The same page opened in a tab may shrink with a narrow window instead.
+  else if (!globalThis.chrome?.extension?.getViews?.({ type: "popup" })?.includes(globalThis)) {
+    document.documentElement.dataset.host = "tab";
+  }
   createPopupController({
     documentApi: document,
     chromeApi: globalThis.chrome,

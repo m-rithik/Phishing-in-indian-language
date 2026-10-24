@@ -145,7 +145,7 @@ function deferred() {
 
 function analysisResult(overrides = {}) {
   return {
-    engineVersion: "0.5.0",
+    engineVersion: "0.5.2",
     mode: "message",
     risk: "review",
     reasons: ["A synthetic test reason."],

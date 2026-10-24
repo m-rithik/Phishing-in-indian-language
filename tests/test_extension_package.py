@@ -41,6 +41,7 @@ EXPECTED_FILES = {
     "styles.css",
     "tests/analyzer.test.mjs",
     "tests/detector.test.mjs",
+    "tests/realistic_messages.test.mjs",
     "tests/selection.test.mjs",
 }
 RUNTIME_FILES = {

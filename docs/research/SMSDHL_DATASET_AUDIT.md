@@ -210,6 +210,98 @@ the browser extension, which remains a transparent rule-only prototype. The
 earlier first-experiment measurements above remain the historical baseline,
 rather than being replaced or reinterpreted as nested-test results.
 
+## Held-out comparison v0.3: rules versus calibrated lexical models
+
+This experiment answers a question the earlier runs left open: how does the
+**shipped v0.5 rule engine** compare with trained lexical models, and how do
+calibrated models behave at a low-false-alarm operating point on data that
+played no role in fitting, calibration, threshold choice, or model selection?
+
+Protocol (all decisions are fixed before the test partition is scored):
+
+1. `StratifiedGroupKFold(5)` over label+script strata and template groups; fold
+   0 (1,287 rows, 221 spam) is the held-out test partition and the other 5,146
+   rows are development. Zero template groups cross the boundary.
+2. Each lexical model receives NFKC + Unicode `Cf` removal (the same folding as
+   the duplicate key), produces grouped four-fold development out-of-fold scores,
+   and fits a Platt sigmoid on them. The operating threshold is the lowest one
+   whose development out-of-fold ham false-positive rate is at most 1%. The model
+   is then refitted on all development rows.
+3. The selected model is the one with the highest development out-of-fold spam
+   recall at that threshold (then AP). The rule engine is untrained and is
+   scored as positive when it returns `review` or `high`.
+4. The test partition is scored once. Robustness perturbations, template-group
+   paired bootstrap intervals (1,000 resamples), and per-slice metrics are
+   computed on it. An unnormalized model is reported as an ablation and is
+   excluded from selection.
+
+```console
+uv run python -m fisher_baselines holdout-evaluate \
+  --workbook "/path/to/Spam Message Collection (1).xlsx" \
+  --output outputs/smsdhl_dravidian/holdout_seed_1729.json --seed 1729
+```
+
+The output must not already exist and its parent must. It is one aggregate JSON
+file; no text, prediction, model, or vocabulary is persisted.
+
+### Measured held-out result (seed 1729)
+
+Development selected `word_char_linear_svc`. The test results at each approach's
+operating point were:
+
+| Approach | Spam precision | Spam recall | Spam F1 | Ham FPR | AP | ROC AUC | FP | FN |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Rules v0.5 (`review` or `high`) | 0.9375 | 0.0679 | 0.1266 | 0.0009 | 0.2237 | 0.5335 | 1 | 206 |
+| Char TF-IDF + LR, calibrated | 0.9507 | 0.8733 | 0.9104 | 0.0094 | 0.9585 | 0.9906 | 10 | 28 |
+| Word+char TF-IDF + linear SVM, calibrated (selected) | 0.9488 | 0.9231 | 0.9358 | 0.0103 | 0.9642 | 0.9937 | 11 | 17 |
+
+The rule engine returned `high` for no test message. The selected model's test
+Brier score was 0.0175 and its 10-bin expected calibration error was 0.0076.
+Paired template-group bootstrap 95% intervals for selected-minus-other were:
+spam F1 +0.809 [0.743, 0.870] and recall +0.855 [0.807, 0.902] against the
+rules, and spam F1 +0.025 [-0.001, 0.052] and recall +0.050 [0.018, 0.082]
+against character LR. The F1 interval against LR includes zero.
+
+Spam recall / ham FPR on the test partition under perturbation:
+
+| Perturbation | Rules | Char LR | Selected SVM | SVM without normalization |
+| --- | ---: | ---: | ---: | ---: |
+| None | 0.068 / 0.0009 | 0.873 / 0.0094 | 0.923 / 0.0103 | 0.923 / 0.0094 |
+| Uppercase | 0.068 / 0.0009 | 0.873 / 0.0094 | 0.923 / 0.0103 | 0.923 / 0.0094 |
+| Latin→Cyrillic homoglyphs | 0.014 / 0.0009 | 0.855 / 0.0103 | 0.910 / 0.0084 | 0.910 / 0.0075 |
+| Zero-width joiner between characters | 0.253 / 0.0281 | 0.873 / 0.0094 | 0.923 / 0.0103 | **0.000 / 0.0000** |
+| Truncate to 64 code points | 0.014 / 0.0000 | 0.538 / 0.0084 | 0.665 / 0.0113 | 0.665 / 0.0113 |
+
+Without normalization, zero-width-joiner insertion reduced the lexical model's
+spam recall to zero. Normalization restored it, and the clean-test cost was one
+additional false positive. This normalization decision was informed by the
+test-partition perturbation, so the normalized row is not a fully blind estimate
+of that design choice.
+
+Selected-model slices: Telugu spam recall 0.833 (18 spam) and Latin-script ham
+FPR 0.029 (175 ham) are the weakest script slices. Both of the 2 spam messages
+of at most 40 code points were missed. Slices with fewer than about 50 spam
+examples are too small for stable estimates.
+
+Two same-seed runs produced identical outputs apart from timing fields (output
+SHA-256 of one run:
+`d6f7c9622fb3d9a34c7284401ff7bbf4f7d5a06f4b930cded6f5a3b29e511a91`).
+Wall-clock time was 20–28 s and peak resident memory was 469–512 MB. The selected
+model fitted in about 1.5 s, predicted about 0.14 ms per message, and pickled to
+about 4.8 MB in memory. These describe one local machine.
+
+### Interpretation boundary
+
+**OBSERVED:** on this spam/ham corpus, the rule engine almost never fires. That
+is consistent with its design for credential and phishing pressure cues rather
+than promotional spam, so it is **not** evidence about its phishing recall.
+**DERIVED:** a calibrated word+character model is the strongest supported
+candidate for a future learned component, and its probability output supports
+tiered warnings. **Not supported:** phishing performance, campaign-disjoint
+generalization, per-language claims, or a deployment false-positive rate. The
+1% ham-FPR operating point is a development design assumption, not a product
+claim.
+
 ## Remaining unknowns
 
 - download-time license and usage terms;
