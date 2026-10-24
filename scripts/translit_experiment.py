@@ -191,10 +191,16 @@ def run_experiment(
         text_b = f"{original} {flattened_variants[0]}"
         # Condition C: 5 variants original + " " + variant_i
         texts_c = [f"{original} {v}" for v in flattened_variants]
+        # Condition D: 5 variants for each of hindi, tamil, telugu (15 total)
+        texts_d = []
+        for d_lang in ("hindi", "tamil", "telugu"):
+            d_variants, _ = build_variants(item["text"], d_lang, k)
+            texts_d.extend(f"{original} {flatten_text(v)}" for v in d_variants)
 
         all_needed_texts.append(text_a)
         all_needed_texts.append(text_b)
         all_needed_texts.extend(texts_c)
+        all_needed_texts.extend(texts_d)
 
         item_variants.append(
             {
@@ -202,6 +208,7 @@ def run_experiment(
                 "text_a": text_a,
                 "text_b": text_b,
                 "texts_c": texts_c,
+                "texts_d": texts_d,
                 "weights_c": norm_weights,
                 "variants_raw": variants,
             }
@@ -227,11 +234,15 @@ def run_experiment(
         )
         pred_c_weighted = weighted_pos_sum >= 0.5
 
+        preds_d = [is_positive(risk_cache[t]) for t in data["texts_d"]]
+        pred_d = any(preds_d)
+
         predictions = {
             "A": bool(pred_a),
             "B": bool(pred_b),
             "C-max": bool(pred_c_max),
             "C-weighted": bool(pred_c_weighted),
+            "D": bool(pred_d),
         }
 
         evaluated_entry = {
@@ -260,7 +271,7 @@ def run_experiment(
     conditions_summary = {}
     languages = sorted(list(set(m["language"] for m in evaluated_items)))
 
-    for cond in ["A", "B", "C-max", "C-weighted"]:
+    for cond in ["A", "B", "C-max", "C-weighted", "D"]:
         overall = compute_condition_metrics(evaluated_items, cond)
         per_lang = {}
         for lang in languages:
@@ -294,6 +305,8 @@ def run_experiment(
         "A_vs_B": compute_pair_mcnemar("A", "B"),
         "B_vs_C-max": compute_pair_mcnemar("B", "C-max"),
         "B_vs_C-weighted": compute_pair_mcnemar("B", "C-weighted"),
+        "B_vs_D": compute_pair_mcnemar("B", "D"),
+        "C-max_vs_D": compute_pair_mcnemar("C-max", "D"),
     }
 
     metrics_output = {
@@ -303,6 +316,7 @@ def run_experiment(
         "limitations": [
             "Rule-based detector; no learned model.",
             "Oracle language ID: the item's language field selects the transliteration script.",
+            "D removes the oracle: no language label is used.",
             "Small or synthetic evaluation data; no claim of real-world accuracy.",
             "Messages are flattened to one line for the batch CLI.",
         ],
