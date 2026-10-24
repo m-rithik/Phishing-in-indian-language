@@ -121,3 +121,39 @@ test("benign prize or lottery discussion without link or phone is not high", () 
     "high",
   );
 });
+
+test("native KYC suspension with click request and link is high", () => {
+  assert.equal(
+    analyze("आपका KYC अपडेट नहीं हुआ, खाता बंद होगा। अभी क्लिक करें bit.ly/kyc1").risk,
+    "high",
+  );
+});
+
+test("Romanized UPI PIN daalo lure with link is high", () => {
+  assert.equal(
+    analyze("Cashback won! UPI PIN daalo yahan: bit.ly/cb9").risk,
+    "high",
+  );
+});
+
+test("benign casual call request is no_match", () => {
+  assert.equal(analyze("Bhai kal call karna").risk, "no_match");
+});
+
+test("electricity disconnection threat with officer phone number is high", () => {
+  assert.equal(
+    analyze(
+      "Your electricity will be disconnected tonight. Call officer 9123456789 immediately",
+    ).risk,
+    "high",
+  );
+});
+
+test("benign delivery notice and family call are not high", () => {
+  assert.notEqual(
+    analyze("Delivery boy will call you at 9876543210 today").risk,
+    "high",
+  );
+  assert.equal(analyze("Mom call me at 9876543210").risk, "no_match");
+});
+

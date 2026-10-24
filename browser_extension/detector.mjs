@@ -62,7 +62,7 @@ const SIGNALS = [
     weight: 2,
     reason: "Pushes the reader to click, open, call, send, share, or update.",
     pattern:
-      /\b(?:click|open|visit|verify|update|confirm|call|send|share|download|tap|bhejo|karo)\b|क्लिक|खोलें|भेजें|साझा|अपडेट|कॉल करें|कॉल|அழுத்த|திறக்க|அனுப்ப|பகிர|புதுப்பிக்க|క్లిక్|తెరవ|పంప|పంచ|అప్డేట్/iu,
+      /\b(?:click|open|visit|verify|update|confirm|(?<!(?:will|shall)\s+)call\b(?! you\b)|send|share|download|tap|bhejo|karo)\b|क्लिक|खोलें|भेजें|साझा|अपडेट|कॉल करें|कॉल|அழுத்த|திறக்க|அனுப்ப|பகிர|புதுப்பிக்க|క్లిక్|తెరవ|పంప|పంచ|అప్డేట్/iu,
   },
   {
     category: "impersonation",
@@ -90,9 +90,11 @@ const SIGNALS = [
 const PROTECTIVE_ADVISORY =
   /\b(?:do not|don't|never)\s+(?:click|open|share|send|reveal|provide|tell|submit|enter|verify)|\b(?:bank|we)\s+will never ask|\botp\s+(?:share|send)\s+(?:mat|na)\b|(?:ओटीपी|पासवर्ड|पिन|सीवीवी|otp|password|pin(?!\s*code)|cvv).{0,24}(?:साझा न करें|मत भेजें)|(?:लिंक|कड़ी).{0,16}(?:न खोलें|क्लिक न करें)|(?:ஓடிபி|கடவுச்சொல்|பின்|சிவிவி|otp|password|pin(?!\s*code)|cvv).{0,24}(?:பகிர வேண்டாம்|அனுப்ப வேண்டாம்)|இணைப்பை.{0,16}(?:திறக்க வேண்டாம்|அழுத்த வேண்டாம்)|(?:ఓటీపీ|పాస్వర్డ్|పిన్|సీవీవీ|otp|password|pin(?!\s*code)|cvv).{0,24}(?:పంచుకోవద్దు|పంపవద్దు)|లింక్.{0,16}(?:తెరవద్దు|క్లిక్ చేయవద్దు)/iu;
 const DIRECT_DISCLOSURE_REQUEST =
-  /\b(?:send|share|reveal|provide|tell|submit|enter)\b(?:\s+(?:me|us|them|your|the)){0,2}\s+\b(?:otp|one[ -]?time password|pin(?!\s*code)|password|passcode|cvv)\b|\b(?:otp|one[ -]?time password|pin(?!\s*code)|password|passcode|cvv)\b(?:\s+(?:now|abhi|please)){0,2}\s+\b(?:send|share|reveal|provide|submit|enter|bhejo|batao|anuppunga|anuppu|sollunga|pampandi|pampu|cheppandi)\b|(?:ओटीपी|पासवर्ड|पिन|सीवीवी|otp|password|pin(?!\s*code)|cvv)[^.!?;।！？]{0,16}(?:भेजें|भेजो|साझा|बताएं|बताओ|दर्ज करें)|(?:ஓடிபி|கடவுச்சொல்|பின்|சிவிவி|otp|password|pin(?!\s*code)|cvv)[^.!?;।！？]{0,16}(?:அனுப்ப|பகிர|சொல்ல|உள்ளிட)|(?:ఓటీపీ|పాస్వర్డ్|పిన్|సీవీవీ|otp|password|pin(?!\s*code)|cvv)[^.!?;।！？]{0,16}(?:పంప(?!వద్దు)|పంచ(?!ుకోవద్దు)|చెప్ప(?!వద్దు)|నమోదు)/giu;
+  /\b(?:send|share|reveal|provide|tell|submit|enter|daalo|dalo|enter karo)\b(?:\s+(?:me|us|them|your|the|yahan|here)){0,2}\s+\b(?:otp|one[ -]?time password|pin(?!\s*code)|password|passcode|cvv)\b|\b(?:otp|one[ -]?time password|pin(?!\s*code)|password|passcode|cvv)\b(?:\s+(?:now|abhi|please|yahan|here)){0,2}\s+\b(?:send|share|reveal|provide|submit|enter|daalo|dalo|enter karo|bhejo|batao|anuppunga|anuppu|sollunga|pampandi|pampu|cheppandi)\b|(?:ओटीपी|पासवर्ड|पिन|सीवीवी|otp|password|pin(?!\s*code)|cvv)[^.!?;।！？]{0,16}(?:भेजें|भेजो|साझा|बताएं|बताओ|दर्ज करें|दर्ज|डालो|डालें)|(?:ஓடிபி|கடவுச்சொல்|பின்|சிவிவி|otp|password|pin(?!\s*code)|cvv)[^.!?;।！？]{0,16}(?:அனுப்ப|பகிர|சொல்ல|உள்ளிட)|(?:ఓటీపీ|పాస్వర్డ్|పిన్|సీవీవీ|otp|password|pin(?!\s*code)|cvv)[^.!?;।！？]{0,16}(?:పంప(?!వద్దు)|పంచ(?!ుకోవద్దు)|చెప్ప(?!వద్దు)|నమోదు)/giu;
 const ACCOUNT_VERIFICATION_REQUEST =
   /\bverify (?:your )?account\b|(?:खाता|अकाउंट)[^.!?;।！？]{0,16}(?:सत्यापित करें|वेरीफाई करें)|கணக்கை[^.!?;।！？]{0,16}சரிபார்க்க|ఖాతాను[^.!?;।！？]{0,16}ధృవీకరించ/giu;
+const SENSITIVE_ACTION_REQUEST =
+  /(?:क्लिक करें|क्लिक)/giu;
 const NEGATION_INSIDE_REQUEST =
   /(?:मत|न |नहीं|வேண்டாம்|கூடாது|వద్దు|కూడదు)/iu;
 const NEGATION_BEFORE_REQUEST =
@@ -198,7 +200,8 @@ function hasNonNegatedMatch(text, pattern) {
 function hasNonNegatedSensitiveRequest(text) {
   return (
     hasNonNegatedMatch(text, DIRECT_DISCLOSURE_REQUEST) ||
-    hasNonNegatedMatch(text, ACCOUNT_VERIFICATION_REQUEST)
+    hasNonNegatedMatch(text, ACCOUNT_VERIFICATION_REQUEST) ||
+    hasNonNegatedMatch(text, SENSITIVE_ACTION_REQUEST)
   );
 }
 
@@ -316,6 +319,10 @@ function analyzeMessageContext(input, messageContext) {
       categories.has("impersonation") &&
       hasInspectedLink &&
       (categories.has("credential") || categories.has("urgency") || categories.has("money"))) ||
+    (!PROTECTIVE_ADVISORY.test(normalized.text) &&
+      categories.has("impersonation") &&
+      hasPhoneNumber &&
+      (categories.has("urgency") || categories.has("action"))) ||
     (categories.has("lure") &&
       (hasInspectedLink || hasPhoneNumber) &&
       (categories.has("money") || categories.has("action")) &&
