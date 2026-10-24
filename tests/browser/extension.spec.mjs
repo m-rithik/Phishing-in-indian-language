@@ -90,11 +90,14 @@ async function openToolbarPopup(fixture) {
   const { targetInfos } = await control.send("Target.getTargets", { filter: [{}] });
   const tab = targetInfos.find((target) => target.type === "tab" && target.url === fixture.url());
   expect(tab).toBeDefined();
+  const existingTargets = new Set(targetInfos.map((target) => target.targetId));
   await control.send("Extensions.triggerAction", { id: extensionId, targetId: tab.targetId });
   let popupTarget;
   await expect.poll(async () => {
     const { targetInfos: targets } = await control.send("Target.getTargets", { filter: [{}] });
-    popupTarget = targets.find((target) => target.type === "page" && target.url.includes(extensionId));
+    popupTarget = targets.find(
+      (target) => target.type === "page" && target.url.includes(extensionId) && !existingTargets.has(target.targetId),
+    );
     return !!popupTarget;
   }).toBe(true);
   const evaluate = await popupEvaluator(popupTarget.targetId);

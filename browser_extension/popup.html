@@ -10,15 +10,31 @@
     <main class="shell">
       <header class="masthead">
         <div class="brand-lockup">
-          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+              <path d="M5 7l12 5-12 5" />
+              <path d="M5 12h12" />
+            </svg>
+          </span>
           <div>
             <h1>Fisher<span class="workspace-only brand-caption"> / ANALYSIS WORKSPACE</span></h1>
             <p class="tagline">Messages, links, and batch review.</p>
           </div>
         </div>
         <div class="header-actions">
-          <span class="local-badge"><span aria-hidden="true"></span>Offline &amp; private</span>
-          <a id="open-workspace" class="expand-link" href="popup.html?view=workspace" target="_blank" rel="noopener" aria-label="Open a roomy workspace" title="Open a roomy workspace"><span aria-hidden="true">↗</span></a>
+          <span class="local-badge">
+            <svg aria-hidden="true" viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2.5" y="2.5" width="11" height="8" rx="1.5" />
+              <path d="M1.5 13h13" />
+            </svg>
+            Offline &amp; private
+          </span>
+          <a id="open-workspace" class="expand-link" href="popup.html?view=workspace" target="_blank" rel="noopener" aria-label="Open a roomy workspace" title="Open a roomy workspace">
+            <svg aria-hidden="true" viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 3.5h6.5V10" />
+              <path d="M12.5 3.5L3.5 12.5" />
+            </svg>
+          </a>
         </div>
       </header>
 
@@ -44,15 +60,50 @@
           </div>
 
           <div class="mode-switch" role="group" aria-label="Content type">
-            <button id="mode-message" class="mode-button active" type="button" aria-pressed="true"><span aria-hidden="true">≡</span> Message</button>
-            <button id="mode-link" class="mode-button" type="button" aria-pressed="false"><span aria-hidden="true">↗</span> Link check</button>
-            <button id="mode-batch" class="mode-button" type="button" aria-pressed="false"><span aria-hidden="true">▤</span> Bulk check</button>
+            <button id="mode-message" class="mode-button active" type="button" aria-pressed="true">
+              <svg aria-hidden="true" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2.5 4h11M2.5 8h11M2.5 12h7" />
+              </svg>
+              <span>Message</span>
+            </button>
+            <button id="mode-link" class="mode-button" type="button" aria-pressed="false">
+              <svg aria-hidden="true" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M6.5 9.5l3-3" />
+                <path d="M8.5 5l1.3-1.3a2.4 2.4 0 0 1 3.4 3.4L11.9 8.4" />
+                <path d="M7.5 11l-1.3 1.3a2.4 2.4 0 0 1-3.4-3.4L4.1 7.6" />
+              </svg>
+              <span>Link check</span>
+            </button>
+            <button id="mode-batch" class="mode-button" type="button" aria-pressed="false">
+              <svg aria-hidden="true" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2.5" y="2.5" width="11" height="3.2" rx="0.8" />
+                <rect x="2.5" y="6.4" width="11" height="3.2" rx="0.8" />
+                <rect x="2.5" y="10.3" width="11" height="3.2" rx="0.8" />
+              </svg>
+              <span>Bulk check</span>
+            </button>
           </div>
 
           <div id="batch-options" class="batch-options" hidden>
             <div class="batch-option-row">
-              <div><label for="batch-kind">Each line contains</label><select id="batch-kind"><option value="message">A message</option><option value="url">A link</option></select></div>
-              <div class="file-import"><label for="batch-file" class="file-button">Import .txt <span aria-hidden="true">↑</span></label><input id="batch-file" class="visually-hidden" type="file" accept=".txt,text/plain" aria-describedby="batch-format-help"></div>
+              <div>
+                <label for="batch-kind">Each line contains</label>
+                <select id="batch-kind">
+                  <option value="message">A message</option>
+                  <option value="url">A link</option>
+                </select>
+              </div>
+              <div class="file-import">
+                <label for="batch-file" class="file-button">
+                  <span>Import .txt</span>
+                  <svg aria-hidden="true" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M8 11V3.5" />
+                    <path d="M5 6.5L8 3.5l3 3" />
+                    <path d="M3 13h10" />
+                  </svg>
+                </label>
+                <input id="batch-file" class="visually-hidden" type="file" accept=".txt,text/plain" aria-describedby="batch-format-help">
+              </div>
             </div>
             <p id="batch-format-help" class="hint">One input per line. Up to 100 lines and 100,000 characters. Import a UTF-8 text file up to 1 MiB. Blank lines are counted.</p>
             <button id="batch-demo" class="sample-button" type="button">Load a sample batch</button>
@@ -78,13 +129,28 @@
           </div>
 
           <div class="primary-actions">
-            <button id="analyze" type="button" class="primary-button"><span id="analyze-label">Analyze locally</span><span aria-hidden="true">→</span></button>
+            <button id="analyze" type="button" class="primary-button">
+              <span id="analyze-label">Analyze locally</span>
+              <svg aria-hidden="true" viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 8h10" />
+                <path d="M9 4l4 4-4 4" />
+              </svg>
+            </button>
             <button id="cancel-batch" type="button" class="quiet-button" hidden>Cancel</button>
             <button id="clear" type="button" class="quiet-button">Clear</button>
           </div>
           <p id="batch-progress" class="status" role="status" aria-live="polite" aria-atomic="true" hidden></p>
           <div class="page-analysis-buttons">
-            <button id="selection" type="button" class="selection-button" aria-busy="false"><span aria-hidden="true">⌁</span> Selection mode</button>
+            <button id="selection" type="button" class="selection-button" aria-busy="false">
+              <svg aria-hidden="true" viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 2.5H3.5a1 1 0 0 0-1 1V5" />
+                <path d="M11 2.5h1.5a1 1 0 0 1 1 1V5" />
+                <path d="M5 13.5H3.5a1 1 0 0 1-1-1V11" />
+                <path d="M11 13.5h1.5a1 1 0 0 0 1-1V11" />
+                <path d="M5.5 8h5" />
+              </svg>
+              <span>Selection mode</span>
+            </button>
           </div>
           <p class="disclaimer" role="note">Pattern checks can miss scams. Independently verify important requests.</p>
           <p id="status" class="status" role="status" aria-live="polite" aria-atomic="true"></p>
@@ -92,68 +158,187 @@
 
         <div class="report-panel">
           <section id="batch-results" class="batch-results" role="region" aria-labelledby="batch-heading" tabindex="-1" hidden>
-            <div class="batch-heading"><div><p class="eyebrow">BATCH RESULTS</p><h2 id="batch-heading">Review <span id="batch-total">0</span> inputs</h2></div><button id="download-batch" class="result-action" type="button" disabled>Save batch ↓</button></div>
+            <div class="batch-heading">
+              <div>
+                <p class="eyebrow">BATCH RESULTS</p>
+                <h2 id="batch-heading">Review <span id="batch-total">0</span> inputs</h2>
+              </div>
+              <button id="download-batch" class="result-action" type="button" disabled>
+                <span>Save batch</span>
+                <svg aria-hidden="true" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M8 2.5V10.5" />
+                  <path d="M5 7.5l3 3 3-3" />
+                  <path d="M3 13h10" />
+                </svg>
+              </button>
+            </div>
             <dl class="batch-counts">
               <div><dt>High-risk</dt><dd id="batch-high">0</dd></div>
               <div><dt>Review</dt><dd id="batch-review">0</dd></div>
               <div><dt>No match</dt><dd id="batch-no-match">0</dd></div>
               <div><dt>No result</dt><dd id="batch-cannot-analyze">0</dd></div>
             </dl>
-            <div class="batch-filter-row"><label for="batch-filter">Show</label><select id="batch-filter"><option value="all">All inputs</option><option value="high">High-risk patterns</option><option value="review">Needs review</option><option value="no_match">No clear match</option><option value="cannot_analyze">Could not analyze</option></select></div>
+            <div class="batch-filter-row">
+              <label for="batch-filter">Show</label>
+              <select id="batch-filter">
+                <option value="all">All inputs</option>
+                <option value="high">High-risk patterns</option>
+                <option value="review">Needs review</option>
+                <option value="no_match">No clear match</option>
+                <option value="cannot_analyze">Could not analyze</option>
+              </select>
+            </div>
             <p class="batch-instruction">Select a line to inspect its findings. Line numbers match your input, including blank lines.</p>
             <ul id="batch-list" class="batch-list"></ul>
             <p id="batch-empty-filter" class="batch-instruction" hidden>No inputs match this filter.</p>
             <p class="report-privacy">Saved batch reports include line numbers and generic findings, never source text or addresses. A “no match” result does not establish safety.</p>
           </section>
+
           <section id="empty-state" class="empty-state" aria-labelledby="empty-heading">
             <p class="eyebrow workspace-only"><span class="step-number">02</span> THE SECOND LOOK</p>
-            <div class="empty-illustration workspace-only" aria-hidden="true"><div class="orbit orbit-outer"></div><div class="orbit orbit-inner"></div><span class="inspect-mark">⌕</span><span class="orbit-dot"></span></div>
+            <div class="empty-illustration workspace-only" aria-hidden="true">
+              <div class="orbit orbit-outer"></div>
+              <div class="orbit orbit-inner"></div>
+              <span class="inspect-mark">
+                <svg aria-hidden="true" viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="10.5" cy="10.5" r="6.5" />
+                  <path d="M15.5 15.5L20 20" />
+                </svg>
+              </span>
+              <span class="orbit-dot"></span>
+            </div>
             <div class="empty-copy">
-              <span class="empty-icon" aria-hidden="true">⌕</span>
-              <div><h2 id="empty-heading">Your findings appear here.</h2><p>Check a message or link, or use Bulk check to review multiple inputs in one run.</p></div>
+              <span class="empty-icon" aria-hidden="true">
+                <svg aria-hidden="true" viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="9" cy="9" r="5.5" />
+                  <path d="M13.2 13.2L17 17" />
+                </svg>
+              </span>
+              <div>
+                <h2 id="empty-heading">Your findings appear here.</h2>
+                <p>Check a message or link, or use Bulk check to review multiple inputs in one run.</p>
+              </div>
             </div>
             <div class="preview-checks workspace-only">
-              <div><span aria-hidden="true">≡</span><p><strong>Read between the lines</strong>Pressure, urgency, and sensitive requests</p></div>
-              <div><span aria-hidden="true">↗</span><p><strong>Look beneath the link</strong>Address structure, without opening it</p></div>
-              <div><span aria-hidden="true">◎</span><p><strong>Know your next step</strong>Plain explanations and practical guidance</p></div>
+              <div>
+                <span aria-hidden="true">
+                  <svg aria-hidden="true" viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+                    <path d="M2.5 4h11M2.5 8h11M2.5 12h7" />
+                  </svg>
+                </span>
+                <p><strong>Read between the lines</strong>Pressure, urgency, and sensitive requests</p>
+              </div>
+              <div>
+                <span aria-hidden="true">
+                  <svg aria-hidden="true" viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6.5 9.5l3-3" />
+                    <path d="M8.5 5l1.3-1.3a2.4 2.4 0 0 1 3.4 3.4L11.9 8.4" />
+                    <path d="M7.5 11l-1.3 1.3a2.4 2.4 0 0 1-3.4-3.4L4.1 7.6" />
+                  </svg>
+                </span>
+                <p><strong>Look beneath the link</strong>Address structure, without opening it</p>
+              </div>
+              <div>
+                <span aria-hidden="true">
+                  <svg aria-hidden="true" viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="8" cy="8" r="5.5" />
+                    <circle cx="8" cy="8" r="2" />
+                  </svg>
+                </span>
+                <p><strong>Know your next step</strong>Plain explanations and practical guidance</p>
+              </div>
             </div>
             <p class="empty-footnote workspace-only">No account. No upload. No scan history.</p>
           </section>
 
           <section id="result" class="result" role="region" aria-labelledby="risk" tabindex="-1" hidden>
             <div class="result-banner">
-              <p id="result-context" class="eyebrow">Message check</p>
+              <div class="banner-top">
+                <span class="risk-icon" aria-hidden="true">
+                  <svg class="icon-high" viewBox="0 0 20 20" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M10 3L2.2 16.5h15.6L10 3z" />
+                    <path d="M10 8v4" />
+                    <circle cx="10" cy="14.3" r="0.6" fill="currentColor" />
+                  </svg>
+                  <svg class="icon-review" viewBox="0 0 20 20" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="10" cy="10" r="7.5" />
+                    <path d="M10 6.5v4.2" />
+                    <circle cx="10" cy="13.5" r="0.6" fill="currentColor" />
+                  </svg>
+                  <svg class="icon-no-match" viewBox="0 0 20 20" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="9.2" cy="9.2" r="5.5" />
+                    <path d="M13.5 13.5L17 17" />
+                    <path d="M7.2 9.2h4" />
+                  </svg>
+                  <svg class="icon-cannot-analyze" viewBox="0 0 20 20" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="10" cy="10" r="7.5" stroke-dasharray="3 2.5" />
+                    <path d="M7.5 10h5" />
+                  </svg>
+                </span>
+                <p id="result-context" class="eyebrow">Message check</p>
+              </div>
               <h2 id="risk"></h2>
               <p id="summary"></p>
             </div>
+            <div id="link-summary" class="link-summary" hidden></div>
+            <div id="next-steps-group" class="result-group next-steps">
+              <h3>What to do next</h3>
+              <ul id="next-steps"></ul>
+            </div>
+            <div class="result-group">
+              <h3>Evidence noticed</h3>
+              <ul id="reasons" class="evidence-list"></ul>
+            </div>
+            <details id="checks-details" class="checks-details" open>
+              <summary>Explore the checks</summary>
+              <div id="checks-group" class="result-group">
+                <h3>Checks performed</h3>
+                <ul id="checks" class="check-list"></ul>
+              </div>
+            </details>
             <div class="result-metrics" aria-label="Report details">
               <div><strong id="result-check-count">—</strong><span>reported checks</span></div>
               <div><strong id="result-link-count">—</strong><span>input addresses</span></div>
               <div><strong>Local</strong><span>analysis only</span></div>
             </div>
-            <div id="link-summary" class="link-summary" hidden></div>
-            <div id="next-steps-group" class="result-group next-steps"><h3>What to do next</h3><ul id="next-steps"></ul></div>
             <div class="result-actions">
               <button id="edit-input" type="button" class="result-action">Edit input</button>
               <button id="locate-batch-line" type="button" class="result-action" hidden>Locate input</button>
-              <button id="download-report" type="button" class="result-action">Save report <span aria-hidden="true">↓</span></button>
+              <button id="download-report" type="button" class="result-action">
+                <span>Save report</span>
+                <svg aria-hidden="true" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M8 2.5V10.5" />
+                  <path d="M5 7.5l3 3 3-3" />
+                  <path d="M3 13h10" />
+                </svg>
+              </button>
             </div>
             <p class="report-privacy">Saved reports exclude your message and link addresses.</p>
-            <div class="result-group"><h3>Evidence noticed</h3><ul id="reasons" class="evidence-list"></ul></div>
-            <details id="checks-details" class="checks-details" open>
-              <summary>Explore the checks</summary>
-              <div id="checks-group" class="result-group"><h3>Checks performed</h3><ul id="checks" class="check-list"></ul></div>
-            </details>
           </section>
         </div>
       </div>
 
       <section class="field-notes workspace-only" aria-labelledby="notes-heading">
-        <div class="notes-heading"><p class="eyebrow">A FEW GOOD HABITS</p><h2 id="notes-heading">Keep your next move yours.</h2></div>
+        <div class="notes-heading">
+          <p class="eyebrow">A FEW GOOD HABITS</p>
+          <h2 id="notes-heading">Keep your next move yours.</h2>
+        </div>
         <div class="notes-grid">
-          <article><span class="note-number">01 / PAUSE</span><h3>Urgency is a reason to slow down.</h3><p>A deadline, prize, or account threat can pressure you into acting before checking.</p></article>
-          <article><span class="note-number">02 / VERIFY</span><h3>Take a separate route.</h3><p>Open an official app or use a contact you already trust to confirm an unexpected request.</p></article>
-          <article><span class="note-number">03 / PROTECT</span><h3>Keep your credentials close.</h3><p>Do not share passwords or verification codes in response to an unexpected message.</p></article>
+          <article>
+            <span class="note-number">01 / PAUSE</span>
+            <h3>Urgency is a reason to slow down.</h3>
+            <p>A deadline, prize, or account threat can pressure you into acting before checking.</p>
+          </article>
+          <article>
+            <span class="note-number">02 / VERIFY</span>
+            <h3>Take a separate route.</h3>
+            <p>Open an official app or use a contact you already trust to confirm an unexpected request.</p>
+          </article>
+          <article>
+            <span class="note-number">03 / PROTECT</span>
+            <h3>Keep your credentials close.</h3>
+            <p>Do not share passwords or verification codes in response to an unexpected message.</p>
+          </article>
         </div>
       </section>
 

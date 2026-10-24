@@ -7602,3 +7602,51 @@ Decision: Refine detector rules for native/Romanized action verbs and telephone 
 
 None.
 
+---
+
+## Record LUNA-20261024-010
+
+- Lifecycle state: Finalized
+- Date/time: 2026-10-24 11:35 IST
+- Branch: `feat/v0.6-cleanup-and-transliteration`
+- Planned commit subject: `Implement modern UI layout and responsive stylesheet with Indic typography`
+- Required trailer: `Luna-ID: LUNA-20261024-010`
+- Commit SHA: Pending
+- Prior commit SHAs in cycle: `ecf6dfd`
+- Parent SHA: `ecf6dfd`
+- Affected paths:
+  - `browser_extension/popup.html`
+  - `browser_extension/styles.css`
+  - `tests/browser/extension.spec.mjs`
+  - `docs/CHANGE_DECISION_LOG.md`
+
+### Significant changes & decisions
+
+Decision: Modernize extension popup and workspace layout with inline SVG icons, reordered action-first findings structure, and high-contrast dual-theme CSS design system.
+
+1. **Popup HTML Structure (`browser_extension/popup.html`)**:
+   - Integrated semantic SVG icon vectors directly into header brand mark, status badge, mode buttons, action buttons, risk status badges, and empty-state visual illustrations.
+   - Structured result panels to present immediate guidance first (`#next-steps`), followed by observed signals (`#reasons`), and expandable technical verifications (`#checks`).
+   - Added two-column responsive layout structures and empty-state orbital inspect graphic for the expanded workspace view (`data-view="workspace"`).
+2. **Design System & Stylesheet (`browser_extension/styles.css`)**:
+   - Defined custom properties on `:root` for light and dark themes using a `#1f3a5f` VIT-navy primary accent, neutral slate-blue (`--risk-neutral-*`) for "no match", and >= 4.5:1 WCAG contrast across all states.
+   - Configured accessible opaque keyboard focus rings (`outline: 2px solid #fff; box-shadow: 0 0 0 5px #075985;`) across buttons, textareas, selects, and links.
+   - Enforced Indic-script typography scale with fallback fonts (`Noto Sans`, `Noto Sans Devanagari`, `Noto Sans Tamil`, `Noto Sans Telugu`, `Nirmala UI`) and Indic-friendly line-height (`1.65`) and zero letter-spacing.
+   - Implemented responsive reflow down to 320px with zero horizontal scroll, and sticky two-column layout on wide screens up to 1440px.
+3. **Browser Test Teardown Resilience (`tests/browser/extension.spec.mjs`)**:
+   - Updated `openToolbarPopup` helper to record existing target IDs before triggering actions and select only newly spawned popup targets, preventing race conditions with closing popup targets across test transitions.
+
+### Verification
+
+- `npm test`: 174 passed, 0 failed (including performance benchmark gates).
+- `npm run test:browser`: 22 passed, 0 failed (all Playwright browser extension and workspace tests).
+- `uv run pytest -q`: 415 passed, 24 skipped, 365 subtests passed, 0 failed.
+
+### Remaining risks
+
+- Visual font rendering depends on locally available system Indic fonts or OS fallback stacks (e.g. Nirmala UI on Windows, Noto Sans / Sangam on macOS/Linux).
+
+### Correction history
+
+None.
+
