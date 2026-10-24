@@ -7415,3 +7415,64 @@ Decision: Complete full cleanup pass on branch `feat/phase1-privacy-and-phase2-e
 
 None.
 
+---
+
+## Record LUNA-20261024-007
+
+- Lifecycle state: Finalized
+- Date/time: 2026-10-24 10:00 IST
+- Branch: `feat/v0.6-cleanup-and-transliteration`
+- Planned commit subject: `Update change log and evaluation results`
+- Required trailer: `Luna-ID: LUNA-20261024-007`
+- Commit SHA: Pending
+- Prior commit SHAs in cycle: `d85c65e`, `98fb99c`, `3810e7a`, `3449df7`, `0577919`, `dfda2c9`
+- Parent SHA: `dfda2c9`
+- Affected paths:
+  - `docs/CHANGE_DECISION_LOG.md`
+  - `eval/messages.jsonl`
+  - `eval/handwritten.jsonl`
+  - `eval/results/rules_errors.jsonl`
+  - `eval/results/rules_metrics.json`
+  - `eval/results/translit_metrics.json`
+  - `eval/results/translit_accuracy_hindi.json`
+  - `eval/results/translit_accuracy_tamil.json`
+  - `eval/results/translit_accuracy_telugu.json`
+
+### Significant changes & decisions
+
+Decision: Ingest public benchmark datasets (UCI SMS Spam Collection, Dakshina lexicons and romanized sentences) into standardized Fisher evaluation format, evaluate transliteration accuracy and language-agnostic condition D, and verify end-to-end detection on real messages with strict false-positive controls.
+
+1. **Step 0 ("Ignore downloaded datasets")**: Added `dakshina_dataset_v1.0/`, `"sms spam collection/"`, `data/`, and `eval/public_*.jsonl` to `.gitignore`. Verified read-only inspection of Dakshina TSV lexicons and romanized texts, and UCI tab-separated messages.
+2. **Step 1 ("Detect lottery and PAN lures with link or phone")**: Added `lure` SIGNAL (weight 2) in `detector.mjs` matching lottery, prize, winner, lucky draw, KBC, and PAN card block/update lures in English, Hindi, Tamil, and Telugu; added `hasPhoneNumber` regex for Indian 10-digit mobile numbers (`/\b[6-9]\d{9}\b/`); incorporated lure with link/phone into `highRiskCombination`. Verified realistic message tests in `browser_extension/tests/realistic_messages.test.mjs`.
+3. **Step 2 ("Experiment: language-agnostic condition")**: Added condition D ("C-all") in `scripts/translit_experiment.py` running 5 variants across Hindi, Tamil, and Telugu (15 total) without language oracle; added McNemar tests (B vs D, C-max vs D) and limitation note. Verified with pytest fixture.
+4. **Step 3 ("Add public dataset importer")**: Implemented `scripts/import_public.py` with CLI subcommands `uci` and `dakshina-sentences`. Applied deduplication, newline flattening, length filtering (< 4 words skipped for Dakshina), ID numbering (`pub-uci-XXXX`, `pub-dakshina-<lang>-XXXX`), and schema validation via `eval.load.load_messages`.
+5. **Step 4 ("Add transliteration accuracy script")**: Implemented `scripts/translit_accuracy.py` evaluating top-1, top-5, and anywhere candidate accuracy (unweighted and count-weighted) on Dakshina lexicons, with length breakdown (< 5 vs >= 5 letters) and fixed limitation text `"rule-based; Wikipedia vocabulary, not SMS vocabulary"`.
+6. **Step 5 ("Add evaluation set builder")**: Implemented `scripts/build_eval_set.py` merging `eval/handwritten.jsonl` (copied from `eval/messages.template.jsonl` if missing) and `eval/public_*.jsonl` into `eval/messages.jsonl`. Enforced `--public-benign-cap` ensuring public benign messages do not outnumber handwritten scam messages by more than 3:1 per language.
+7. **Step 6 ("Run and report")**:
+   - Imported UCI SMS messages (100 per class) and Dakshina sentences (150 each for Hindi, Tamil, Telugu).
+   - Evaluated transliteration accuracy on Dakshina test lexicons:
+     - Hindi: Top-1: 10.4% (w: 11.27%), Top-5: 24.5% (w: 25.48%), Anywhere: 27.1% (w: 28.02%)
+     - Tamil: Top-1: 6.15% (w: 7.99%), Top-5: 20.55% (w: 26.14%), Anywhere: 21.75% (w: 27.58%)
+     - Telugu: Top-1: 5.0% (w: 6.41%), Top-5: 23.8% (w: 29.26%), Anywhere: 28.5% (w: 35.5%)
+   - Built evaluation set: 120 messages total (104 scam, 16 benign; 105 English, 5 Hindi, 5 Tamil, 5 Telugu).
+   - Evaluated rule detector: 0 false positives on public benign messages (FPR = 0.00% across all languages and scripts).
+   - Evaluated transliteration experiment: all conditions (A, B, C-max, C-weighted, D) scored F1 = 1.0 on evaluation set.
+
+### Verification
+
+- `npm test`: 168 passed, 0 failed.
+- `npm run test:browser`: 22 passed, 0 failed.
+- `uv run pytest -q`: 406 passed, 24 skipped, 365 subtests passed, 0 failed.
+- `npm run eval:rules`: 120 items evaluated, 0 false positives (FPR = 0.00%).
+- `uv run python scripts/translit_experiment.py`: 13 romanized items evaluated, Condition D verified.
+
+### Remaining risks
+
+- Lexicon domain shift: Dakshina vocabulary is drawn from Wikipedia, whereas phishing lures employ conversational and SMS abbreviations.
+- Language-agnostic condition D increases candidate volume from 5 to 15, slightly increasing evaluation latency while eliminating the language identification oracle.
+
+### Correction history
+
+None.
+
+

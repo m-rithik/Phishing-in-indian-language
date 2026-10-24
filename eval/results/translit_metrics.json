@@ -1,5 +1,5 @@
 {
-  "n_items": 4,
+  "n_items": 13,
   "k": 5,
   "positive_risks": [
     "high",
@@ -8,16 +8,17 @@
   "limitations": [
     "Rule-based detector; no learned model.",
     "Oracle language ID: the item's language field selects the transliteration script.",
+    "D removes the oracle: no language label is used.",
     "Small or synthetic evaluation data; no claim of real-world accuracy.",
     "Messages are flattened to one line for the batch CLI."
   ],
   "conditions": {
     "A": {
       "overall": {
-        "n": 4,
+        "n": 13,
         "TP": 3,
         "FP": 0,
-        "TN": 1,
+        "TN": 10,
         "FN": 0,
         "precision": 1.0,
         "recall": 1.0,
@@ -25,30 +26,30 @@
       },
       "per_language": {
         "hindi": {
-          "n": 2,
+          "n": 5,
           "TP": 1,
           "FP": 0,
-          "TN": 1,
+          "TN": 4,
           "FN": 0,
           "precision": 1.0,
           "recall": 1.0,
           "f1": 1.0
         },
         "tamil": {
-          "n": 1,
+          "n": 4,
           "TP": 1,
           "FP": 0,
-          "TN": 0,
+          "TN": 3,
           "FN": 0,
           "precision": 1.0,
           "recall": 1.0,
           "f1": 1.0
         },
         "telugu": {
-          "n": 1,
+          "n": 4,
           "TP": 1,
           "FP": 0,
-          "TN": 0,
+          "TN": 3,
           "FN": 0,
           "precision": 1.0,
           "recall": 1.0,
@@ -58,10 +59,10 @@
     },
     "B": {
       "overall": {
-        "n": 4,
+        "n": 13,
         "TP": 3,
         "FP": 0,
-        "TN": 1,
+        "TN": 10,
         "FN": 0,
         "precision": 1.0,
         "recall": 1.0,
@@ -69,30 +70,30 @@
       },
       "per_language": {
         "hindi": {
-          "n": 2,
+          "n": 5,
           "TP": 1,
           "FP": 0,
-          "TN": 1,
+          "TN": 4,
           "FN": 0,
           "precision": 1.0,
           "recall": 1.0,
           "f1": 1.0
         },
         "tamil": {
-          "n": 1,
+          "n": 4,
           "TP": 1,
           "FP": 0,
-          "TN": 0,
+          "TN": 3,
           "FN": 0,
           "precision": 1.0,
           "recall": 1.0,
           "f1": 1.0
         },
         "telugu": {
-          "n": 1,
+          "n": 4,
           "TP": 1,
           "FP": 0,
-          "TN": 0,
+          "TN": 3,
           "FN": 0,
           "precision": 1.0,
           "recall": 1.0,
@@ -102,10 +103,10 @@
     },
     "C-max": {
       "overall": {
-        "n": 4,
+        "n": 13,
         "TP": 3,
         "FP": 0,
-        "TN": 1,
+        "TN": 10,
         "FN": 0,
         "precision": 1.0,
         "recall": 1.0,
@@ -113,30 +114,30 @@
       },
       "per_language": {
         "hindi": {
-          "n": 2,
+          "n": 5,
           "TP": 1,
           "FP": 0,
-          "TN": 1,
+          "TN": 4,
           "FN": 0,
           "precision": 1.0,
           "recall": 1.0,
           "f1": 1.0
         },
         "tamil": {
-          "n": 1,
+          "n": 4,
           "TP": 1,
           "FP": 0,
-          "TN": 0,
+          "TN": 3,
           "FN": 0,
           "precision": 1.0,
           "recall": 1.0,
           "f1": 1.0
         },
         "telugu": {
-          "n": 1,
+          "n": 4,
           "TP": 1,
           "FP": 0,
-          "TN": 0,
+          "TN": 3,
           "FN": 0,
           "precision": 1.0,
           "recall": 1.0,
@@ -146,10 +147,10 @@
     },
     "C-weighted": {
       "overall": {
-        "n": 4,
+        "n": 13,
         "TP": 3,
         "FP": 0,
-        "TN": 1,
+        "TN": 10,
         "FN": 0,
         "precision": 1.0,
         "recall": 1.0,
@@ -157,30 +158,74 @@
       },
       "per_language": {
         "hindi": {
-          "n": 2,
+          "n": 5,
           "TP": 1,
           "FP": 0,
-          "TN": 1,
+          "TN": 4,
           "FN": 0,
           "precision": 1.0,
           "recall": 1.0,
           "f1": 1.0
         },
         "tamil": {
-          "n": 1,
+          "n": 4,
           "TP": 1,
           "FP": 0,
-          "TN": 0,
+          "TN": 3,
           "FN": 0,
           "precision": 1.0,
           "recall": 1.0,
           "f1": 1.0
         },
         "telugu": {
-          "n": 1,
+          "n": 4,
           "TP": 1,
           "FP": 0,
-          "TN": 0,
+          "TN": 3,
+          "FN": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        }
+      }
+    },
+    "D": {
+      "overall": {
+        "n": 13,
+        "TP": 3,
+        "FP": 0,
+        "TN": 10,
+        "FN": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "per_language": {
+        "hindi": {
+          "n": 5,
+          "TP": 1,
+          "FP": 0,
+          "TN": 4,
+          "FN": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "tamil": {
+          "n": 4,
+          "TP": 1,
+          "FP": 0,
+          "TN": 3,
+          "FN": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "telugu": {
+          "n": 4,
+          "TP": 1,
+          "FP": 0,
+          "TN": 3,
           "FN": 0,
           "precision": 1.0,
           "recall": 1.0,
@@ -191,19 +236,31 @@
   },
   "mcnemar_exact": {
     "A_vs_B": {
-      "n_items": 4,
+      "n_items": 13,
       "first_only_correct": 0,
       "second_only_correct": 0,
       "p_value": 1.0
     },
     "B_vs_C-max": {
-      "n_items": 4,
+      "n_items": 13,
       "first_only_correct": 0,
       "second_only_correct": 0,
       "p_value": 1.0
     },
     "B_vs_C-weighted": {
-      "n_items": 4,
+      "n_items": 13,
+      "first_only_correct": 0,
+      "second_only_correct": 0,
+      "p_value": 1.0
+    },
+    "B_vs_D": {
+      "n_items": 13,
+      "first_only_correct": 0,
+      "second_only_correct": 0,
+      "p_value": 1.0
+    },
+    "C-max_vs_D": {
+      "n_items": 13,
       "first_only_correct": 0,
       "second_only_correct": 0,
       "p_value": 1.0

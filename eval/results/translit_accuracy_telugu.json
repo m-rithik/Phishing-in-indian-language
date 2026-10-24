@@ -1,0 +1,39 @@
+{
+  "language": "telugu",
+  "lexicon_path": "dakshina_dataset_v1.0\\te\\lexicons\\te.translit.sampled.test.tsv",
+  "max_pairs_requested": 2000,
+  "n_pairs_evaluated": 2000,
+  "overall": {
+    "n_pairs": 2000,
+    "total_count": 2997,
+    "top1_unweighted": 0.05,
+    "top5_unweighted": 0.238,
+    "anywhere_unweighted": 0.285,
+    "top1_weighted": 0.0641,
+    "top5_weighted": 0.2926,
+    "anywhere_weighted": 0.355
+  },
+  "shorter_than_5_letters": {
+    "n_pairs": 126,
+    "total_count": 227,
+    "top1_unweighted": 0.1111,
+    "top5_unweighted": 0.3651,
+    "anywhere_unweighted": 0.3968,
+    "top1_weighted": 0.1145,
+    "top5_weighted": 0.4537,
+    "anywhere_weighted": 0.489
+  },
+  "5_letters_or_more": {
+    "n_pairs": 1874,
+    "total_count": 2770,
+    "top1_unweighted": 0.0459,
+    "top5_unweighted": 0.2295,
+    "anywhere_unweighted": 0.2775,
+    "top1_weighted": 0.0599,
+    "top5_weighted": 0.2794,
+    "anywhere_weighted": 0.344
+  },
+  "limitations": [
+    "rule-based; Wikipedia vocabulary, not SMS vocabulary"
+  ]
+}
