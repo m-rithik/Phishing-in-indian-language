@@ -87,3 +87,37 @@ test("Hindi advisory not to share OTP is not high", () => {
 test("benign team lunch message is no_match", () => {
   assert.equal(analyze("Hi, team lunch moved to 1 PM").risk, "no_match");
 });
+
+test("KBC lottery lure with link is high", () => {
+  assert.equal(
+    analyze(
+      "Congratulations! You won KBC lottery of Rs 25 lakh. Pay processing fee at bit.ly/kbc-claim",
+    ).risk,
+    "high",
+  );
+});
+
+test("PAN card block lure with link is high", () => {
+  assert.equal(
+    analyze("Your PAN card will be blocked. Update now: pan-update-india.xyz").risk,
+    "high",
+  );
+});
+
+test("prize lure with phone number is high", () => {
+  assert.equal(
+    analyze("You have won a prize! Call 9876543210 to claim").risk,
+    "high",
+  );
+});
+
+test("benign prize or lottery discussion without link or phone is not high", () => {
+  assert.notEqual(
+    analyze("I won the prize at our office quiz!").risk,
+    "high",
+  );
+  assert.notEqual(
+    analyze("Lottery results are out; check the official site").risk,
+    "high",
+  );
+});

@@ -78,6 +78,13 @@ const SIGNALS = [
     pattern:
       /₹|\b(?:payment|pay now|prize|lottery|reward|refund|cashback|pay (?:the )?fine|loan|rupees?|lakh)\b|रुपये|इनाम|जुर्माना|ऋण|பணம்|பரிசு|அபராதம்|கடன்|రూపాయలు|బహుమతి|జరిమానా|రుణం/iu,
   },
+  {
+    category: "lure",
+    weight: 2,
+    reason: "Offers rewards, prizes, lottery winnings, or urgent identity-card alerts.",
+    pattern:
+      /\b(?:lottery|prize|winner|jackpot|lucky draw|kbc|you have won|congratulations.{0,30}won|pan card.{0,20}(?:blocked|suspended|update|link))\b|इनाम|जीता|பரிசு|బహుమతి/iu,
+  },
 ];
 
 const PROTECTIVE_ADVISORY =
@@ -278,6 +285,8 @@ function analyzeMessageContext(input, messageContext) {
     reasons.push("Contains a locally recognized web address pattern.");
   }
 
+  const hasPhoneNumber = /\b[6-9]\d{9}\b/.test(normalized.text);
+
   if (normalized.removedFormat) {
     score += 1;
     reasons.push("Contains invisible or formatting characters that can hide words.");
@@ -306,7 +315,11 @@ function analyzeMessageContext(input, messageContext) {
     (!PROTECTIVE_ADVISORY.test(normalized.text) &&
       categories.has("impersonation") &&
       hasInspectedLink &&
-      (categories.has("credential") || categories.has("urgency") || categories.has("money")));
+      (categories.has("credential") || categories.has("urgency") || categories.has("money"))) ||
+    (categories.has("lure") &&
+      (hasInspectedLink || hasPhoneNumber) &&
+      (categories.has("money") || categories.has("action")) &&
+      !PROTECTIVE_ADVISORY.test(normalized.text));
   const risk = highRiskCombination
     ? "high"
     : messageContext.linkResult.limited || hasConfusableSensitiveTerm || score >= 3
