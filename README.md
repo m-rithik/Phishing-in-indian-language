@@ -10,7 +10,7 @@ text. Results explain the detected patterns and suggest what to do next.
 1. Open `chrome://extensions` or `edge://extensions`, enable **Developer mode**,
    and **Load unpacked** from the `browser_extension` folder.
 2. Open Fisher. Choose **Message** or **Link check**, paste an input, and analyze.
-   You can also select page text and use the explicit selection button.
+   You can also select page text and use the right-click item "Check selection with Fisher".
 3. Use the same engine from a terminal (Node.js 22+):
 
    ```console
@@ -29,8 +29,8 @@ For more room, choose **Open a roomy workspace** in the popup. The expanded view
 adds side-by-side input and findings, follows your system's light/dark appearance,
 and includes synthetic Hindi, Tamil, Telugu, and everyday-message examples.
 **Save report** downloads generic findings as JSON without your submitted text or
-link addresses. Each workspace starts with an empty draft; page selection stays
-in the toolbar popup.
+link addresses. Each workspace starts with an empty draft; selected-text checks
+run only from the right-click menu.
 
 **Bulk check** accepts pasted inputs or a local UTF-8 `.txt` file, one message or
 link per line. Review up to 100 inputs, filter by result, inspect individual line

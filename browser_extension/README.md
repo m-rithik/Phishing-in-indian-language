@@ -139,7 +139,7 @@ The sections above describe only the explicit selection path. There are no netwo
 - `analyzer.mjs`: versioned report shared with the CLI; combines message-rule results, structural link observations, and next steps.
 - `links.mjs`: canonical bounded local URL extraction and structure checks; locator-shaped and email-shaped spans are masked before message semantic matching so their host, path, and address words do not become message cues. It uses no network or reputation data.
 - `detector.mjs`: fail-closed input bounding, Unicode compatibility normalization, removal of invisible formatting characters, transparent multilingual/romanized signal rules, protective-context labeling, the frozen review-only profile described below, and deterministic category-combination decisions.
-- `tests/*.test.mjs`: dependency-free Node tests for the analyzer, detector, permission bridge, UI controller, Unicode bounds, privacy, and stale-result cancellation.
+- `tests/*.test.mjs`: dependency-free Node tests for the analyzer, detector, UI controller, Unicode bounds, privacy, and stale-result cancellation.
 - `../fisher.mjs`: stdin-only local companion, not part of the extension.
 
 The rules cover a deliberately small set of English, Hindi/Devanagari, Tamil, Telugu, and Romanized Indic signals. They do not establish language coverage, accuracy, robustness, or research performance.
@@ -167,7 +167,7 @@ npx playwright install chromium
 npm run test:browser
 ```
 
-Browser tests install the real unpacked extension into a temporary Chromium profile and use synthetic fixtures. They exercise paste/link interactions, the actual toolbar action, selected text, and automated accessibility. Test-only DevTools extension debugging never touches your existing browser profile. Playwright and axe are development-only dependencies; neither is bundled into the extension. The tests follow [Playwright's Chromium extension workflow](https://playwright.dev/docs/chrome-extensions) and the experimental [DevTools extension commands](https://chromedevtools.github.io/devtools-protocol/tot/Extensions/). Automated checks do not replace human language review or testing with assistive technology. Microsoft Edge and non-Chromium browsers are not covered by this suite.
+Browser tests install the real unpacked extension into a temporary Chromium profile and use synthetic fixtures. Browser tests cover the popup flows, accessibility and registration of the right-click menu item; they do not click the menu or read page selections. Test-only DevTools extension debugging never touches your existing browser profile. Playwright and axe are development-only dependencies; neither is bundled into the extension. The tests follow [Playwright's Chromium extension workflow](https://playwright.dev/docs/chrome-extensions) and the experimental [DevTools extension commands](https://chromedevtools.github.io/devtools-protocol/tot/Extensions/). Automated checks do not replace human language review or testing with assistive technology. Microsoft Edge and non-Chromium browsers are not covered by this suite.
 
 The repository's `Fisher checks` workflow runs unit tests, Chromium checks, and Python tests on GitHub once this source is pushed. It has read-only repository permissions and does not publish artifacts or deploy a release.
 
