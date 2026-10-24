@@ -22,13 +22,12 @@ def build_evaluation_set(
     template_path: Path = Path("eval/messages.template.jsonl"),
     public_glob_pattern: str = "eval/public_*.jsonl",
     output_path: Path = Path("eval/messages.jsonl"),
-    public_benign_cap_ratio: float = 3.0,
+    public_benign_cap_ratio: Optional[float] = None,
 ) -> List[Dict[str, Any]]:
     """Merge handwritten messages and public datasets into eval/messages.jsonl.
 
     - Creates handwritten_path from template_path if missing.
-    - Caps public benign messages per language so they do not outnumber
-      handwritten scam messages by more than public_benign_cap_ratio to 1.
+    - Default: includes all imported public benign messages (no 3:1 cap unless specified).
     - Deduplicates by normalized text and ensures unique IDs.
     - Validates output with eval.load.load_messages.
     - Prints summary breakdown per language, script, label, and source.
@@ -80,8 +79,8 @@ def build_evaluation_set(
             lang = rec["language"]
             label = rec["label"]
 
-            # Cap public benign messages per language
-            if label == "benign":
+            # Cap public benign messages per language only if public_benign_cap_ratio is specified
+            if label == "benign" and public_benign_cap_ratio is not None:
                 scam_count = hw_scam_counts.get(lang, 0)
                 max_allowed_benign = int(scam_count * public_benign_cap_ratio)
                 if public_benign_counts[lang] >= max_allowed_benign:
@@ -150,7 +149,7 @@ def main():
     parser.add_argument("--template", type=Path, default=Path("eval/messages.template.jsonl"), help="Path to template messages")
     parser.add_argument("--public-glob", type=str, default="eval/public_*.jsonl", help="Glob pattern for public files")
     parser.add_argument("--out", "-o", type=Path, default=Path("eval/messages.jsonl"), help="Output path for eval set")
-    parser.add_argument("--public-benign-cap", type=float, default=3.0, help="Max ratio of public benign to handwritten scam per language")
+    parser.add_argument("--public-benign-cap", type=float, default=None, help="Optional max ratio of public benign to handwritten scam per language (default: None, no cap)")
 
     args = parser.parse_args()
 

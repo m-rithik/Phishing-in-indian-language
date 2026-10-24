@@ -48,7 +48,7 @@ def test_build_eval_set(tmp_path: Path):
         for r in pub_uci_data:
             f.write(json.dumps(r) + "\n")
 
-    # Run builder
+    # Run builder with explicit cap
     records = build_evaluation_set(
         handwritten_path=handwritten_path,
         template_path=template_path,
@@ -77,3 +77,42 @@ def test_build_eval_set(tmp_path: Path):
     # 4. Validated with load_messages
     loaded = load_messages(out_path)
     assert len(loaded) == len(records)
+
+
+def test_build_eval_set_default_uncapped(tmp_path: Path):
+    template_path = tmp_path / "template.jsonl"
+    handwritten_path = tmp_path / "handwritten.jsonl"
+    public_file_hi = tmp_path / "public_dakshina_hi.jsonl"
+    out_path = tmp_path / "messages_uncapped.jsonl"
+
+    hw_data = [
+        {"id": "hw-hi-01", "text": "Aapka account block hoga turant OTP bhejo", "label": "scam", "language": "hindi", "script": "romanized", "source": "synthetic"},
+        {"id": "hw-hi-02", "text": "Kal milte hain chai pe", "label": "benign", "language": "hindi", "script": "romanized", "source": "synthetic"},
+    ]
+    with open(template_path, "w", encoding="utf-8") as f:
+        for r in hw_data:
+            f.write(json.dumps(r) + "\n")
+
+    pub_hi_data = [
+        {"id": f"pub-dakshina-hi-{i:04d}", "text": f"Kumbh rashi sentence number {i} with long text", "label": "benign", "language": "hindi", "script": "romanized", "source": "public:Dakshina"}
+        for i in range(1, 10)
+    ]
+    with open(public_file_hi, "w", encoding="utf-8") as f:
+        for r in pub_hi_data:
+            f.write(json.dumps(r) + "\n")
+
+    # Run default (uncapped)
+    records = build_evaluation_set(
+        handwritten_path=handwritten_path,
+        template_path=template_path,
+        public_glob_pattern=str(tmp_path / "public_*.jsonl"),
+        output_path=out_path,
+    )
+
+    # All 9 public benign + 1 hw benign = 10 benign, 1 hw scam = 11 total
+    benign_recs = [r for r in records if r["label"] == "benign"]
+    scam_recs = [r for r in records if r["label"] == "scam"]
+    assert len(benign_recs) == 10
+    assert len(scam_recs) == 1
+    assert len(records) == 11
+
