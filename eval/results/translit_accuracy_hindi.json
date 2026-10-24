@@ -6,32 +6,32 @@
   "overall": {
     "n_pairs": 2000,
     "total_count": 3673,
-    "top1_unweighted": 0.104,
-    "top5_unweighted": 0.245,
-    "anywhere_unweighted": 0.271,
-    "top1_weighted": 0.1127,
-    "top5_weighted": 0.2548,
-    "anywhere_weighted": 0.2802
+    "top1_unweighted": 0.1225,
+    "top5_unweighted": 0.257,
+    "anywhere_unweighted": 0.275,
+    "top1_weighted": 0.1356,
+    "top5_weighted": 0.2665,
+    "anywhere_weighted": 0.284
   },
   "shorter_than_5_letters": {
     "n_pairs": 260,
     "total_count": 566,
-    "top1_unweighted": 0.2154,
-    "top5_unweighted": 0.35,
+    "top1_unweighted": 0.2538,
+    "top5_unweighted": 0.3692,
     "anywhere_unweighted": 0.3731,
-    "top1_weighted": 0.2473,
-    "top5_weighted": 0.3816,
+    "top1_weighted": 0.3074,
+    "top5_weighted": 0.3975,
     "anywhere_weighted": 0.4028
   },
   "5_letters_or_more": {
     "n_pairs": 1740,
     "total_count": 3107,
-    "top1_unweighted": 0.0874,
-    "top5_unweighted": 0.2293,
-    "anywhere_unweighted": 0.2557,
-    "top1_weighted": 0.0882,
-    "top5_weighted": 0.2317,
-    "anywhere_weighted": 0.2578
+    "top1_unweighted": 0.1029,
+    "top5_unweighted": 0.2402,
+    "anywhere_unweighted": 0.2603,
+    "top1_weighted": 0.1043,
+    "top5_weighted": 0.2427,
+    "anywhere_weighted": 0.2623
   },
   "limitations": [
     "rule-based; Wikipedia vocabulary, not SMS vocabulary"

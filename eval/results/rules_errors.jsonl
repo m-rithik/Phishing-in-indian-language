@@ -15,7 +15,7 @@
 {"setting":"high_or_review","id":"pub-uci-0117","label":"scam","predicted_risk":"no_match","reasons":["Offers rewards, prizes, lottery winnings, or urgent identity-card alerts."]}
 {"setting":"high_or_review","id":"pub-uci-0120","label":"scam","predicted_risk":"no_match","reasons":["Pushes the reader to click, open, call, send, share, or update."]}
 {"setting":"high_or_review","id":"pub-uci-0123","label":"scam","predicted_risk":"no_match","reasons":["Pushes the reader to click, open, call, send, share, or update."]}
-{"setting":"high_or_review","id":"pub-uci-0132","label":"benign","predicted_risk":"review","reasons":["Pushes the reader to click, open, call, send, share, or update.","Contains a locally recognized web address pattern.","A web address was found and should be verified independently."]}
+{"setting":"high_or_review","id":"pub-uci-0132","label":"benign","predicted_risk":"review","reasons":["Contains a locally recognized web address pattern.","A web address was found and should be verified independently."]}
 {"setting":"high_or_review","id":"pub-uci-0134","label":"scam","predicted_risk":"no_match","reasons":["No configured scam-signal combination was detected."]}
 {"setting":"high_or_review","id":"pub-uci-0135","label":"scam","predicted_risk":"no_match","reasons":["No configured scam-signal combination was detected."]}
 {"setting":"high_or_review","id":"pub-uci-0139","label":"scam","predicted_risk":"no_match","reasons":["Pushes the reader to click, open, call, send, share, or update."]}
