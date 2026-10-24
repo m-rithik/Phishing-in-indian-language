@@ -1,12 +1,12 @@
-# Fisher v0.5.0 Release Notes
+# Fisher v0.6.0 Release Notes
 
-**Release Date**: October 11, 2026
+**Release Date**: October 2026
 
 ---
 
 ## Summary
 
-Fisher v0.5 adds workspace, bulk-check, and comprehensive governance infrastructure to establish a reproducible foundation for the Phase 1 feasibility pilot.
+Fisher v0.6 adds multi-candidate Indic transliteration, expanded native-script detector rules, and held-out evaluation alongside workspace and bulk-check infrastructure.
 
 ---
 
@@ -55,7 +55,7 @@ Fisher v0.5 adds workspace, bulk-check, and comprehensive governance infrastruct
 
 ## Breaking Changes
 
-**None.** v0.5 is compatible with v0.4 API (new features are additive).
+**None.** v0.6 is compatible with v0.5 API (new features are additive).
 
 ---
 
@@ -63,7 +63,7 @@ Fisher v0.5 adds workspace, bulk-check, and comprehensive governance infrastruct
 
 ### Current Limitations
 1. **No authentic phishing evaluation**: Rules are transparent heuristics; no trained model
-2. **Romanization ambiguity**: Cannot resolve "otp" → English vs. Hindi ओटीपी (deferred to v0.6)
+2. **Romanization ambiguity**: Romanized candidate generation added in v0.6; multi-candidate aggregation in progress
 3. **Single-interpretation**: Uses top-1 transliteration candidate (multi-candidate deferred)
 4. **No reputation data**: URL legitimacy checks disabled (no DNS resolution, no IP reputation lookups)
 5. **False positives**: Legitimate bank messages ("verify account", "account suspended") may trigger review
@@ -81,13 +81,7 @@ Fisher v0.5 adds workspace, bulk-check, and comprehensive governance infrastruct
 
 ## Roadmap
 
-### v0.5.1 (Minor, Q4 2026)
-- Accessibility audit + fixes (WCAG 2.1 Level AA)
-- Performance profiling & optimization
-- Browser automation test execution
-- Defang edge-case hardening
-
-### v0.6.0 (Major, Q1 2027)
+### Future Work (Phase 2)
 - Multi-candidate transliteration aggregation
 - Multilingual encoder (XLS-R or mBERT) integration
 - Phishing classifier (trained on Fisher pilot data)
@@ -229,7 +223,8 @@ Report bugs, feature requests, or governance concerns:
 
 | Version | Release | Status |
 |---------|---------|--------|
-| v0.5.0 | Oct 2026 | Current (rule-based prototype, no trained model) |
+| v0.6.0 | Oct 2026 | Current (rule-based prototype, no trained model) |
+| v0.5.0 | Oct 2026 | Superseded |
 | v0.4.0 | Aug 2026 | End of support |
 | v0.3.0 | Jun 2026 | End of support |
 | v0.1.0 | May 2026 | End of support |

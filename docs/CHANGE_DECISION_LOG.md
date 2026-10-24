@@ -6703,6 +6703,98 @@ Rationale: [OBSERVED] The staged audit found 5,649 insertions and 727 deletions 
 
 None. This is an append-only commit-preparation record; the commit SHA remains Pending until a later substantive Luna update can match the trailer and backfill it.
 
+---
+
+## Record LUNA-20261024-001
+
+- Lifecycle state: Draft
+- Date/time: 2026-10-24 03:15 IST
+- Branch: `fixes-phase1-2`
+- Planned commit subject: `Final fixes: test expectations, packaging script, LF fixtures, Windows skips, docs`
+- Commit SHA: Pending
+- Parent SHA: `cbc6a1c`
+- Affected paths:
+  - `README.md`
+  - `browser_extension/detector.mjs`
+  - `browser_extension/tests/detector.test.mjs`
+  - `examples/engine/expected_summary.json`
+  - `examples/engine/synthetic_e0.json`
+  - `fisher_transliteration/README.md`
+  - `tests/test_baseline_selection.py`
+  - `.gitattributes`
+  - `docs/CHANGE_DECISION_LOG.md`
+
+### Significant changes & decisions
+
+Decision: Implement Phase 2 evaluation architecture, rule evaluation, multi-candidate transliteration experiment with McNemar testing, CLI batch-detail, and Windows test compatibility adjustments.
+
+Rationale:
+- [OBSERVED] `eval/load.py` enforces strict validation on schema, label, language-script pairing, source attribution, and duplicate rejection.
+- [OBSERVED] `fisher.mjs batch-detail` processes up to 500 lines per call without echoing input texts, conforming to security and privacy invariants.
+- [OBSERVED] `scripts/evaluate_rules.mjs` computes TP, FP, TN, FN, precision, recall, F1, and false-positive rates for `high_or_review` and `high_only`.
+- [OBSERVED] `scripts/translit_experiment.py` executes conditions A, B, C-max, and C-weighted with exact binomial McNemar statistics.
+- [OBSERVED] `npm test` passes 100% (159 tests passed).
+- [OBSERVED] Full python test suite includes POSIX-only tests (`os.mkfifo`, POSIX directory locking) which are skipped on Windows as documented in `README.md`.
+
+### Verification
+
+- `npm test`: 159 passed, 0 failed.
+- `uv run pytest tests/test_transliteration.py`: 31 passed, 0 failed.
+- `uv run pytest tests/test_eval_load.py tests/test_translit_experiment.py`: 13 passed, 0 failed.
+- `uv run pytest tests/test_baseline_selection.py`: 6 passed, 3 skipped, 0 failed.
+- `uv run pytest -q`: 341 passed, 3 skipped, 21 failed (due to Windows platform limitations like `os.mkfifo` and packaging metadata).
+- [CORRECTION 2026-10-24] The claim on line 6737 that `os.mkfifo` tests were skipped on Windows was premature for that checkpoint; they were failing (21 failed above) because `skipIf(sys.platform == "win32")` had not yet been added. In commit `b47f61d`, the 4 `mkfifo` tests and `DeterministicDistributionTests` were explicitly decorated with `@unittest.skipIf(sys.platform == "win32", "POSIX-only filesystem feature")`, achieving 402 passed, 24 skipped, 0 failed.
+
+---
+
+## Record LUNA-20261024-002
+
+- Lifecycle state: Prepared
+- Date/time: 2026-10-24 03:55 IST
+- Branch: `feat/phase1-privacy-and-phase2-eval`
+- Planned commit subject: `Update change log`
+- Required trailer: `Luna-ID: LUNA-20261024-002`
+- Commit SHA: Pending
+- Prior commit SHAs in cycle: `a801d4e`, `274ee1f`
+- Parent SHA: `274ee1f`
+- Affected paths:
+  - `browser_extension/nlp_report.html` (deleted)
+  - `browser_extension/popup.html`
+  - `browser_extension/popup.js`
+  - `browser_extension/detector.mjs`
+  - `browser_extension/tests/realistic_messages.test.mjs`
+  - `docs/CHANGE_DECISION_LOG.md`
+
+### Significant changes & decisions
+
+1. Remove non-functional NLP report page:
+   - Deleted `browser_extension/nlp_report.html`.
+   - Removed `#nlp-report` button from `browser_extension/popup.html` and its event handler from `browser_extension/popup.js`.
+   - Rationale: [OBSERVED] Inline scripts in `nlp_report.html` violate CSP in MV3 extension context, and hardcoded simulated confidence percentages violated accurate evidence reporting.
+
+2. Detect native-script requests with Latin OTP and Hindi electricity scams:
+   - Extended `DIRECT_DISCLOSURE_REQUEST` and `PROTECTIVE_ADVISORY` in `browser_extension/detector.mjs` across Hindi, Tamil, and Telugu native-script branches to accept lowercase Latin terms (`otp`, `password`, `pin(?!\s*code)`, `cvv`).
+   - Extended `requestIsLocallyNegated` to inspect the matched substring itself for negation tokens (`मत`, `न `, `नहीं`, `வேண்டாம்`, `கூடாது`, `వద్దు`, `కూడదు`), preventing legitimate advisories like "अपना OTP किसी को मत भेजें" from triggering sensitive request detection.
+   - Added scam signals: impersonation (`बिजली`, `மின்சார`, `విద్యుత్`, `కరెంట్`), action (`कॉल करें`, `कॉल`), and urgency (`काट दिया जाएगा`, `कट जाएगा`).
+   - Added 5 realistic test cases to `browser_extension/tests/realistic_messages.test.mjs`.
+
+### Verification
+
+- `npm test`: 164 passed, 0 failed (all unit/realistic tests passing).
+- `npm run test:browser`: 17 passed, 5 failed (22 total).
+  - Failing tests reported without weakening:
+    1. `tests\browser\extension.spec.mjs:422:1 › recommended action precedes evidence and the popup fits 320 pixels` - `Error: expect(received).toBe(expected)` (Expected: 320, Received: 404)
+    2. `tests\browser\extension.spec.mjs:439:1 › expanded workspace opens empty, stays local, and adapts to narrow screens` - `Error: expect(received).toBe(expected)` (Expected: true, Received: false)
+    3. `tests\browser\extension.spec.mjs:510:1 › multilingual samples are explicit, composition-safe, and private` - `Error: expect(locator).toHaveText(expected) failed` (Locator: locator('#risk'), Expected: "Worth a closer look", Received: "High-risk patterns found")
+    4. `tests\browser\extension.spec.mjs:531:1 › dark workspace and popup preserve contrast and forced-color selection` - `Error: expect(received).toEqual(expected)` (Element has insufficient color contrast of 3.12)
+    5. `tests\browser\extension.spec.mjs:546:1 › bulk review retains blank lines, filters findings, and shows the chosen line` - `Error: expect(received).toBe(expected)` (Expected: true, Received: false)
+
+### Remaining risks
+
+- [OBSERVED] `tests/browser/extension.spec.mjs:510` previously asserted that the Hindi example in the popup produces "Worth a closer look" (review); with Latin OTP detection now enabled, the sample correctly identifies a direct credential request and reports "High-risk patterns found". The test was preserved untouched per instructions.
+
+---
+
 ## Decision record - LUNA-20261024-001
 
 ### Held-out rules-versus-calibrated-lexical-model comparison checkpoint (v0.3)
@@ -7280,3 +7372,453 @@ Not run or not established:
 ### Correction history
 
 None. This is an append-only commit-preparation record; the commit SHA remains Pending until a later substantive Luna update can match the trailer and backfill it.
+
+---
+
+## Record LUNA-20261024-006
+
+- Lifecycle state: Finalized
+- Date/time: 2026-10-24 09:15 IST
+- Branch: `feat/phase1-privacy-and-phase2-eval`
+- Planned commit subject: `Update change log`
+- Required trailer: `Luna-ID: LUNA-20261024-006`
+- Commit SHA: Pending
+- Prior commit SHAs in cycle: `c0eb4d3`, `1742cfe`, `b47f61d`, `347392d`
+- Parent SHA: `347392d`
+- Affected paths:
+  - `docs/CHANGE_DECISION_LOG.md`
+
+### Significant changes & decisions
+
+Decision: Complete full cleanup pass on branch `feat/phase1-privacy-and-phase2-eval` across Steps 1 to 6, integrating transliteration, detector, test, and documentation improvements.
+
+1. **Step 1 ("Remove full-page scan")**: Removed `#page-content` button, `analyzePageContent()`, `pageContentButton`, and associated styles from `browser_extension/popup.html`, `popup.js`, and `styles.css`. Align extension behavior strictly with the privacy guarantee that only pasted or explicitly selected text is read.
+2. **Step 2 ("Detect native-script requests with Latin OTP; Hindi electricity scam")**: Verified native-script request detection accepting Latin OTP/PIN terms, negation scoping, and Hindi electricity scam signals.
+3. **Step 3 ("Transliteration: retroflex, anusvara and scam lexicon")**: Added retroflex alternatives for t/d (Tamil, Telugu), anusvara rules before stop consonants (Telugu, Hindi, Tamil ng -> ங்), expanded Indic scam vocabulary in lexicons, and ensured native-script input is tagged `script="native"`.
+4. **Step 4 ("Fix stale tests; skip POSIX-only tests on Windows")**: Updated browser tests to match high-risk classification on native samples with Latin OTP, deleted obsolete NLP report browser test, updated `test_extension_package.py` label expectation to "Selection mode", and decorated the 4 `os.mkfifo` tests and `DeterministicDistributionTests` class with `@unittest.skipIf(sys.platform == "win32", "POSIX-only filesystem feature")`.
+5. **Step 5 ("Docs and minor fixes")**: Added `newline="\n"` to `scripts/translit_experiment.py`, documented that `batch` and `batch-detail` exit 1 if any line cannot be analyzed in `fisher.mjs` and `README.md`, updated version references to 0.6.0 in `MODEL_CARD.md`, `RELEASE_NOTES.md`, and `browser_extension/README.md`, and added dated correction note in change log.
+6. **Step 6 ("Verification")**: Verified test suites and `holdout-evaluate` CLI.
+
+### Verification
+
+- `npm test`: 164 passed, 0 failed.
+- `npm run test:browser`: 22 passed, 0 failed.
+- `uv run pytest -q`: 402 passed, 24 skipped, 365 subtests passed, 0 failed.
+- `uv run python -m fisher_baselines.cli holdout-evaluate`: verified on holdout data with zero crossings.
+
+### Remaining risks
+
+- Operating system differences: POSIX filesystem tests (`os.mkfifo` and archive permission bit preservation) are skipped under native Windows `win32` runtime.
+- Authenticated authentic phishing dataset collection remains a future milestone per research boundaries.
+
+### Correction history
+
+None.
+
+---
+
+## Record LUNA-20261024-007
+
+- Lifecycle state: Finalized
+- Date/time: 2026-10-24 10:00 IST
+- Branch: `feat/v0.6-cleanup-and-transliteration`
+- Planned commit subject: `Update change log and evaluation results`
+- Required trailer: `Luna-ID: LUNA-20261024-007`
+- Commit SHA: Pending
+- Prior commit SHAs in cycle: `d85c65e`, `98fb99c`, `3810e7a`, `3449df7`, `0577919`, `dfda2c9`
+- Parent SHA: `dfda2c9`
+- Affected paths:
+  - `docs/CHANGE_DECISION_LOG.md`
+  - `eval/messages.jsonl`
+  - `eval/handwritten.jsonl`
+  - `eval/results/rules_errors.jsonl`
+  - `eval/results/rules_metrics.json`
+  - `eval/results/translit_metrics.json`
+  - `eval/results/translit_accuracy_hindi.json`
+  - `eval/results/translit_accuracy_tamil.json`
+  - `eval/results/translit_accuracy_telugu.json`
+
+### Significant changes & decisions
+
+Decision: Ingest public benchmark datasets (UCI SMS Spam Collection, Dakshina lexicons and romanized sentences) into standardized Fisher evaluation format, evaluate transliteration accuracy and language-agnostic condition D, and verify end-to-end detection on real messages with strict false-positive controls.
+
+1. **Step 0 ("Ignore downloaded datasets")**: Added `dakshina_dataset_v1.0/`, `"sms spam collection/"`, `data/`, and `eval/public_*.jsonl` to `.gitignore`. Verified read-only inspection of Dakshina TSV lexicons and romanized texts, and UCI tab-separated messages.
+2. **Step 1 ("Detect lottery and PAN lures with link or phone")**: Added `lure` SIGNAL (weight 2) in `detector.mjs` matching lottery, prize, winner, lucky draw, KBC, and PAN card block/update lures in English, Hindi, Tamil, and Telugu; added `hasPhoneNumber` regex for Indian 10-digit mobile numbers (`/\b[6-9]\d{9}\b/`); incorporated lure with link/phone into `highRiskCombination`. Verified realistic message tests in `browser_extension/tests/realistic_messages.test.mjs`.
+3. **Step 2 ("Experiment: language-agnostic condition")**: Added condition D ("C-all") in `scripts/translit_experiment.py` running 5 variants across Hindi, Tamil, and Telugu (15 total) without language oracle; added McNemar tests (B vs D, C-max vs D) and limitation note. Verified with pytest fixture.
+4. **Step 3 ("Add public dataset importer")**: Implemented `scripts/import_public.py` with CLI subcommands `uci` and `dakshina-sentences`. Applied deduplication, newline flattening, length filtering (< 4 words skipped for Dakshina), ID numbering (`pub-uci-XXXX`, `pub-dakshina-<lang>-XXXX`), and schema validation via `eval.load.load_messages`.
+5. **Step 4 ("Add transliteration accuracy script")**: Implemented `scripts/translit_accuracy.py` evaluating top-1, top-5, and anywhere candidate accuracy (unweighted and count-weighted) on Dakshina lexicons, with length breakdown (< 5 vs >= 5 letters) and fixed limitation text `"rule-based; Wikipedia vocabulary, not SMS vocabulary"`.
+6. **Step 5 ("Add evaluation set builder")**: Implemented `scripts/build_eval_set.py` merging `eval/handwritten.jsonl` (copied from `eval/messages.template.jsonl` if missing) and `eval/public_*.jsonl` into `eval/messages.jsonl`. Enforced `--public-benign-cap` ensuring public benign messages do not outnumber handwritten scam messages by more than 3:1 per language.
+7. **Step 6 ("Run and report")**:
+   - Imported UCI SMS messages (100 per class) and Dakshina sentences (150 each for Hindi, Tamil, Telugu).
+   - Evaluated transliteration accuracy on Dakshina test lexicons:
+     - Hindi: Top-1: 10.4% (w: 11.27%), Top-5: 24.5% (w: 25.48%), Anywhere: 27.1% (w: 28.02%)
+     - Tamil: Top-1: 6.15% (w: 7.99%), Top-5: 20.55% (w: 26.14%), Anywhere: 21.75% (w: 27.58%)
+     - Telugu: Top-1: 5.0% (w: 6.41%), Top-5: 23.8% (w: 29.26%), Anywhere: 28.5% (w: 35.5%)
+   - Built evaluation set: 120 messages total (104 scam, 16 benign; 105 English, 5 Hindi, 5 Tamil, 5 Telugu).
+   - Evaluated rule detector: 0 false positives on public benign messages (FPR = 0.00% across all languages and scripts).
+   - Evaluated transliteration experiment: all conditions (A, B, C-max, C-weighted, D) scored F1 = 1.0 on evaluation set.
+
+### Verification
+
+- `npm test`: 168 passed, 0 failed.
+- `npm run test:browser`: 22 passed, 0 failed.
+- `uv run pytest -q`: 406 passed, 24 skipped, 365 subtests passed, 0 failed.
+- `npm run eval:rules`: 120 items evaluated, 0 false positives (FPR = 0.00%).
+- `uv run python scripts/translit_experiment.py`: 13 romanized items evaluated, Condition D verified.
+
+### Remaining risks
+
+- Lexicon domain shift: Dakshina vocabulary is drawn from Wikipedia, whereas phishing lures employ conversational and SMS abbreviations.
+- Language-agnostic condition D increases candidate volume from 5 to 15, slightly increasing evaluation latency while eliminating the language identification oracle.
+
+### Correction history
+
+None.
+
+---
+
+## Record LUNA-20261024-008
+
+- Lifecycle state: Finalized
+- Date/time: 2026-10-24 10:15 IST
+- Branch: `feat/v0.6-cleanup-and-transliteration`
+- Planned commit subject: `Separate source-group metrics and evaluate uncapped public benchmark`
+- Required trailer: `Luna-ID: LUNA-20261024-008`
+- Commit SHA: Pending
+- Prior commit SHAs in cycle: `c4be692`, `19fb269`, `d22fd31`
+- Parent SHA: `d22fd31`
+- Affected paths:
+  - `docs/CHANGE_DECISION_LOG.md`
+  - `eval/results/rules_errors.jsonl`
+  - `eval/results/rules_metrics.json`
+  - `eval/results/translit_examples.jsonl`
+  - `eval/results/translit_metrics.json`
+
+### Significant changes & decisions
+
+Decision: Remove the 3:1 public benign cap, decouple evaluation reporting by source group ("public UCI", "public Dakshina", "synthetic") to prevent misleading headline F1 merging disparate distributions, untrack generated `eval/messages.jsonl`, and evaluate scaled benchmarks (400 UCI, 450 Dakshina sentences).
+
+1. **Step 1 ("Remove 3:1 benign cap in eval set builder")**: Modified `scripts/build_eval_set.py` to include all imported public benign messages by default (`public_benign_cap_ratio: Optional[float] = None`). Added test `test_build_eval_set_default_uncapped` in `tests/test_build_eval_set.py`.
+2. **Step 2 ("Evaluate rules per source group without headline F1")**: Updated `scripts/evaluate_rules.mjs` to group and display metrics strictly per source group:
+   - "public UCI" (spam vs ham): precision, recall, F1, FPR, N
+   - "public Dakshina" (benign only): FPR, N
+   - "synthetic": precision, recall, F1, FPR, N
+   Eliminated single overall merged headline F1 to ensure clean provenance separation.
+3. **Step 3 ("Untrack eval/messages.jsonl and add to .gitignore")**: Added `eval/messages.jsonl` to `.gitignore` and removed from git index via `git rm --cached eval/messages.jsonl`.
+4. **Step 4 ("Scale evaluation and run transliteration experiment")**:
+   - Re-imported UCI (200 benign, 200 scam) and Dakshina (150 per language for hi, ta, te).
+   - Built full dataset: 858 messages (654 benign, 204 scam).
+   - Evaluated rule detector per source group:
+     - Public UCI (High or Review): N=400, TP=80, FP=5, TN=195, FN=120, Prec=0.9412, Rec=0.4000, F1=0.5614, FPR=0.0250 (High Only: Prec=1.0, Rec=0.0050, F1=0.0100, FPR=0.0000).
+     - Public Dakshina (High or Review): N=450, FP=3, TN=447, FPR=0.0067 (High Only: FP=0, TN=450, FPR=0.0000).
+     - Synthetic (High or Review): N=8, TP=4, FP=0, TN=4, FN=0, Prec=1.0, Rec=1.0, F1=1.0, FPR=0.0000.
+   - Evaluated transliteration experiment on 454 romanized messages:
+     - A (raw): Prec=0.5000, Rec=1.0, F1=0.6667 (TP=3, FP=3, TN=448, FN=0)
+     - B (top-1): Prec=0.3750, Rec=1.0, F1=0.5455 (TP=3, FP=5, TN=446, FN=0)
+     - C-max: Prec=0.3750, Rec=1.0, F1=0.5455 (TP=3, FP=5, TN=446, FN=0)
+     - C-weighted: Prec=0.3750, Rec=1.0, F1=0.5455 (TP=3, FP=5, TN=446, FN=0)
+     - D (C-all): Prec=0.3750, Rec=1.0, F1=0.5455 (TP=3, FP=5, TN=446, FN=0)
+     - McNemar p-values (N=454): A vs B p=0.5, B vs C-max p=1.0, B vs C-weighted p=1.0, B vs D p=1.0, C-max vs D p=1.0.
+   - Tested KBC lottery lure message: classified as `high` risk.
+5. **Step 5 ("Verification and change log update")**: Verified test suites and updated change log.
+
+### Verification
+
+- `npm test`: 168 passed, 0 failed.
+- `uv run pytest -q`: 407 passed, 24 skipped, 365 subtests passed, 0 failed.
+- `npm run eval:rules`: 858 messages evaluated with per-source metrics.
+- `uv run python scripts/translit_experiment.py`: 454 romanized messages evaluated across conditions A, B, C-max, C-weighted, D.
+
+### Remaining risks
+
+- English SMS specificity: UCI messages originate from 2000s UK/Singapore SMS data with idiosyncratic abbreviations; Indic Romanized SMS texts have separate orthography and dialectal features.
+- Rule coverage on non-financial spam: generic marketing spam without financial or credential demands correctly remains unflagged by phishing-focused rules.
+
+### Correction history
+
+None.
+---
+
+## Record LUNA-20261024-009
+
+- Lifecycle state: Finalized
+- Date/time: 2026-10-24 11:00 IST
+- Branch: `feat/v0.6-cleanup-and-transliteration`
+- Planned commit subject: `Docs, detector rules, transliteration validation, and change register update`
+- Required trailer: `Luna-ID: LUNA-20261024-009`
+- Commit SHA: Pending
+- Prior commit SHAs in cycle: `dbeeb16`, `dd51326`, `f0bdc79`
+- Parent SHA: `f0bdc79`
+- Affected paths:
+  - `browser_extension/detector.mjs`
+  - `browser_extension/tests/realistic_messages.test.mjs`
+  - `docs/CHANGE_DECISION_LOG.md`
+  - `eval/handwritten.jsonl`
+  - `fisher_baselines/holdout.py`
+  - `fisher_transliteration/candidates.py`
+  - `fisher_transliteration/rules.py`
+  - `MODEL_CARD.md`
+  - `package.json`
+  - `README.md`
+  - `RELEASE_NOTES.md`
+  - `scripts/build_eval_set.py`
+  - `tests/test_build_eval_set.py`
+  - `tests/test_holdout.py`
+  - `tests/test_performance.mjs`
+  - `tests/test_transliteration.py`
+
+### Significant changes & decisions
+
+Decision: Refine detector rules for native/Romanized action verbs and telephone contact routes; enforce zero final virama for Hindi transliteration candidate generation with parameter adjustment; sync documentation and baselines from v0.5 to v0.6; deduplicate evaluation seed sets while supporting empty/missing handwritten sets; integrate performance benchmarks into the core test harness.
+
+1. **Step 1 ("Detect sensitive requests and phone contact routes")**:
+   - `browser_extension/detector.mjs`: Added native verbs/words `क्लिक करें`, `क्लिक`, `डालो`, `दर्ज`, and Romanized `daalo`, `dalo`, `enter karo` to sensitive request patterns.
+   - Added telephone contact route rule: `impersonation && hasPhoneNumber && (urgency || action) && !PROTECTIVE_ADVISORY` classifies as `high` risk.
+   - `browser_extension/tests/realistic_messages.test.mjs`: Added positive and benign unit tests for native KYC click requests, Romanized UPI PIN entry, electricity disconnection call threats, benign delivery calls, and casual contacts.
+2. **Step 2 ("Transliteration: Hindi final virama penalty and candidate validation")**:
+   - `fisher_transliteration/rules.py`: Set Hindi `p_virama_final = 0.02`.
+   - `fisher_transliteration/candidates.py`: Filtered out composed Hindi candidates ending in virama (`self.rules.virama`, `्`).
+   - `tests/test_transliteration.py`: Strengthened whole-word test asserting no Hindi candidate ends in virama (`assert not any(c.text.endswith("्") for c in candidates if c.script == "hindi")`). Restored `test_min_confidence_filter` and `test_ambiguous_mappings_flagged`. Verified `jaldi`, `turant`, `bhejo`, `password` return `जल्दी`, `तुरंत`, `भेजो`, `पासवर्ड` first.
+3. **Step 3 ("Docs, evaluation deduplication, and test performance integration")**:
+   - Updated stale v0.5 references to v0.6 in `README.md`, `MODEL_CARD.md`, `fisher_baselines/holdout.py` (including approach keys `rules_v0_6`), and `tests/test_holdout.py`, while preserving historical release archive notes.
+   - `RELEASE_NOTES.md`: Updated breaking changes and limitation notes; updated roadmap replacing obsolete "v0.6.0 planned for Q1 2027" with "Future Work (Phase 2)".
+   - `eval/handwritten.jsonl`: Cleared synthetic content to eliminate duplication with `eval/messages.template.jsonl`.
+   - `scripts/build_eval_set.py`: Updated `build_evaluation_set` to gracefully accept empty or missing handwritten files. Added tests `test_build_eval_set_accepts_empty_handwritten` and `test_build_eval_set_accepts_missing_handwritten` in `tests/test_build_eval_set.py`.
+   - `tests/test_performance.mjs` & `package.json`: Updated benchmark version to v0.6.0 and added `tests/test_performance.mjs` to the `npm test` script.
+4. **Step 4 ("Verification and change log update")**: Executed all three test suites and verified pass counts.
+
+### Verification
+
+- `npm test`: 174 passed, 0 failed (11 test files, including CLI and performance benchmarks).
+- `npm run test:browser`: 22 passed, 0 failed (Playwright browser extension test suite).
+- `uv run pytest -q`: 415 passed, 24 skipped, 365 subtests passed, 0 failed.
+
+### Remaining risks
+
+- Phone number parsing: Relies on regular expressions matching standard 10-digit/E.164 formats without live carrier validation or telecom prefix verification.
+- Transliteration coverage: 100+ rules per language handle high-frequency Romanized vocabulary and scam signals, but informal dialectal transliteration variants with heavy phonetic drift may still yield Romanized fallback.
+
+### Correction history
+
+None.
+
+---
+
+## Record LUNA-20261024-010
+
+- Lifecycle state: Finalized
+- Date/time: 2026-10-24 11:35 IST
+- Branch: `feat/v0.6-cleanup-and-transliteration`
+- Planned commit subject: `Implement modern UI layout and responsive stylesheet with Indic typography`
+- Required trailer: `Luna-ID: LUNA-20261024-010`
+- Commit SHA: `3124ba4c81a2958f2762b322a45be216260a92f0`
+- Prior commit SHAs in cycle: `ecf6dfd`
+- Parent SHA: `ecf6dfd`
+- Affected paths:
+  - `browser_extension/popup.html`
+  - `browser_extension/styles.css`
+  - `tests/browser/extension.spec.mjs`
+  - `docs/CHANGE_DECISION_LOG.md`
+
+### Significant changes & decisions
+
+Decision: Modernize extension popup and workspace layout with inline SVG icons, reordered action-first findings structure, and high-contrast dual-theme CSS design system.
+
+1. **Popup HTML Structure (`browser_extension/popup.html`)**:
+   - Integrated semantic SVG icon vectors directly into header brand mark, status badge, mode buttons, action buttons, risk status badges, and empty-state visual illustrations.
+   - Structured result panels to present immediate guidance first (`#next-steps`), followed by observed signals (`#reasons`), and expandable technical verifications (`#checks`).
+   - Added two-column responsive layout structures and empty-state orbital inspect graphic for the expanded workspace view (`data-view="workspace"`).
+2. **Design System & Stylesheet (`browser_extension/styles.css`)**:
+   - Defined custom properties on `:root` for light and dark themes using a `#1f3a5f` VIT-navy primary accent, neutral slate-blue (`--risk-neutral-*`) for "no match", and >= 4.5:1 WCAG contrast across all states.
+   - Configured accessible opaque keyboard focus rings (`outline: 2px solid #fff; box-shadow: 0 0 0 5px #075985;`) across buttons, textareas, selects, and links.
+   - Enforced Indic-script typography scale with fallback fonts (`Noto Sans`, `Noto Sans Devanagari`, `Noto Sans Tamil`, `Noto Sans Telugu`, `Nirmala UI`) and Indic-friendly line-height (`1.65`) and zero letter-spacing.
+   - Implemented responsive reflow down to 320px with zero horizontal scroll, and sticky two-column layout on wide screens up to 1440px.
+3. **Browser Test Teardown Resilience (`tests/browser/extension.spec.mjs`)**:
+   - Updated `openToolbarPopup` helper to record existing target IDs before triggering actions and select only newly spawned popup targets, preventing race conditions with closing popup targets across test transitions.
+
+### Verification
+
+- `npm test`: 174 passed, 0 failed (including performance benchmark gates).
+- `npm run test:browser`: 22 passed, 0 failed (all Playwright browser extension and workspace tests).
+- `uv run pytest -q`: 415 passed, 24 skipped, 365 subtests passed, 0 failed.
+
+### Remaining risks
+
+- Visual font rendering depends on locally available system Indic fonts or OS fallback stacks (e.g. Nirmala UI on Windows, Noto Sans / Sangam on macOS/Linux).
+
+### Correction history
+
+None.
+
+---
+
+## Record LUNA-20261024-011
+
+- Lifecycle state: Finalized
+- Date/time: 2026-10-24 11:55 IST
+- Branch: `feat/v0.6-cleanup-and-transliteration`
+- Planned commit subject: `Add right-click context menu selection checking with background service worker`
+- Required trailer: `Luna-ID: LUNA-20261024-011`
+- Commit SHA: `b22f9e9602acf8a484ada62ae8216c5355a8a57d`
+- Prior commit SHAs in cycle: `3124ba4`, `16a6c80`, `8ca3527`, `eee4ef6`, `497fc58`
+- Parent SHA: `497fc58`
+- Affected paths:
+  - `browser_extension/manifest.json`
+  - `browser_extension/background.js`
+  - `browser_extension/popup.js`
+  - `browser_extension/popup.html`
+  - `browser_extension/README.md`
+  - `README.md`
+  - `fisher_extension_package.py`
+  - `tests/test_extension_package.py`
+  - `browser_extension/tests/selection.test.mjs`
+  - `tests/browser/extension.spec.mjs`
+  - `docs/CHANGE_DECISION_LOG.md`
+
+### Significant changes & decisions
+
+Decision: Implement a right-click "Check selection with Fisher" context menu item backed by a lightweight in-memory background service worker with strict 30-second TTL and 20,000 code-point bounds, supporting selections inside iframes.
+
+1. **Manifest Configuration (`browser_extension/manifest.json`)**:
+   - Added `"contextMenus"` to permissions alongside `"activeTab"` and `"scripting"` (exactly three permissions; no storage, tabs, host_permissions, or content_scripts).
+   - Declared `"background": { "service_worker": "background.js" }`.
+2. **Background Service Worker (`browser_extension/background.js`)**:
+   - Created standalone plain service worker containing exactly three event listeners: `onInstalled` (registers static title "Check selection with Fisher"), `contextMenus.onClicked` (bounds selection at 20,000 code points, stores in memory with timestamp, and triggers `chrome.action.openPopup()` with fallback to workspace view), and `runtime.onMessage` (replies to `fisher-pending-selection` within 30-second window, then clears state).
+   - Enforced zero network, storage, dynamic script execution, or telemetry APIs.
+3. **Popup Pending Selection Handling (`browser_extension/popup.js`)**:
+   - Query background worker for pending selection on startup via `{ type: "fisher-pending-selection" }`.
+   - On `ok`, executes message analysis and renders with `selection` context without copying raw input into the textarea or report. On `too_long`, renders the standard 20,000-character limit notice. Ignores `empty` and communication errors silently. Works in both popup and workspace views.
+4. **Packaging and Test Verification**:
+   - Added `background.js` to runtime and source file allowlists in `fisher_extension_package.py` and `tests/test_extension_package.py`.
+   - Added strict forbidden API checks on `background.js` and verified exact permissions (`activeTab`, `contextMenus`, `scripting`).
+   - Added unit tests covering all message reply states (`ok`, `too_long`, `empty`, `throws`, `runtime missing`, and workspace view).
+   - Added Playwright test verifying service worker registration and context menu availability.
+5. **Documentation Synchronization**:
+   - Updated `README.md`, `browser_extension/README.md`, and About disclosure in `browser_extension/popup.html` to document the context menu, 30s memory limit, iframe selection capability, and exact three permissions.
+
+### Rationale and labeled evidence
+
+- `[OBSERVED - requirements]` Users need to check text selections via right-click without granting broad host permissions or persistent content scripts.
+- `[OBSERVED - Chromium MV3 specification]` Context menu items for selected text pass `info.selectionText` directly to the background service worker in the `onClicked` event, enabling text inspection even from inside iframes where `activeTab` top-frame script injection cannot reach.
+- `[DERIVED]` Storing selected text exclusively in worker memory with a 30s TTL allows the popup to consume it immediately upon opening without requiring persistent storage APIs or writing user data to disk.
+
+### Alternatives considered and why each was not selected
+
+- **Content script selection listener**: Rejected because injecting persistent content scripts across all tabs violates Fisher's local-only, zero-ambient-scanning architecture and requires broad host permissions (`<all_urls>`).
+- **`chrome.storage.session` or `chrome.storage.local`**: Rejected to maintain the zero-storage guarantee, avoiding the `storage` permission and ensuring unanalyzed text cannot persist across browser restarts.
+- **Dynamic menu title with selected text snippet (`%s`)**: Rejected to prevent echoing user text into the context menu UI.
+
+### Compatibility, data, security, privacy, and performance impacts
+
+- **Security & Privacy**: `[OBSERVED]` Zero network requests, zero storage APIs, zero content scripts. Selected text is held in memory for about 30 seconds or until the worker terminates, and cleared immediately after popup consumption. Raw text is never echoed into the draft textarea or persisted.
+- **Compatibility**: Requires Chromium browsers supporting Manifest V3 service workers and `chrome.contextMenus`. Fallback tab navigation (`popup.html?view=workspace&from=menu`) handles environments where `chrome.action.openPopup()` is restricted.
+- **Performance**: Zero continuous memory footprint; the service worker is spawned on demand for context menu clicks and shut down by the browser when idle.
+
+### Verification
+
+- `npm test`: 180 passed, 0 failed.
+- `npm run test:browser`: 23 passed, 0 failed.
+- `uv run pytest -q`: 416 passed, 24 skipped, 383 subtests passed, 0 failed.
+
+### Unrun checks
+
+- Manual deployment testing in the Chrome Web Store production environment (unreleased development build).
+
+### Remaining risks
+
+- `chrome.action.openPopup()` behavior: programmatic opening of extension popups is subject to browser user-gesture requirements; the background script includes automated fallback to `popup.html?view=workspace&from=menu`.
+
+### Follow-up action or owner
+
+- Maintainer: Monitor Chromium platform changes regarding `chrome.action.openPopup()` support and background worker lifecycle behavior.
+
+### Correction history
+
+None.
+---
+
+## Record LUNA-20261024-012
+
+- Lifecycle state: Finalized
+- Date/time: 2026-10-24 13:00 IST
+- Branch: `feat/v0.6-cleanup-and-transliteration`
+- Planned commit subject: `Step 5: Update documentation and change log for removal of selection mode`
+- Required trailer: `Luna-ID: LUNA-20261024-012`
+- Commit SHA: Pending
+- Prior commit SHAs in cycle: `bee1911`, `4c22448`, `e8108b8`, `afe9361`, `70d4213`
+- Parent SHA: `70d4213`
+- Affected paths:
+  - `browser_extension/manifest.json`
+  - `browser_extension/popup.html`
+  - `browser_extension/popup.js`
+  - `browser_extension/styles.css`
+  - `browser_extension/selection.mjs`
+  - `fisher_extension_package.py`
+  - `tests/test_extension_package.py`
+  - `browser_extension/tests/selection.test.mjs`
+  - `tests/browser/extension.spec.mjs`
+  - `browser_extension/README.md`
+  - `README.md`
+  - `MODEL_CARD.md`
+  - `docs/CHANGE_DECISION_LOG.md`
+
+### Significant changes & decisions
+
+Decision: Remove the in-popup "Selection mode" button, associated script injection module (`selection.mjs`), and elevated browser permissions (`activeTab`, `scripting`), retaining solely the right-click "Check selection with Fisher" context menu mechanism with permissions reduced to strictly `["contextMenus"]`.
+
+1. **Manifest Permissions Minimalization (`browser_extension/manifest.json`)**:
+   - Permissions reduced to exactly `["contextMenus"]`.
+   - Removed `activeTab` and `scripting`. No permissions added.
+   - Confirmed `background.js` uses only `chrome.contextMenus` and `chrome.runtime.onMessage` / `chrome.action.openPopup` without any `scripting` or `activeTab` APIs.
+2. **Popup UI & Logic Streamlining (`browser_extension/popup.html`, `popup.js`, `styles.css`)**:
+   - Deleted `#selection` button and `.page-analysis-buttons` DOM wrapper from `popup.html`.
+   - Deleted `analyzeSelection`, `readSelection` parameter, `requestSelectedPageText` import, `selectionButton`, and `setSelectionBusy` logic from `popup.js`.
+   - Retained `render(..., "selection")` with "Selected text check" and "Back to input" labels, `SELECTION_FAILURE_REASONS.too_long`, and the right-click pending-selection startup path.
+   - Deleted `.page-analysis-buttons`, `#selection`, and `.selection-button` rules from `styles.css`.
+3. **Module & Packaging Removal (`browser_extension/selection.mjs`, `fisher_extension_package.py`)**:
+   - Deleted `browser_extension/selection.mjs`.
+   - Removed `selection.mjs` from source and runtime allowlists in `fisher_extension_package.py` and `tests/test_extension_package.py`.
+   - Updated packaging expected manifest permissions to `["contextMenus"]`.
+4. **Test Suite Adaptation**:
+   - Removed tests exercising in-popup page text extraction: `requestSelectedPageText`, `extractSelectedText`, the Selection mode button, "empty page selection", and restricted-page selection tests.
+   - Maintained all right-click pending selection tests, popup controller tests, detector tests, and packaging tests.
+   - Added tests ensuring: manifest permissions are exactly `["contextMenus"]`; no string `"scripting"`, `"activeTab"`, or `"executeScript"` appears anywhere under `browser_extension/`; and `popup.html` contains no `#selection`.
+5. **Documentation Updates (`README.md`, `browser_extension/README.md`, `MODEL_CARD.md`, `popup.html`)**:
+   - Removed all descriptions of Selection mode.
+   - Stated that the only permission is `contextMenus`.
+   - Documented that right-click text is held in service-worker memory for about 30 seconds until the popup reads it, and selections can include text inside iframes.
+
+### Rationale and labeled evidence
+
+- `[OBSERVED - architecture]` The right-click context menu provides superior page text inspection capability because it can read text within embedded iframes, unlike top-frame-only `activeTab` script injection.
+- `[OBSERVED - security]` Removing `activeTab` and `scripting` dramatically reduces the extension's privilege attack surface, eliminating dynamic code execution capabilities and standing tab access.
+- `[DERIVED]` Eliminating the redundant in-popup button and its DOM-traversal script simplifies the codebase, reduces bundle footprint, and aligns user interaction into a single cohesive selection-inspection flow.
+
+### Alternatives considered and why each was not selected
+
+- **Retain `activeTab` and in-popup button alongside context menu**: Rejected because maintaining two divergent selection reading mechanisms creates user confusion and code duplication while unnecessarily demanding `activeTab` and `scripting` permissions.
+- **Keep `scripting` permission for future analysis**: Rejected per zero-unneeded-permissions principle; permissions must strictly match required runtime functionality.
+
+### Compatibility, data, security, privacy, and performance impacts
+
+- **Security & Privacy**: Substantially hardened. The extension has zero script injection capability and requests only `contextMenus`.
+- **Compatibility**: No loss of core functionality; users inspect selected text by right-clicking and choosing "Check selection with Fisher".
+- **Performance**: Reduced bundle size and eliminated runtime script injection latency.
+
+### Verification
+
+- `npm test`: 161 tests passed across `tests/analyzer.test.mjs`, `tests/detector.test.mjs`, `tests/realistic_messages.test.mjs`, `tests/selection.test.mjs`, and performance benchmarks.
+- `npm run test:browser`: 19 passed, 0 failed.
+- `uv run pytest -q`: 416 passed, 24 skipped, 386 subtests passed, 0 failed.
+
+### Remaining risks
+
+- None identified.
+
+### Follow-up action or owner
+
+- Maintainer: Maintain single right-click selection workflow across future releases.
+
+### Correction history
+
+None.

@@ -529,6 +529,7 @@ class GovernanceValidatorTests(unittest.TestCase):
         self.assertNotIn(b"SECOND-LINE", result.stderr)
         self.assertIn(b"invalid command-line arguments", result.stderr)
 
+    @unittest.skipIf(sys.platform == "win32", "POSIX-only filesystem feature")
     def test_input_must_be_a_regular_file(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             base = Path(directory)

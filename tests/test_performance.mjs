@@ -86,7 +86,7 @@ const tests = [
 ];
 
 // Run benchmarks
-console.log("Fisher Performance Benchmarks (v0.5.2)");
+console.log("Fisher Performance Benchmarks (v0.6.0)");
 console.log("=====================================\n");
 
 const results = [];

@@ -1,6 +1,6 @@
-# Fisher v0.5 — message and link checks
+# Fisher v0.6 — message and link checks
 
-Fisher helps you pause and inspect a suspicious message or link. The Chrome/Edge popup and local command-line tool share the same deterministic engine. Choose Message to check a pasted message, or Link check to inspect an address without opening it. Explicitly selected top-frame page text can also be checked in Message mode.
+Fisher helps you pause and inspect a suspicious message or link. The Chrome/Edge popup and local command-line tool share the same deterministic engine. Choose Message to check a pasted message, or Link check to inspect an address without opening it. You can also right-click selected page text and choose "Check selection with Fisher".
 
 This is an **unvalidated research prototype**, not a phishing classifier and not a guarantee that a message is safe or malicious. `No clear pattern match` is explicitly not a safety result. Its rule-based explanations are intended to support, not replace, independent verification.
 
@@ -9,7 +9,7 @@ This is an **unvalidated research prototype**, not a phishing classifier and not
 1. Open `chrome://extensions` in Chrome or `edge://extensions` in Edge.
 2. Enable developer mode.
 3. Choose **Load unpacked** and select this `browser_extension` directory.
-4. Pin Fisher. Choose **Message** or **Link check**, paste an input, and press **Analyze locally**. In Message mode you can also select page text, open Fisher, and press **Selection mode**.
+4. Pin Fisher. Choose **Message** or **Link check**, paste an input, and press **Analyze locally**. You can also right-click any selected text and choose **Check selection with Fisher**.
 
 If you received the ZIP package, extract it first, then choose the extracted
 folder containing `manifest.json` in **Load unpacked**. If Fisher is already
@@ -21,11 +21,11 @@ Use **Ctrl+Enter** / **Cmd+Enter** to analyze. Example buttons fill a synthetic 
 ## A roomier workspace
 
 Choose **Open a roomy workspace** (↗) in the popup header to open an independent tab with
-the input and findings side by side. It starts empty: neither your draft nor the
-selected page text is transferred. Page selection remains available only in the
-toolbar popup. Both views adapt to narrow screens and the system's light or dark
-appearance, respect reduced motion, and retain visible keyboard focus and
-high-contrast selection states.
+the input and findings side by side. When opened from the header, it starts empty: neither
+your draft nor the selected page text is transferred. When a workspace tab is opened from
+the menu, it starts with the selected text analyzed but never copied into the draft. Both views adapt to narrow screens
+and the system's light or dark appearance, respect reduced motion, and retain visible keyboard
+focus and high-contrast selection states.
 
 Try the Hindi, Tamil, Telugu, and everyday-message samples alongside the original
 delivery and account examples. These are synthetic demonstrations of the current
@@ -125,21 +125,21 @@ Exit `0` means a report was produced for every input, regardless of the risk lev
 
 ## Permissions and data handling
 
-For the popup's selection path, `activeTab` provides temporary permission associated with the user invoking the extension. The code queries the active tab and injects the selection reader only after the user presses **Selection mode**. Injection is limited to frame `0` (the top frame), so selections inside embedded frames are not read. A bounded preflight reads text data only after a text node is confirmed to intersect the selection and enforces raw code-point and text-node limits. Only then does the reader use the browser-rendered selection string, which preserves block separators and inline word joins. Form-control-only selections are deliberately excluded, and the reader does not access control values, the page URL, title, HTML, or unselected page text.
+Users can right-click any selected text and choose **Check selection with Fisher**. The right-click path uses the browser's selection string, which can include text inside iframes. The right-click item sends only the text you selected, held in memory by the background service worker for about 30 seconds, or until the browser stops the extension worker, until the popup reads it, with no automatic scanning. If a workspace tab is opened from the menu, it starts with the selected text analyzed but never copied into the draft.
 
-**Since v0.5.2, automatic page scanning adds standing page access.** The manifest also requests `tabs` and `notifications`, plus host access to `http://*/*` and `https://*/*`. A content script on `<all_urls>` reads up to 20,000 characters of visible page text and sends it, with the page URL, to the `background.js` service worker. This happens on every page load, without a user action. The worker scores that text with its own keyword rules, separate from the shared engine. It keeps the latest result per tab in memory until the tab closes, sets the toolbar badge, and injects a banner into the page for `review` or `high` results. It also logs page URLs and results to the extension console. The popup's **NLP Report** button opens `nlp_report.html?tabId=<id>` for the page it was opened on. `nlp_report.js` then shows that tab's cached result, rendering the page title, URL and findings as text, never as HTML. A no-match result shows no toolbar badge, and both the badge and the report label it as not a safety result. The cache lives in service-worker memory, so the report can say no data is available after Chrome stops an idle worker.
+The manifest requests exactly one permission: `contextMenus`. It declares no host permissions, content scripts, `tabs`, or `notifications`, so Fisher never reads a page unless you select text and trigger the context menu. There is no automatic page scan and no page-analysis report.
 
-The sections above describe only the popup's explicit selection path. There are no network calls, remote code, telemetry, or storage APIs. Text can exist transiently in page memory, the browser's script-result transfer, and popup memory while analysis runs; the extension makes no secure-erasure claim. At most 20,000 Unicode code points of selected text can cross into the popup. Longer input is rejected in full rather than returned as a partial string, and traversal is also bounded by a text-node limit. Selected text is not copied into the textarea or rendered in results. Results contain generic evidence categories, never the matched text. Displayed web addresses remain plain text and are never converted into clickable links.
+The sections above describe only the explicit selection path. There are no network calls, remote code, telemetry, or storage APIs. Text can exist transiently in background worker memory and popup memory while analysis runs; the extension makes no secure-erasure claim. At most 20,000 Unicode code points of selected text can cross into the popup. Longer input is rejected in full rather than returned as a partial string. Selected text is not copied into the textarea or rendered in results. Results contain generic evidence categories, never the matched text. Displayed web addresses remain plain text and are never converted into clickable links.
 
 ## Architecture
 
 - `popup.html`, `popup.js`, and `styles.css`: accessible user-triggered interface, cancellation of stale selection work, and safe text-only rendering.
+- `background.js`: background service worker registering the context menu and temporarily holding selection text in memory for about 30 seconds, or until the browser stops the extension worker.
 - `icon.svg` and the derived PNG sizes: the Fisher mark used by the installed extension and toolbar.
 - `analyzer.mjs`: versioned report shared with the CLI; combines message-rule results, structural link observations, and next steps.
 - `links.mjs`: canonical bounded local URL extraction and structure checks; locator-shaped and email-shaped spans are masked before message semantic matching so their host, path, and address words do not become message cues. It uses no network or reputation data.
-- `selection.mjs`: validates the active tab and injected result, then performs a bounded top-frame preflight and returns the browser-rendered selection string from an isolated world after the explicit button action.
 - `detector.mjs`: fail-closed input bounding, Unicode compatibility normalization, removal of invisible formatting characters, transparent multilingual/romanized signal rules, protective-context labeling, the frozen review-only profile described below, and deterministic category-combination decisions.
-- `tests/*.test.mjs`: dependency-free Node tests for the analyzer, detector, permission bridge, UI controller, Unicode bounds, privacy, and stale-result cancellation.
+- `tests/*.test.mjs`: dependency-free Node tests for the analyzer, detector, UI controller, Unicode bounds, privacy, and stale-result cancellation.
 - `../fisher.mjs`: stdin-only local companion, not part of the extension.
 
 The rules cover a deliberately small set of English, Hindi/Devanagari, Tamil, Telugu, and Romanized Indic signals. They do not establish language coverage, accuracy, robustness, or research performance.
@@ -167,8 +167,8 @@ npx playwright install chromium
 npm run test:browser
 ```
 
-Browser tests install the real unpacked extension into a temporary Chromium profile and use synthetic fixtures. They exercise paste/link interactions, the actual toolbar action, selected text, empty/restricted pages, and automated accessibility. Test-only DevTools extension debugging never touches your existing browser profile. Playwright and axe are development-only dependencies; neither is bundled into the extension. The tests follow [Playwright's Chromium extension workflow](https://playwright.dev/docs/chrome-extensions), the experimental [DevTools extension commands](https://chromedevtools.github.io/devtools-protocol/tot/Extensions/), and [Chrome's temporary activeTab permission model](https://developer.chrome.com/docs/extensions/develop/concepts/activeTab). Automated checks do not replace human language review or testing with assistive technology. Microsoft Edge and non-Chromium browsers are not covered by this suite.
+Browser tests install the real unpacked extension into a temporary Chromium profile and use synthetic fixtures. Browser tests cover the popup flows, accessibility and registration of the right-click menu item; they do not click the menu or read page selections. Test-only DevTools extension debugging never touches your existing browser profile. Playwright and axe are development-only dependencies; neither is bundled into the extension. The tests follow [Playwright's Chromium extension workflow](https://playwright.dev/docs/chrome-extensions) and the experimental [DevTools extension commands](https://chromedevtools.github.io/devtools-protocol/tot/Extensions/). Automated checks do not replace human language review or testing with assistive technology. Microsoft Edge and non-Chromium browsers are not covered by this suite.
 
 The repository's `Fisher checks` workflow runs unit tests, Chromium checks, and Python tests on GitHub once this source is pushed. It has read-only repository permissions and does not publish artifacts or deploy a release.
 
-Heuristic limits remain: spaced `word [.] com` can be explanatory prose or a defanged domain, so it can trigger review. Message-mode dotted candidates accept alphabetic suffixes without a live registry, which can conservatively treat filename-like text as an address. Bare-domain extraction is a bounded candidate scan, not exhaustive recognition. A later literal HTTP/HXXP scheme in the same whitespace-free token is conservatively treated as another address after an earlier recognized locator; this keeps chained addresses masked but can split an unusual path containing a literal scheme. Recognized email spans require a domain-shaped suffix, so malformed dotless address-like text remains outside that masking rule. Top-frame selection uses the browser-rendered selection string after bounded DOM-text preflight; iframe, form-control-only, shadow-DOM, and multi-range selections remain excluded or limited. Language coverage, accuracy, and false-positive rate are unmeasured.
+Heuristic limits remain: spaced `word [.] com` can be explanatory prose or a defanged domain, so it can trigger review. Message-mode dotted candidates accept alphabetic suffixes without a live registry, which can conservatively treat filename-like text as an address. Bare-domain extraction is a bounded candidate scan, not exhaustive recognition. A later literal HTTP/HXXP scheme in the same whitespace-free token is conservatively treated as another address after an earlier recognized locator; this keeps chained addresses masked but can split an unusual path containing a literal scheme. Recognized email spans require a domain-shaped suffix, so malformed dotless address-like text remains outside that masking rule. Right-click selection uses the browser's selection string, which can include text inside iframes. Language coverage, accuracy, and false-positive rate are unmeasured.

@@ -31,3 +31,11 @@ test-results/
 *.p12
 *.pfx
 docs/CHANGE_DECISION_LOG.docx
+
+all_code.txt
+
+dakshina_dataset_v1.0/
+sms spam collection/
+data/
+eval/public_*.jsonl
+eval/messages.jsonl

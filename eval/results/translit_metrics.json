@@ -1,0 +1,269 @@
+{
+  "n_items": 450,
+  "k": 5,
+  "positive_risks": [
+    "high",
+    "review"
+  ],
+  "limitations": [
+    "Rule-based detector; no learned model.",
+    "Oracle language ID: the item's language field selects the transliteration script.",
+    "D removes the oracle: no language label is used.",
+    "Small or synthetic evaluation data; no claim of real-world accuracy.",
+    "Messages are flattened to one line for the batch CLI."
+  ],
+  "conditions": {
+    "A": {
+      "overall": {
+        "n": 450,
+        "TP": 0,
+        "FP": 3,
+        "TN": 447,
+        "FN": 0,
+        "precision": 0.0,
+        "recall": 1.0,
+        "f1": 0.0
+      },
+      "per_language": {
+        "hindi": {
+          "n": 150,
+          "TP": 0,
+          "FP": 0,
+          "TN": 150,
+          "FN": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "tamil": {
+          "n": 150,
+          "TP": 0,
+          "FP": 3,
+          "TN": 147,
+          "FN": 0,
+          "precision": 0.0,
+          "recall": 1.0,
+          "f1": 0.0
+        },
+        "telugu": {
+          "n": 150,
+          "TP": 0,
+          "FP": 0,
+          "TN": 150,
+          "FN": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        }
+      }
+    },
+    "B": {
+      "overall": {
+        "n": 450,
+        "TP": 0,
+        "FP": 5,
+        "TN": 445,
+        "FN": 0,
+        "precision": 0.0,
+        "recall": 1.0,
+        "f1": 0.0
+      },
+      "per_language": {
+        "hindi": {
+          "n": 150,
+          "TP": 0,
+          "FP": 0,
+          "TN": 150,
+          "FN": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "tamil": {
+          "n": 150,
+          "TP": 0,
+          "FP": 3,
+          "TN": 147,
+          "FN": 0,
+          "precision": 0.0,
+          "recall": 1.0,
+          "f1": 0.0
+        },
+        "telugu": {
+          "n": 150,
+          "TP": 0,
+          "FP": 2,
+          "TN": 148,
+          "FN": 0,
+          "precision": 0.0,
+          "recall": 1.0,
+          "f1": 0.0
+        }
+      }
+    },
+    "C-max": {
+      "overall": {
+        "n": 450,
+        "TP": 0,
+        "FP": 5,
+        "TN": 445,
+        "FN": 0,
+        "precision": 0.0,
+        "recall": 1.0,
+        "f1": 0.0
+      },
+      "per_language": {
+        "hindi": {
+          "n": 150,
+          "TP": 0,
+          "FP": 0,
+          "TN": 150,
+          "FN": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "tamil": {
+          "n": 150,
+          "TP": 0,
+          "FP": 3,
+          "TN": 147,
+          "FN": 0,
+          "precision": 0.0,
+          "recall": 1.0,
+          "f1": 0.0
+        },
+        "telugu": {
+          "n": 150,
+          "TP": 0,
+          "FP": 2,
+          "TN": 148,
+          "FN": 0,
+          "precision": 0.0,
+          "recall": 1.0,
+          "f1": 0.0
+        }
+      }
+    },
+    "C-weighted": {
+      "overall": {
+        "n": 450,
+        "TP": 0,
+        "FP": 5,
+        "TN": 445,
+        "FN": 0,
+        "precision": 0.0,
+        "recall": 1.0,
+        "f1": 0.0
+      },
+      "per_language": {
+        "hindi": {
+          "n": 150,
+          "TP": 0,
+          "FP": 0,
+          "TN": 150,
+          "FN": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "tamil": {
+          "n": 150,
+          "TP": 0,
+          "FP": 3,
+          "TN": 147,
+          "FN": 0,
+          "precision": 0.0,
+          "recall": 1.0,
+          "f1": 0.0
+        },
+        "telugu": {
+          "n": 150,
+          "TP": 0,
+          "FP": 2,
+          "TN": 148,
+          "FN": 0,
+          "precision": 0.0,
+          "recall": 1.0,
+          "f1": 0.0
+        }
+      }
+    },
+    "D": {
+      "overall": {
+        "n": 450,
+        "TP": 0,
+        "FP": 5,
+        "TN": 445,
+        "FN": 0,
+        "precision": 0.0,
+        "recall": 1.0,
+        "f1": 0.0
+      },
+      "per_language": {
+        "hindi": {
+          "n": 150,
+          "TP": 0,
+          "FP": 0,
+          "TN": 150,
+          "FN": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "tamil": {
+          "n": 150,
+          "TP": 0,
+          "FP": 3,
+          "TN": 147,
+          "FN": 0,
+          "precision": 0.0,
+          "recall": 1.0,
+          "f1": 0.0
+        },
+        "telugu": {
+          "n": 150,
+          "TP": 0,
+          "FP": 2,
+          "TN": 148,
+          "FN": 0,
+          "precision": 0.0,
+          "recall": 1.0,
+          "f1": 0.0
+        }
+      }
+    }
+  },
+  "mcnemar_exact": {
+    "A_vs_B": {
+      "n_items": 450,
+      "first_only_correct": 2,
+      "second_only_correct": 0,
+      "p_value": 0.5
+    },
+    "B_vs_C-max": {
+      "n_items": 450,
+      "first_only_correct": 0,
+      "second_only_correct": 0,
+      "p_value": 1.0
+    },
+    "B_vs_C-weighted": {
+      "n_items": 450,
+      "first_only_correct": 0,
+      "second_only_correct": 0,
+      "p_value": 1.0
+    },
+    "B_vs_D": {
+      "n_items": 450,
+      "first_only_correct": 0,
+      "second_only_correct": 0,
+      "p_value": 1.0
+    },
+    "C-max_vs_D": {
+      "n_items": 450,
+      "first_only_correct": 0,
+      "second_only_correct": 0,
+      "p_value": 1.0
+    }
+  }
+}

@@ -1,12 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import {
-  MAX_SELECTION_CODE_POINTS,
-  MAX_VISITED_TEXT_NODES,
-  extractSelectedText,
-  requestSelectedPageText,
-} from "../selection.mjs";
 import { createPopupController } from "../popup.js";
 
 function popupFixture() {
@@ -64,7 +58,6 @@ function popupFixture() {
     "counter",
     "analyze",
     "analyze-label",
-    "selection",
     "clear",
     "mode-message",
     "mode-link",
@@ -162,763 +155,9 @@ function analysisResult(overrides = {}) {
   };
 }
 
-function withSelection(text, callback, renderedText = text) {
-  const previousGetSelection = globalThis.getSelection;
-  const textNode = { nodeType: 3, data: text };
-  const range = {
-    collapsed: false,
-    commonAncestorContainer: textNode,
-    startContainer: textNode,
-    startOffset: 0,
-    endContainer: textNode,
-    endOffset: text.length,
-    intersectsNode: (node) => node === textNode,
-  };
-  const selection = {
-    rangeCount: 1,
-    getRangeAt: () => range,
-    toString() {
-      return renderedText;
-    },
-  };
-  globalThis.getSelection = () => selection;
-  try {
-    return callback();
-  } finally {
-    if (previousGetSelection === undefined) {
-      delete globalThis.getSelection;
-    } else {
-      globalThis.getSelection = previousGetSelection;
-    }
-  }
-}
-
-function withTreeSelection(
-  {
-    nodes,
-    selectedNodes = nodes,
-    startContainer = selectedNodes[0],
-    startOffset = 0,
-    endContainer = selectedNodes[selectedNodes.length - 1],
-    endOffset,
-    renderedText,
-    stringify,
-  },
-  callback,
-) {
-  const previousDocument = globalThis.document;
-  const previousGetSelection = globalThis.getSelection;
-  const root = { nodeType: 1 };
-  const selected = new Set(selectedNodes);
-  let stringificationCalls = 0;
-  let stringificationReceiver;
-  const selection = {
-    rangeCount: 1,
-    getRangeAt: () => ({
-      collapsed: false,
-      commonAncestorContainer: root,
-      startContainer,
-      startOffset,
-      endContainer,
-      endOffset,
-      intersectsNode: (node) => selected.has(node),
-    }),
-    toString() {
-      stringificationCalls += 1;
-      stringificationReceiver = this;
-      return stringify === undefined ? renderedText : stringify();
-    },
-  };
-  globalThis.document = {
-    createTreeWalker() {
-      let index = 0;
-      return { nextNode: () => nodes[index++] ?? null };
-    },
-  };
-  globalThis.getSelection = () => selection;
-  try {
-    return callback({
-      selection,
-      stringificationCalls: () => stringificationCalls,
-      stringificationReceiver: () => stringificationReceiver,
-    });
-  } finally {
-    if (previousDocument === undefined) delete globalThis.document;
-    else globalThis.document = previousDocument;
-    if (previousGetSelection === undefined) delete globalThis.getSelection;
-    else globalThis.getSelection = previousGetSelection;
-  }
-}
-
-function fakeChrome({ tabs = [{ id: 7 }], injection, queryError, injectionError } = {}) {
-  const calls = [];
-  const chromeApi = {
-    tabs: {
-      async query(query) {
-        calls.push(["query", query]);
-        if (queryError) {
-          throw queryError;
-        }
-        return tabs;
-      },
-    },
-    scripting: {
-      async executeScript(details) {
-        calls.push(["executeScript", details]);
-        if (injectionError) {
-          throw injectionError;
-        }
-        return injection === undefined ? [
-          {
-            documentId: "document-1",
-            frameId: 0,
-            result: { status: "ok", text: "selected text" },
-          },
-        ] : injection;
-      },
-    },
-  };
-  return { chromeApi, calls };
-}
-
-test("in-page extraction accepts exactly 20,000 BMP or astral code points", () => {
-  withSelection("a".repeat(MAX_SELECTION_CODE_POINTS), () => {
-    assert.deepEqual(
-      extractSelectedText(MAX_SELECTION_CODE_POINTS, MAX_VISITED_TEXT_NODES),
-      { status: "ok", text: "a".repeat(MAX_SELECTION_CODE_POINTS) },
-    );
-  });
-  withSelection("😀".repeat(MAX_SELECTION_CODE_POINTS), () => {
-    assert.deepEqual(
-      extractSelectedText(MAX_SELECTION_CODE_POINTS, MAX_VISITED_TEXT_NODES),
-      { status: "ok", text: "😀".repeat(MAX_SELECTION_CODE_POINTS) },
-    );
-  });
-});
-
-test("in-page extraction rejects 20,001 code points without returning a prefix", () => {
-  for (const text of [
-    "a".repeat(MAX_SELECTION_CODE_POINTS + 1),
-    "😀".repeat(MAX_SELECTION_CODE_POINTS + 1),
-  ]) {
-    withSelection(text, () => {
-      assert.deepEqual(
-        extractSelectedText(MAX_SELECTION_CODE_POINTS, MAX_VISITED_TEXT_NODES),
-        { status: "too_long" },
-      );
-    });
-  }
-});
-
-test("raw and rendered selection limits are enforced independently", () => {
-  const oversizedRaw = {
-    nodeType: 3,
-    data: "😀".repeat(MAX_SELECTION_CODE_POINTS + 1),
-  };
-  withTreeSelection(
-    {
-      nodes: [oversizedRaw],
-      endOffset: oversizedRaw.data.length,
-      renderedText: "short rendered text",
-    },
-    ({ stringificationCalls }) => {
-      assert.deepEqual(
-        extractSelectedText(MAX_SELECTION_CODE_POINTS, MAX_VISITED_TEXT_NODES),
-        { status: "too_long" },
-      );
-      assert.equal(stringificationCalls(), 0);
-    },
-  );
-
-  const shortRaw = { nodeType: 3, data: "x" };
-  for (const [renderedText, expected] of [
-    [
-      "😀".repeat(MAX_SELECTION_CODE_POINTS),
-      { status: "ok", text: "😀".repeat(MAX_SELECTION_CODE_POINTS) },
-    ],
-    ["😀".repeat(MAX_SELECTION_CODE_POINTS + 1), { status: "too_long" }],
-  ]) {
-    withTreeSelection(
-      { nodes: [shortRaw], endOffset: 1, renderedText },
-      ({ stringificationCalls }) => {
-        assert.deepEqual(
-          extractSelectedText(MAX_SELECTION_CODE_POINTS, MAX_VISITED_TEXT_NODES),
-          expected,
-        );
-        assert.equal(stringificationCalls(), 1);
-      },
-    );
-  }
-});
-
-test("rendered selection preserves block separators and inline word joins", () => {
-  const send = { nodeType: 3, data: "Send" };
-  const otp = { nodeType: 3, data: "OTP immediately at bad.example" };
-  withTreeSelection(
-    {
-      nodes: [send, otp],
-      endOffset: otp.data.length,
-      renderedText: "Send\nOTP immediately at bad.example",
-    },
-    ({ selection, stringificationCalls, stringificationReceiver }) => {
-      assert.deepEqual(
-        extractSelectedText(MAX_SELECTION_CODE_POINTS, MAX_VISITED_TEXT_NODES),
-        { status: "ok", text: "Send\nOTP immediately at bad.example" },
-      );
-      assert.equal(stringificationCalls(), 1);
-      assert.equal(stringificationReceiver(), selection);
-    },
-  );
-
-  const pass = { nodeType: 3, data: "pass" };
-  const word = { nodeType: 3, data: "word" };
-  withTreeSelection(
-    { nodes: [pass, word], endOffset: word.data.length, renderedText: "password" },
-    () => {
-      assert.deepEqual(
-        extractSelectedText(MAX_SELECTION_CODE_POINTS, MAX_VISITED_TEXT_NODES),
-        { status: "ok", text: "password" },
-      );
-    },
-  );
-});
-
-test("rendered selection preserves explicit whitespace, punctuation, and partial boundaries", () => {
-  const first = { nodeType: 3, data: "XX  Pay" };
-  const second = { nodeType: 3, data: " now, please!YY" };
-  withTreeSelection(
-    {
-      nodes: [first, second],
-      startContainer: first,
-      startOffset: 2,
-      endContainer: second,
-      endOffset: second.data.length - 2,
-      renderedText: "  Pay now, please! \n",
-    },
-    () => {
-      assert.deepEqual(
-        extractSelectedText(MAX_SELECTION_CODE_POINTS, MAX_VISITED_TEXT_NODES),
-        { status: "ok", text: "  Pay now, please! \n" },
-      );
-    },
-  );
-});
-
-test("missing, throwing, or non-string selection stringifiers fail generically", () => {
-  const node = { nodeType: 3, data: "selected" };
-  withTreeSelection(
-    { nodes: [node], endOffset: node.data.length, renderedText: "selected" },
-    ({ selection }) => {
-      selection.toString = null;
-      assert.deepEqual(
-        extractSelectedText(MAX_SELECTION_CODE_POINTS, MAX_VISITED_TEXT_NODES),
-        { status: "unavailable" },
-      );
-    },
-  );
-  for (const stringify of [
-    () => {
-      throw new Error("SECRET stringifier detail");
-    },
-    () => 7,
-  ]) {
-    withTreeSelection(
-      { nodes: [node], endOffset: node.data.length, stringify },
-      ({ stringificationCalls }) => {
-        const serialized = JSON.stringify(
-          extractSelectedText(MAX_SELECTION_CODE_POINTS, MAX_VISITED_TEXT_NODES),
-        );
-        assert.equal(serialized, '{"status":"unavailable"}');
-        assert.doesNotMatch(serialized, /SECRET/);
-        assert.equal(stringificationCalls(), 1);
-      },
-    );
-  }
-});
-
-test("zero-DOM-text form selections return empty without reading form values or stringifying", () => {
-  const previousDocument = globalThis.document;
-  const previousGetSelection = globalThis.getSelection;
-  const input = { nodeType: 1 };
-  Object.defineProperty(input, "value", {
-    get() {
-      throw new Error("SECRET form value was read");
-    },
-  });
-  let stringificationCalls = 0;
-  globalThis.document = {
-    createTreeWalker: () => ({ nextNode: () => null }),
-  };
-  globalThis.getSelection = () => ({
-    rangeCount: 1,
-    getRangeAt: () => ({
-      collapsed: false,
-      commonAncestorContainer: input,
-      startContainer: input,
-      startOffset: 0,
-      endContainer: input,
-      endOffset: 1,
-      intersectsNode: () => false,
-    }),
-    toString() {
-      stringificationCalls += 1;
-      return "SECRET form value";
-    },
-  });
-  try {
-    assert.deepEqual(
-      extractSelectedText(MAX_SELECTION_CODE_POINTS, MAX_VISITED_TEXT_NODES),
-      { status: "empty" },
-    );
-    assert.equal(stringificationCalls, 0);
-  } finally {
-    if (previousDocument === undefined) delete globalThis.document;
-    else globalThis.document = previousDocument;
-    if (previousGetSelection === undefined) delete globalThis.getSelection;
-    else globalThis.getSelection = previousGetSelection;
-  }
-});
-
-test("in-page extraction returns generic empty and complexity sentinels", () => {
-  withSelection(" \n\t ", () => {
-    assert.deepEqual(
-      extractSelectedText(MAX_SELECTION_CODE_POINTS, MAX_VISITED_TEXT_NODES),
-      { status: "empty" },
-    );
-  });
-
-  const previousDocument = globalThis.document;
-  const previousGetSelection = globalThis.getSelection;
-  const nodes = [
-    { nodeType: 3, data: "one" },
-    { nodeType: 3, data: "two" },
-  ];
-  const root = { nodeType: 1 };
-  globalThis.document = {
-    createTreeWalker() {
-      let index = 0;
-      return { nextNode: () => nodes[index++] ?? null };
-    },
-  };
-  let stringificationCalls = 0;
-  globalThis.getSelection = () => ({
-    rangeCount: 1,
-    toString() {
-      stringificationCalls += 1;
-      return "one\ntwo";
-    },
-    getRangeAt: () => ({
-      collapsed: false,
-      commonAncestorContainer: root,
-      startContainer: root,
-      startOffset: 0,
-      endContainer: root,
-      endOffset: 2,
-      intersectsNode: () => true,
-    }),
-  });
-  try {
-    assert.deepEqual(extractSelectedText(MAX_SELECTION_CODE_POINTS, 1), {
-      status: "too_complex",
-    });
-    assert.equal(stringificationCalls, 0);
-  } finally {
-    if (previousDocument === undefined) delete globalThis.document;
-    else globalThis.document = previousDocument;
-    if (previousGetSelection === undefined) delete globalThis.getSelection;
-    else globalThis.getSelection = previousGetSelection;
-  }
-});
-
-test("in-page extraction respects Range boundaries across text nodes", () => {
-  const previousDocument = globalThis.document;
-  const previousGetSelection = globalThis.getSelection;
-  const before = { nodeType: 3, data: "UNSELECTED" };
-  const first = { nodeType: 3, data: "alpha" };
-  const second = { nodeType: 3, data: "beta" };
-  const after = { nodeType: 3, data: "ALSO UNSELECTED" };
-  const nodes = [before, first, second, after];
-  const root = { nodeType: 1 };
-  globalThis.document = {
-    createTreeWalker() {
-      let index = 0;
-      return { nextNode: () => nodes[index++] ?? null };
-    },
-  };
-  globalThis.getSelection = () => ({
-    rangeCount: 1,
-    toString: () => "lphabe",
-    getRangeAt: () => ({
-      collapsed: false,
-      commonAncestorContainer: root,
-      startContainer: first,
-      startOffset: 1,
-      endContainer: second,
-      endOffset: 2,
-      intersectsNode: (node) => node === first || node === second,
-    }),
-  });
-  try {
-    assert.deepEqual(
-      extractSelectedText(MAX_SELECTION_CODE_POINTS, MAX_VISITED_TEXT_NODES),
-      { status: "ok", text: "lphabe" },
-    );
-  } finally {
-    if (previousDocument === undefined) delete globalThis.document;
-    else globalThis.document = previousDocument;
-    if (previousGetSelection === undefined) delete globalThis.getSelection;
-    else globalThis.getSelection = previousGetSelection;
-  }
-});
-
-test("in-page extraction never reads data from unselected text nodes", () => {
-  const previousDocument = globalThis.document;
-  const previousGetSelection = globalThis.getSelection;
-  const unselected = { nodeType: 3 };
-  Object.defineProperty(unselected, "data", {
-    get() {
-      throw new Error("SECRET unselected text was accessed");
-    },
-  });
-  let selectedDataReads = 0;
-  const selected = { nodeType: 3 };
-  Object.defineProperty(selected, "data", {
-    get() {
-      selectedDataReads += 1;
-      return "selected text";
-    },
-  });
-  const root = { nodeType: 1 };
-  globalThis.document = {
-    createTreeWalker() {
-      const nodes = [unselected, selected];
-      let index = 0;
-      return { nextNode: () => nodes[index++] ?? null };
-    },
-  };
-  globalThis.getSelection = () => ({
-    rangeCount: 1,
-    toString: () => "selected text",
-    getRangeAt: () => ({
-      collapsed: false,
-      commonAncestorContainer: root,
-      startContainer: selected,
-      startOffset: 0,
-      endContainer: selected,
-      endOffset: 13,
-      intersectsNode: (node) => node === selected,
-    }),
-  });
-  try {
-    assert.deepEqual(
-      extractSelectedText(MAX_SELECTION_CODE_POINTS, MAX_VISITED_TEXT_NODES),
-      { status: "ok", text: "selected text" },
-    );
-    assert.equal(selectedDataReads, 1);
-  } finally {
-    if (previousDocument === undefined) delete globalThis.document;
-    else globalThis.document = previousDocument;
-    if (previousGetSelection === undefined) delete globalThis.getSelection;
-    else globalThis.getSelection = previousGetSelection;
-  }
-});
-
-test("an intersecting malicious data getter fails generically without echo", () => {
-  const previousGetSelection = globalThis.getSelection;
-  const selected = { nodeType: 3 };
-  Object.defineProperty(selected, "data", {
-    get() {
-      throw new Error("SECRET selected getter detail");
-    },
-  });
-  globalThis.getSelection = () => ({
-    rangeCount: 1,
-    toString: () => "SECRET selected getter detail",
-    getRangeAt: () => ({
-      collapsed: false,
-      commonAncestorContainer: selected,
-      startContainer: selected,
-      startOffset: 0,
-      endContainer: selected,
-      endOffset: 1,
-      intersectsNode: () => true,
-    }),
-  });
-  try {
-    const serialized = JSON.stringify(
-      extractSelectedText(MAX_SELECTION_CODE_POINTS, MAX_VISITED_TEXT_NODES),
-    );
-    assert.equal(serialized, '{"status":"unavailable"}');
-    assert.doesNotMatch(serialized, /SECRET/);
-  } finally {
-    if (previousGetSelection === undefined) delete globalThis.getSelection;
-    else globalThis.getSelection = previousGetSelection;
-  }
-});
-
-test("in-page extraction treats collapsed and multiple ranges as non-results", () => {
-  const previousGetSelection = globalThis.getSelection;
-  const textNode = { nodeType: 3, data: "not returned" };
-  let stringificationCalls = 0;
-  globalThis.getSelection = () => ({
-    rangeCount: 1,
-    toString() {
-      stringificationCalls += 1;
-      return "not returned";
-    },
-    getRangeAt: () => ({
-      collapsed: true,
-      commonAncestorContainer: textNode,
-      startContainer: textNode,
-      startOffset: 0,
-      endContainer: textNode,
-      endOffset: 0,
-      intersectsNode: () => true,
-    }),
-  });
-  try {
-    assert.deepEqual(
-      extractSelectedText(MAX_SELECTION_CODE_POINTS, MAX_VISITED_TEXT_NODES),
-      { status: "empty" },
-    );
-    assert.equal(stringificationCalls, 0);
-    globalThis.getSelection = () => ({ rangeCount: 2, getRangeAt: () => null });
-    assert.deepEqual(
-      extractSelectedText(MAX_SELECTION_CODE_POINTS, MAX_VISITED_TEXT_NODES),
-      { status: "too_complex" },
-    );
-  } finally {
-    if (previousGetSelection === undefined) delete globalThis.getSelection;
-    else globalThis.getSelection = previousGetSelection;
-  }
-});
-
-test("bridge performs the exact active-tab top-frame isolated-world injection", async () => {
-  const { chromeApi, calls } = fakeChrome();
-  assert.deepEqual(await requestSelectedPageText(chromeApi), {
-    status: "ok",
-    text: "selected text",
-  });
-  assert.deepEqual(calls[0], [
-    "query",
-    { active: true, currentWindow: true },
-  ]);
-  assert.equal(calls.length, 2);
-  assert.equal(calls[1][0], "executeScript");
-  assert.deepEqual(calls[1][1], {
-    target: { tabId: 7, frameIds: [0] },
-    world: "ISOLATED",
-    func: extractSelectedText,
-    args: [MAX_SELECTION_CODE_POINTS, MAX_VISITED_TEXT_NODES],
-  });
-});
-
-test("bridge uses generic non-echo failures for unavailable APIs and rejections", async () => {
-  for (const chromeApi of [
-    undefined,
-    {},
-    fakeChrome({ queryError: new Error("SECRET query detail") }).chromeApi,
-    fakeChrome({ injectionError: new Error("SECRET injection detail") }).chromeApi,
-  ]) {
-    const serialized = JSON.stringify(await requestSelectedPageText(chromeApi));
-    assert.match(serialized, /unavailable/i);
-    assert.doesNotMatch(serialized, /SECRET/);
-  }
-});
-
-test("bridge rejects malformed tabs and injection results", async () => {
-  const malformedTabs = [
-    null,
-    [],
-    [{ id: -1 }],
-    [{ id: 1.5 }],
-    [{ id: 1 }, { id: 2 }],
-  ];
-  for (const tabs of malformedTabs) {
-    const { chromeApi, calls } = fakeChrome({ tabs });
-    assert.equal((await requestSelectedPageText(chromeApi)).status, "unavailable");
-    // Requires exactly 1 valid tab. Arrays without exactly 1 element trigger fallback (2 calls)
-    // Single invalid tabs fail on validation without fallback (1 call)
-    const isValidSingleTab = Array.isArray(tabs) && tabs.length === 1;
-    const expectedCalls = isValidSingleTab ? 1 : 2;
-    assert.equal(calls.length, expectedCalls);
-  }
-
-  const malformedInjections = [
-    null,
-    [],
-    [{ frameId: 1, result: { status: "ok", text: "secret" } }],
-    [{ frameId: 0 }],
-    [{ frameId: 0, result: { status: "ok", text: "secret" }, extra: true }],
-    [{ frameId: 0, result: { status: "ok", text: "" } }],
-    [{ frameId: 0, result: { status: "ok", text: "a".repeat(20_001) } }],
-    [{ frameId: 0, result: { status: "too_long", text: "secret" } }],
-    [{ frameId: 0, result: { status: "other" } }],
-  ];
-  for (const injection of malformedInjections) {
-    const { chromeApi } = fakeChrome({ injection });
-    const serialized = JSON.stringify(await requestSelectedPageText(chromeApi));
-    assert.match(serialized, /unavailable/i);
-    assert.doesNotMatch(serialized, /secret/i);
-  }
-});
-
-test("bridge maps empty, too-long, and too-complex sentinels without source text", async () => {
-  for (const status of ["empty", "too_long", "too_complex", "unavailable"]) {
-    const { chromeApi } = fakeChrome({
-      injection: [{ frameId: 0, result: { status } }],
-    });
-    const result = await requestSelectedPageText(chromeApi);
-    assert.equal(result.status, status);
-    assert.equal(Object.hasOwn(result, "text"), false);
-  }
-});
-
-test("popup initialization performs no page API call and only selection is marked busy", async () => {
+test("editing invalidates a rendered result without analysis", () => {
   const { elements, documentApi } = popupFixture();
-  let requests = 0;
-  const pending = deferred();
-  const controller = createPopupController({
-    documentApi,
-    chromeApi: {},
-    readSelection: () => {
-      requests += 1;
-      return pending.promise;
-    },
-  });
-  assert.equal(requests, 0);
-
-  const operation = controller.analyzeSelection();
-  assert.equal(requests, 1);
-  assert.equal(elements.selection.disabled, true);
-  assert.equal(elements.selection.attributes["aria-busy"], "true");
-  assert.equal(elements.analyze.disabled, false);
-  assert.equal(elements.clear.disabled, false);
-  pending.resolve({ status: "empty" });
-  await operation;
-  assert.equal(elements.selection.disabled, false);
-});
-
-test("Clear cancels an older selection result and restores the empty focused UI", async () => {
-  const { elements, documentApi } = popupFixture();
-  const pending = deferred();
-  const controller = createPopupController({
-    documentApi,
-    chromeApi: {},
-    readSelection: () => pending.promise,
-  });
-  elements.message.value = "old paste";
-  const operation = controller.analyzeSelection();
-  controller.clearResult();
-  pending.resolve({ status: "ok", text: "SECRET stale selected text" });
-  await operation;
-
-  assert.equal(elements.message.value, "");
-  assert.equal(elements.result.hidden, true);
-  assert.equal(elements.risk.textContent, "");
-  assert.equal(elements.reasons.children.length, 0);
-  assert.equal(elements.message.focusCount, 1);
-  assert.equal(JSON.stringify(elements).includes("SECRET"), false);
-});
-
-test("newer pasted analysis wins over an older selection request", async () => {
-  const { elements, documentApi } = popupFixture();
-  const pending = deferred();
-  const controller = createPopupController({
-    documentApi,
-    chromeApi: {},
-    readSelection: () => pending.promise,
-  });
-  const operation = controller.analyzeSelection();
-  elements.message.value = "ordinary lunch plans";
-  controller.analyzePastedText();
-  const heading = elements.risk.textContent;
-  pending.resolve({
-    status: "ok",
-    text: "Bank says send OTP immediately at secret.example",
-  });
-  await operation;
-
-  assert.equal(elements.risk.textContent, heading);
-  assert.match(elements.risk.textContent, /No clear pattern match/);
-  assert.match(elements.status.textContent, /Message analyzed locally/);
-});
-
-test("a newer selection request wins if an older request finishes last", async () => {
-  const { elements, documentApi } = popupFixture();
-  const first = deferred();
-  const second = deferred();
-  let calls = 0;
-  const controller = createPopupController({
-    documentApi,
-    chromeApi: {},
-    readSelection: () => {
-      calls += 1;
-      return calls === 1 ? first.promise : second.promise;
-    },
-  });
-  const olderOperation = controller.analyzeSelection();
-  const newerOperation = controller.analyzeSelection();
-  second.resolve({ status: "ok", text: "ordinary lunch plans" });
-  await newerOperation;
-  const heading = elements.risk.textContent;
-  first.resolve({
-    status: "ok",
-    text: "Bank says send OTP immediately at stale-secret.example",
-  });
-  await olderOperation;
-
-  assert.equal(elements.risk.textContent, heading);
-  assert.match(elements.risk.textContent, /No clear pattern match/);
-});
-
-test("selected source text is analyzed but never copied or rendered", async () => {
-  const { elements, documentApi } = popupFixture();
-  const secret = "Bank says send OTP immediately at secret.example";
-  const existingDraft = "Existing message draft";
-  const controller = createPopupController({
-    documentApi,
-    chromeApi: {},
-    readSelection: async () => ({ status: "ok", text: secret }),
-  });
-  elements.message.value = existingDraft;
-  elements.message.listeners.input();
-  await controller.analyzeSelection();
-
-  const rendered = [
-    elements.message.value,
-    elements.status.textContent,
-    elements.risk.textContent,
-    elements.summary.textContent,
-    ...elements.reasons.children.map((item) => item.textContent),
-  ].join("\n");
-  assert.equal(rendered.includes(secret), false);
-  assert.equal(elements.message.value, existingDraft);
-  assert.equal(elements.result.hidden, false);
-  assert.equal(elements.result.focusCount, 1);
-  assert.equal(elements["edit-input"].textContent, "Back to input");
-  assert.equal(
-    elements.status.textContent,
-    "Selected text analyzed locally. It was not copied into the draft. No input history is saved.",
-  );
-
-  elements["edit-input"].listeners.click();
-
-  assert.equal(elements.result.hidden, true);
-  assert.equal(elements.message.value, existingDraft);
-  assert.equal(elements.message.focusCount, 1);
-  assert.equal(
-    elements.status.textContent,
-    "Message input ready. Selected page text was not copied.",
-  );
-  assert.equal(elements["edit-input"].textContent, "Edit input");
-});
-
-test("editing invalidates a rendered result and a pending selection without analysis", async () => {
-  const { elements, documentApi } = popupFixture();
-  const pending = deferred();
   let analyses = 0;
-  let selectionReads = 0;
   const controller = createPopupController({
     documentApi,
     chromeApi: {},
@@ -926,27 +165,18 @@ test("editing invalidates a rendered result and a pending selection without anal
       analyses += 1;
       return analysisResult();
     },
-    readSelection: () => {
-      selectionReads += 1;
-      return pending.promise;
-    },
   });
 
   elements.message.value = "first";
   controller.analyzePastedText();
   assert.equal(elements.result.hidden, false);
-  const selectionOperation = controller.analyzeSelection();
   elements.message.value = "😀a";
   elements.message.listeners.input();
-  pending.resolve({ status: "ok", text: "SECRET stale selection" });
-  await selectionOperation;
 
   assert.equal(analyses, 1);
-  assert.equal(selectionReads, 1);
   assert.equal(elements.result.hidden, true);
   assert.equal(elements.counter.textContent, "2 / 20,000");
   assert.equal(elements["empty-state"].hidden, false);
-  assert.equal(JSON.stringify(elements).includes("SECRET"), false);
 
   elements.message.value = "a".repeat(100_000);
   elements.message.listeners.input();
@@ -991,7 +221,6 @@ test("result context identifies pasted messages, links, and selected page text",
     documentApi,
     chromeApi: {},
     analyze: (_input, options) => analysisResult({ mode: options.mode }),
-    readSelection: async () => ({ status: "ok", text: "selected text" }),
   });
 
   elements.message.value = "message draft";
@@ -1005,8 +234,24 @@ test("result context identifies pasted messages, links, and selected page text",
   assert.equal(elements["result-context"].textContent, "Link check");
   assert.equal(elements["edit-input"].textContent, "Edit input");
 
-  controller.setMode("message");
-  await controller.analyzeSelection();
+  const chromeApi = {
+    runtime: {
+      sendMessage: (_message, callback) => {
+        if (typeof callback === "function") {
+          callback({ status: "ok", text: "selected text" });
+        }
+        return Promise.resolve({ status: "ok", text: "selected text" });
+      },
+    },
+  };
+  const selectionController = createPopupController({
+    documentApi,
+    chromeApi,
+    analyze: (_input, options) => analysisResult({ mode: options.mode }),
+  });
+  if (selectionController.pendingSelectionOperation) {
+    await selectionController.pendingSelectionOperation;
+  }
   assert.equal(elements["result-context"].textContent, "Selected text check");
   assert.equal(elements["edit-input"].textContent, "Back to input");
 });
@@ -1133,11 +378,9 @@ test("privacy hints and success statuses describe local in-memory behavior preci
   );
 });
 
-test("mode changes invalidate pending work and URL mode never requests page selection", async () => {
+test("mode changes invalidate rendered work and update active draft", () => {
   const { elements, documentApi } = popupFixture();
-  const pending = deferred();
   const calls = [];
-  let selectionReads = 0;
   const controller = createPopupController({
     documentApi,
     chromeApi: {},
@@ -1149,26 +392,19 @@ test("mode changes invalidate pending work and URL mode never requests page sele
         reasons: ["No synthetic finding."],
       });
     },
-    readSelection: () => {
-      selectionReads += 1;
-      return pending.promise;
-    },
   });
 
-  const selectionOperation = controller.analyzeSelection();
-  assert.equal(controller.setMode("url"), true);
-  pending.resolve({ status: "ok", text: "SECRET stale selection" });
-  await selectionOperation;
-  assert.equal(elements.result.hidden, true);
-  assert.equal(elements.selection.hidden, true);
-  assert.equal(elements.selection.disabled, true);
+  elements.message.value = "message draft";
+  controller.analyzePastedText();
+  assert.equal(elements.result.hidden, false);
 
-  await controller.analyzeSelection();
-  assert.equal(selectionReads, 1);
-  assert.match(elements.status.textContent, /not read in Link mode/);
+  assert.equal(controller.setMode("url"), true);
+  assert.equal(elements.result.hidden, true);
+
   elements.message.value = "https://destination.example/path";
   controller.analyzePastedText();
   assert.deepEqual(calls, [
+    ["message draft", { mode: "message" }],
     ["https://destination.example/path", { mode: "url" }],
   ]);
   assert.equal(controller.setMode("unsupported"), false);
@@ -1232,17 +468,12 @@ test("Ctrl or Command plus Enter does not analyze during IME composition", () =>
 test("example buttons use documentation-safe content and never auto-analyze", () => {
   const { elements, documentApi } = popupFixture();
   let analyses = 0;
-  let selectionReads = 0;
   const controller = createPopupController({
     documentApi,
     chromeApi: {},
     analyze: () => {
       analyses += 1;
       return analysisResult();
-    },
-    readSelection: async () => {
-      selectionReads += 1;
-      return { status: "empty" };
     },
   });
   const target = documentApi.createElement("button");
@@ -1251,7 +482,6 @@ test("example buttons use documentation-safe content and never auto-analyze", ()
 
   assert.match(elements.message.value, /\.example\b/);
   assert.equal(analyses, 0);
-  assert.equal(selectionReads, 0);
   assert.equal(elements.result.hidden, true);
   assert.notEqual(elements.counter.textContent, "0 / 20,000");
 
@@ -1263,7 +493,6 @@ test("example buttons use documentation-safe content and never auto-analyze", ()
   assert.equal(controller.useExample("account"), true);
   assert.equal(elements.message.value, "https://example.com");
   assert.equal(analyses, 0);
-  assert.equal(selectionReads, 0);
 
   controller.setMode("message");
   assert.equal(elements["example-urgent"].textContent, "Urgent delivery");
@@ -1281,7 +510,6 @@ test("example buttons use documentation-safe content and never auto-analyze", ()
   assert.equal(controller.useExample("benign"), true);
   assert.match(elements.message.value, /team lunch/i);
   assert.equal(analyses, 0);
-  assert.equal(selectionReads, 0);
 
   controller.setMode("url");
   assert.equal(elements["more-examples"].hidden, true);
@@ -1373,25 +601,35 @@ test("explicit report downloads contain only allowlisted report data and static 
   const saved = [];
   const filenames = [];
   const selectedSecret = "SECRET selected source text";
+  const chromeApi = {
+    runtime: {
+      sendMessage: (_message, callback) => {
+        if (typeof callback === "function") {
+          callback({ status: "ok", text: selectedSecret });
+        }
+        return Promise.resolve({ status: "ok", text: selectedSecret });
+      },
+    },
+  };
   const controller = createPopupController({
     documentApi,
-    chromeApi: {},
+    chromeApi,
     analyze: (_input, options) =>
       analysisResult({
         mode: options.mode,
         arbitraryExtra: "SECRET arbitrary report field",
         timestamp: "SECRET timestamp",
       }),
-    readSelection: async () => ({ status: "ok", text: selectedSecret }),
     saveReport: (report, filename) => {
       saved.push(report);
       filenames.push(filename);
     },
   });
 
+  if (controller.pendingSelectionOperation) {
+    await controller.pendingSelectionOperation;
+  }
   elements.message.value = "SECRET textarea draft";
-  elements.message.listeners.input();
-  await controller.analyzeSelection();
   assert.equal(saved.length, 0);
   assert.equal(controller.downloadReport(), true);
   assert.equal(saved.length, 1);
@@ -1420,7 +658,7 @@ test("explicit report downloads contain only allowlisted report data and static 
   assert.doesNotMatch(JSON.stringify(saved[0]), /SECRET/);
 });
 
-test("editing, clearing, mode changes, and pending selection invalidate report downloads", async () => {
+test("editing, clearing, and mode changes invalidate report downloads", () => {
   const invalidators = [
     (controller, elements) => elements.message.listeners.input(),
     (controller) => controller.clearResult(),
@@ -1445,27 +683,6 @@ test("editing, clearing, mode changes, and pending selection invalidate report d
     assert.equal(controller.downloadReport(), false);
     assert.equal(saves, 0);
   }
-
-  const { elements, documentApi } = popupFixture();
-  const pending = deferred();
-  let saves = 0;
-  const controller = createPopupController({
-    documentApi,
-    chromeApi: {},
-    analyze: () => analysisResult(),
-    readSelection: () => pending.promise,
-    saveReport: () => {
-      saves += 1;
-    },
-  });
-  elements.message.value = "initial draft";
-  controller.analyzePastedText();
-  const operation = controller.analyzeSelection();
-  assert.equal(elements["download-report"].disabled, true);
-  assert.equal(controller.downloadReport(), false);
-  assert.equal(saves, 0);
-  pending.resolve({ status: "empty" });
-  await operation;
 });
 
 test("download failures are generic and do not expose saver errors", () => {
@@ -1485,48 +702,33 @@ test("download failures are generic and do not expose saver errors", () => {
   assert.doesNotMatch(elements.status.textContent, /SECRET/);
 });
 
-test("expanded workspace disables page selection and never reads the originating page", async () => {
-  const { elements, documentApi } = popupFixture();
-  let selectionReads = 0;
-  const controller = createPopupController({
-    documentApi,
-    chromeApi: {},
-    expandedWorkspace: true,
-    readSelection: async () => {
-      selectionReads += 1;
-      return { status: "ok", text: "SECRET selected text" };
-    },
-  });
-  assert.equal(elements.selection.hidden, true);
-  assert.equal(elements.selection.disabled, true);
-  await controller.analyzeSelection();
-  assert.equal(selectionReads, 0);
-  assert.equal(elements.result.hidden, true);
-  assert.equal(
-    elements.status.textContent,
-    "Page selection is unavailable in the expanded workspace.",
-  );
-});
-
 test("unexpected checker exceptions produce generic non-echo results", async () => {
   for (const source of ["paste", "selection"]) {
     const { elements, documentApi } = popupFixture();
+    const chromeApi = source === "selection" ? {
+      runtime: {
+        sendMessage: (_message, callback) => {
+          if (typeof callback === "function") {
+            callback({ status: "ok", text: "SECRET selected input" });
+          }
+          return Promise.resolve({ status: "ok", text: "SECRET selected input" });
+        },
+      },
+    } : {};
     const controller = createPopupController({
       documentApi,
-      chromeApi: {},
+      chromeApi,
       analyze: () => {
         throw new Error("SECRET checker detail");
       },
-      readSelection: async () => ({
-        status: "ok",
-        text: "SECRET selected input",
-      }),
     });
     if (source === "paste") {
       elements.message.value = "SECRET pasted input";
       controller.analyzePastedText();
     } else {
-      await controller.analyzeSelection();
+      if (controller.pendingSelectionOperation) {
+        await controller.pendingSelectionOperation;
+      }
     }
     const rendered = JSON.stringify({
       status: elements.status.textContent,
@@ -1550,7 +752,6 @@ test("batch mode keeps its own draft and exposes only batch controls", () => {
   assert.equal(controller.setMode("batch"), true);
   assert.equal(elements.message.value, "");
   assert.equal(elements.examples.hidden, true);
-  assert.equal(elements.selection.hidden, true);
   assert.equal(elements["batch-options"].hidden, false);
   assert.equal(elements["analyze-label"].textContent, "Analyze batch");
   assert.match(elements.counter.textContent, /0 \/ 100 lines/);
@@ -2017,4 +1218,211 @@ test("batch and selected-item exports contain allowlisted reports and line numbe
   assert.equal(saved[1].report.lineNumber, 2);
   assert.equal(saved[1].report.context, "Batch message · line 2");
   assert.doesNotMatch(JSON.stringify(saved[1].report), /SECRET/);
+});
+
+test("popup startup consumes pending selection message: ok status", async () => {
+  const { elements, documentApi } = popupFixture();
+  const saved = [];
+  const analyzedInputs = [];
+  const chromeApi = {
+    runtime: {
+      sendMessage: (message, callback) => {
+        assert.equal(message.type, "fisher-pending-selection");
+        if (typeof callback === "function") {
+          callback({ status: "ok", text: "Urgent: send OTP immediately" });
+        }
+        return Promise.resolve({ status: "ok", text: "Urgent: send OTP immediately" });
+      },
+    },
+  };
+
+  const controller = createPopupController({
+    documentApi,
+    chromeApi,
+    analyze: (input, options) => {
+      analyzedInputs.push({ input, options });
+      return analysisResult({
+        mode: options.mode,
+        risk: "high",
+        reasons: ["Test high risk reason"],
+        nextSteps: ["Do not share OTP"],
+      });
+    },
+    saveReport: (report, filename) => saved.push({ report, filename }),
+  });
+  if (controller.pendingSelectionOperation) {
+    await controller.pendingSelectionOperation;
+  }
+
+  assert.equal(analyzedInputs.length, 1);
+  assert.equal(analyzedInputs[0].input, "Urgent: send OTP immediately");
+  assert.equal(analyzedInputs[0].options.mode, "message");
+  assert.equal(elements.message.value, "");
+  assert.equal(elements.result.hidden, false);
+  assert.equal(elements["result-context"].textContent, "Selected text check");
+  assert.equal(elements.risk.textContent, "High-risk patterns found");
+  assert.match(elements.status.textContent, /Selected text analyzed locally/);
+
+  assert.equal(controller.downloadReport(), true);
+  assert.equal(saved.length, 1);
+  assert.equal(saved[0].report.context, "Selected text check");
+  assert.doesNotMatch(JSON.stringify(saved[0].report), /Urgent: send OTP/);
+});
+
+test("popup startup consumes pending selection message: too_long status", async () => {
+  const { elements, documentApi } = popupFixture();
+  const chromeApi = {
+    runtime: {
+      sendMessage: (_message, callback) => {
+        if (typeof callback === "function") {
+          callback({ status: "too_long" });
+        }
+        return Promise.resolve({ status: "too_long" });
+      },
+    },
+  };
+
+  const controller = createPopupController({
+    documentApi,
+    chromeApi,
+  });
+  if (controller.pendingSelectionOperation) {
+    await controller.pendingSelectionOperation;
+  }
+
+  assert.equal(elements.message.value, "");
+  assert.equal(elements.result.hidden, false);
+  assert.equal(elements.risk.textContent, "Could not analyze");
+  assert.match(elements.reasons.children[0].textContent, /20,000-character/);
+  assert.match(elements.status.textContent, /was not analyzed/);
+});
+
+test("popup startup ignores empty pending selection message", async () => {
+  const { elements, documentApi } = popupFixture();
+  const chromeApi = {
+    runtime: {
+      sendMessage: (_message, callback) => {
+        if (typeof callback === "function") {
+          callback({ status: "empty" });
+        }
+        return Promise.resolve({ status: "empty" });
+      },
+    },
+  };
+
+  const controller = createPopupController({
+    documentApi,
+    chromeApi,
+  });
+  if (controller.pendingSelectionOperation) {
+    await controller.pendingSelectionOperation;
+  }
+
+  assert.equal(elements.result.hidden, true);
+  assert.equal(elements["empty-state"].hidden, false);
+  assert.equal(elements.message.value, "");
+});
+
+test("popup startup handles sendMessage throwing without error", async () => {
+  const { elements, documentApi } = popupFixture();
+  const chromeApi = {
+    runtime: {
+      sendMessage: () => {
+        throw new Error("Port disconnected");
+      },
+    },
+  };
+
+  assert.doesNotThrow(() => {
+    const controller = createPopupController({
+      documentApi,
+      chromeApi,
+    });
+    assert.ok(controller);
+  });
+  assert.equal(elements.result.hidden, true);
+});
+
+test("popup startup handles missing chromeApi or runtime safely", () => {
+  const { elements, documentApi } = popupFixture();
+  assert.doesNotThrow(() => {
+    const controller1 = createPopupController({ documentApi, chromeApi: {} });
+    assert.ok(controller1);
+    const controller2 = createPopupController({ documentApi, chromeApi: undefined });
+    assert.ok(controller2);
+  });
+  assert.equal(elements.result.hidden, true);
+});
+
+test("popup startup pending selection works in workspace view (?view=workspace&from=menu)", async () => {
+  const { elements, documentApi } = popupFixture();
+  const chromeApi = {
+    runtime: {
+      sendMessage: (_message, callback) => {
+        if (typeof callback === "function") {
+          callback({ status: "ok", text: "Workspace menu text" });
+        }
+        return Promise.resolve({ status: "ok", text: "Workspace menu text" });
+      },
+    },
+  };
+
+  const controller = createPopupController({
+    documentApi,
+    chromeApi,
+    expandedWorkspace: true,
+  });
+  if (controller.pendingSelectionOperation) {
+    await controller.pendingSelectionOperation;
+  }
+
+  assert.equal(elements.result.hidden, false);
+  assert.equal(elements["result-context"].textContent, "Selected text check");
+  assert.equal(elements.message.value, "");
+});
+
+test("manifest permissions are exactly ['contextMenus']", async () => {
+  const fs = await import("node:fs");
+  const manifest = JSON.parse(fs.readFileSync(new URL("../manifest.json", import.meta.url), "utf-8"));
+  assert.deepEqual(manifest.permissions, ["contextMenus"]);
+});
+
+const forbiddenPerm1 = "scrip" + "ting";
+const forbiddenPerm2 = "active" + "Tab";
+const forbiddenPerm3 = "execute" + "Script";
+
+test(`no string '${forbiddenPerm1}', '${forbiddenPerm2}' or '${forbiddenPerm3}' appears under browser_extension/`, async () => {
+  const fs = await import("node:fs");
+  const path = await import("node:path");
+  const extensionDir = path.dirname(path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1")));
+  
+  function checkDir(dir) {
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        checkDir(fullPath);
+      } else if (entry.isFile()) {
+        // Skip binary icon files
+        if (entry.name.endsWith(".png") || entry.name.endsWith(".ico")) continue;
+        const text = fs.readFileSync(fullPath, "utf-8");
+        for (const forbidden of [forbiddenPerm1, forbiddenPerm2, forbiddenPerm3]) {
+          assert.equal(
+            text.includes(forbidden),
+            false,
+            `Forbidden string "${forbidden}" found in ${fullPath}`,
+          );
+        }
+      }
+    }
+  }
+  checkDir(extensionDir);
+});
+
+test("popup.html contains no #selection", async () => {
+  const fs = await import("node:fs");
+  const html = fs.readFileSync(new URL("../popup.html", import.meta.url), "utf-8");
+  assert.equal(html.includes('id="selection"'), false);
+  assert.equal(html.includes("id='selection'"), false);
+  assert.equal(html.includes("#selection"), false);
 });

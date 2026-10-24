@@ -1,11 +1,11 @@
-# Fisher Model Card v0.5
+# Fisher Model Card v0.6
 
 ## Model Details
 
 ### Model Description
 **Fisher** is a **local, rule-based phishing-signal detector** for Hindi, Tamil, Telugu, and English messages. It is **not** a trained machine learning model.
 
-- **Version**: 0.5.0
+- **Version**: 0.6.0
 - **Type**: Transparent rule-based system (no ML)
 - **Languages**: Hindi (Devanagari, Romanized), Tamil, Telugu, English-Indic code-mixed
 - **Input**: Text messages (20K character max) or URLs (2K character max)
@@ -17,7 +17,6 @@
 1. **detector.mjs**: Message pattern rules (6 categories: credential, urgency, action, impersonation, money, defang)
 2. **links.mjs**: URL parsing and structural inspection (credentials, HTTP, IP addresses, punycode, shorteners)
 3. **analyzer.mjs**: Public API combining detector + link results
-4. **selection.mjs**: Page text extraction (in-browser)
 
 **Analysis Pipeline**:
 ```
@@ -68,7 +67,7 @@ Output Report (risk, reasons, checks, next steps)
 ## Model Performance
 
 ### Training Data
-**None.** Fisher v0.5 uses curated rules, not trained ML models.
+**None.** Fisher v0.6 uses curated rules, not trained ML models.
 
 ### Auxiliary Baseline Results
 (Development-only spam/ham evaluation on public Dravidian dataset; **not phishing**; **not Fisher validation**):
@@ -97,6 +96,12 @@ Output Report (risk, reasons, checks, next steps)
 8. **Context-free**: Rules ignore preceding/following tokens
 9. **False positives possible**: Legitimate bank warnings ("verify account") may trigger high risk
 10. **No voice/conversation support**: Text messages only
+
+### Known Misses
+
+- Customs-fee messages ("package held at customs, pay a fee") and friend-in-need messages ("I am stuck, send money") are not detected.
+- Promotional spam on UCI almost never reaches high (recall 0.005).
+- Real bank notices and OTP warnings get review.
 
 ---
 
@@ -187,6 +192,7 @@ Blind annotation by 3 independent reviewers; phishing vs. benign labels.
 - **Bias risk**: Rules may over-flag legitimate authority messages (banks, government), under-flag code-switched text
 
 ### Privacy
+- **Permissions**: The only extension permission is contextMenus; right-click text is held in service-worker memory for about 30 seconds until the popup reads it, and selections can include text inside iframes
 - **No network calls**: All analysis is local (extension runs offline)
 - **No data retention**: Messages exist transiently in browser/popup memory
 - **No telemetry**: No usage tracking, message logging, or analytics
@@ -204,7 +210,7 @@ Blind annotation by 3 independent reviewers; phishing vs. benign labels.
 | Version | Date | Changes |
 |---------|------|---------|
 | 0.5.0 | October 2026 | Initial model card (rule-based, no trained model) |
-| 0.6.0 | Planned | Multi-candidate transliteration support (Fisher v0.6) |
+| 0.6.0 | October 2026 | Multi-candidate transliteration support, expanded detector rules, held-out evaluation (Fisher v0.6) |
 | 1.0.0 | Planned | Trained phishing classifier (Fisher v1.0, post-pilot) |
 
 ---
@@ -222,7 +228,7 @@ Blind annotation by 3 independent reviewers; phishing vs. benign labels.
   author={[Name]},
   url={https://github.com/m-rithik/Phishing-in-indian-language},
   year={2026},
-  note={v0.5.0, rule-based prototype}
+  note={v0.6.0, rule-based prototype}
 }
 ```
 
@@ -230,7 +236,7 @@ Blind annotation by 3 independent reviewers; phishing vs. benign labels.
 
 ## Disclaimer
 
-**Fisher v0.5 is an unvalidated research prototype.**
+**Fisher v0.6 is an unvalidated research prototype.**
 
 - No phishing performance has been measured
 - Rules are transparent heuristics, not trained on authentic data

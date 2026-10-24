@@ -1,7 +1,7 @@
 import { analyzeTextWithLinks } from "./detector.mjs";
 import { inspectUrlInput } from "./links.mjs";
 
-export const ENGINE_VERSION = "0.5.2";
+export const ENGINE_VERSION = "0.6.0";
 const EMPTY_LINK_SUMMARY = Object.freeze({ inspected: 0, flagged: 0, limited: false });
 
 const NEXT_STEPS = {

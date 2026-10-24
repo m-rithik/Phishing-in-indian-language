@@ -1,7 +1,6 @@
 import { analyzeContent } from "./analyzer.mjs";
 import { MAX_INPUT_CHARS } from "./detector.mjs";
 import { MAX_URL_CODE_POINTS } from "./links.mjs";
-import { requestSelectedPageText } from "./selection.mjs";
 
 const SUPPORTED_MODES = new Set(["message", "url", "batch"]);
 const SUPPORTED_BATCH_KINDS = new Set(["message", "url"]);
@@ -58,13 +57,8 @@ const PRESENTATION = {
 };
 
 const SELECTION_FAILURE_REASONS = {
-  empty: "No selected page text was found. Select text or paste it instead.",
   too_long:
     "Selected page text exceeds the 20,000-character limit; nothing was analyzed. Select a shorter excerpt instead.",
-  too_complex:
-    "The selection is too complex to read safely; nothing was analyzed. Paste a shorter excerpt instead.",
-  unavailable:
-    "Selected page text could not be accessed. Paste the text to analyze it instead.",
 };
 
 const EXAMPLES = {
@@ -233,7 +227,6 @@ export function createPopupController({
   documentApi,
   chromeApi,
   analyze = analyzeContent,
-  readSelection = requestSelectedPageText,
   saveReport,
   expandedWorkspace = false,
   yieldTask = () => new Promise((resolve) => setTimeout(resolve, 0)),
@@ -245,9 +238,6 @@ export function createPopupController({
   const counter = documentApi.querySelector("#counter");
   const analyzeButton = documentApi.querySelector("#analyze");
   const analyzeLabel = documentApi.querySelector("#analyze-label");
-  const selectionButton = documentApi.querySelector("#selection");
-  const pageContentButton = documentApi.querySelector("#page-content");
-  const nlpReportButton = documentApi.querySelector("#nlp-report");
   const clearButton = documentApi.querySelector("#clear");
   const messageModeButton = documentApi.querySelector("#mode-message");
   const linkModeButton = documentApi.querySelector("#mode-link");
@@ -294,7 +284,6 @@ export function createPopupController({
   let currentMode = "message";
   let currentBatchKind = "message";
   let activeResultContext = currentMode;
-  let selectionBusy = false;
   let batchBusy = false;
   let activeReport;
   let activeBatchLineNumber;
@@ -335,19 +324,6 @@ export function createPopupController({
     batchReview.textContent = "0";
     batchNoMatch.textContent = "0";
     batchCannotAnalyze.textContent = "0";
-  }
-
-  function setSelectionBusy(busy) {
-    selectionBusy = busy;
-    const unavailableInMode = currentMode !== "message" || expandedWorkspace;
-    selectionButton.disabled = busy || unavailableInMode;
-    selectionButton.hidden = unavailableInMode;
-    selectionButton.setAttribute("aria-busy", busy ? "true" : "false");
-    if (pageContentButton) {
-      pageContentButton.disabled = busy || unavailableInMode;
-      pageContentButton.hidden = unavailableInMode;
-      pageContentButton.setAttribute("aria-busy", busy ? "true" : "false");
-    }
   }
 
   function setEmptyState(visible) {
@@ -487,7 +463,6 @@ export function createPopupController({
   function supersede() {
     generation += 1;
     invalidateActiveReport();
-    setSelectionBusy(false);
     setBatchBusy(false);
     return generation;
   }
@@ -849,147 +824,6 @@ export function createPopupController({
     }
   }
 
-  async function analyzeSelection() {
-    if (expandedWorkspace) {
-      supersede();
-      hideResult();
-      status.textContent = "Page selection is unavailable in the expanded workspace.";
-      return;
-    }
-    if (currentMode !== "message") {
-      supersede();
-      render({
-        risk: "cannot_analyze",
-        reasons: ["Page selection is available only in Message mode."],
-        nextSteps: ["Switch to Message mode, or paste a link above."],
-      }, "selection");
-      status.textContent = "Selected page text was not read in Link mode.";
-      return;
-    }
-
-    const requestGeneration = supersede();
-    hideResult();
-    setSelectionBusy(true);
-    status.textContent = "Reading only the selected text from this page…";
-    let selected;
-    try {
-      selected = await readSelection(chromeApi);
-    } catch {
-      selected = { status: "unavailable" };
-    }
-    if (requestGeneration !== generation) return;
-    setSelectionBusy(false);
-
-    if (selected?.status === "ok") {
-      try {
-        const analysis = analyze(selected.text, { mode: "message" });
-        render(analysis, "selection");
-        activeReport = buildDownloadReport(analysis, "selection");
-        downloadReportButton.disabled = false;
-        status.textContent =
-          analysis?.risk === "cannot_analyze"
-            ? "Selected text did not produce a result. It was not copied into the draft."
-            : "Selected text analyzed locally. It was not copied into the draft. No input history is saved.";
-      } catch {
-        invalidateActiveReport();
-        renderAnalysisFailure("Selected text", "selection");
-      }
-      return;
-    }
-
-    const reason =
-      SELECTION_FAILURE_REASONS[selected?.status] ??
-      SELECTION_FAILURE_REASONS.unavailable;
-    render({ risk: "cannot_analyze", reasons: [reason] }, "selection");
-    status.textContent = "Selected page text was not analyzed.";
-  }
-
-  async function analyzePageContent() {
-    if (expandedWorkspace) {
-      supersede();
-      hideResult();
-      status.textContent = "Page analysis is unavailable in the expanded workspace.";
-      return;
-    }
-    if (currentMode !== "message") {
-      supersede();
-      render({
-        risk: "cannot_analyze",
-        reasons: ["Page analysis is available only in Message mode."],
-        nextSteps: ["Switch to Message mode, or paste content above."],
-      }, "selection");
-      status.textContent = "Page content was not analyzed in Link mode.";
-      return;
-    }
-
-    const requestGeneration = supersede();
-    hideResult();
-    setSelectionBusy(true);
-    status.textContent = "Scanning page content…";
-
-    try {
-      const tabs = await chromeApi.tabs.query({ active: true, currentWindow: true });
-      if (!Array.isArray(tabs) || tabs.length === 0) {
-        throw new Error("No active tab");
-      }
-
-      const tabId = tabs[0].id;
-
-      // Directly execute script to extract text
-      const results = await chromeApi.scripting.executeScript({
-        target: { tabId },
-        func: () => {
-          // Extract all text from page
-          const walker = document.createTreeWalker(
-            document.body,
-            NodeFilter.SHOW_TEXT,
-            null
-          );
-          let text = '';
-          let node;
-          let count = 0;
-          while ((node = walker.nextNode()) && count < 5000) {
-            const nodeText = node.textContent?.trim();
-            if (nodeText && nodeText.length > 0) {
-              text += (text.length > 0 ? ' ' : '') + nodeText;
-              if (text.length > 20000) {
-                text = text.substring(0, 20000);
-                break;
-              }
-            }
-            count++;
-          }
-          return text.trim();
-        }
-      });
-
-      if (requestGeneration !== generation) return;
-      setSelectionBusy(false);
-
-      const text = results?.[0]?.result;
-      if (text && text.length > 10) {
-        try {
-          const analysis = analyze(text, { mode: "message" });
-          render(analysis, "selection", "🔍 Auto-scan Result");
-          activeReport = buildDownloadReport(analysis, "selection", undefined, "Auto-scan Result");
-          downloadReportButton.disabled = false;
-          status.textContent = "✓ Page scanned and analyzed locally. No data uploaded.";
-        } catch (error) {
-          invalidateActiveReport();
-          renderAnalysisFailure("Page content", "selection");
-        }
-      } else {
-        render({ risk: "cannot_analyze", reasons: ["Could not extract enough text from this page."] }, "selection");
-        status.textContent = "Could not analyze - page has no readable text.";
-      }
-    } catch (error) {
-      if (requestGeneration !== generation) return;
-      setSelectionBusy(false);
-      render({ risk: "cannot_analyze", reasons: ["Could not access this page. Some pages may be restricted."] }, "selection");
-      status.textContent = "Could not analyze this page.";
-    }
-  }
-
   function handleInput() {
     drafts[currentMode] = message.value;
     supersede();
@@ -1044,7 +878,6 @@ export function createPopupController({
     moreExamples.hidden = !messageMode;
     batchOptions.hidden = !batchMode;
     analyzeLabel.textContent = batchMode ? "Analyze batch" : "Analyze locally";
-    setSelectionBusy(selectionBusy);
     updateInputValidation();
     return true;
   }
@@ -1104,23 +937,6 @@ export function createPopupController({
   }
 
   analyzeButton.addEventListener("click", analyzePastedText);
-  selectionButton.addEventListener("click", () => {
-    void analyzeSelection();
-  });
-  if (pageContentButton) {
-    pageContentButton.addEventListener("click", () => {
-      void analyzePageContent();
-    });
-  }
-  if (nlpReportButton) {
-    nlpReportButton.addEventListener("click", () => {
-      // The report opens in a new tab, so tell it which page's cached result to show.
-      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        const query = Number.isInteger(tabs?.[0]?.id) ? `?tabId=${tabs[0].id}` : "";
-        chrome.tabs.create({ url: chrome.runtime.getURL(`nlp_report.html${query}`) });
-      });
-    });
-  }
   clearButton.addEventListener("click", clearResult);
   editInputButton.addEventListener("click", editInput);
   locateBatchLineButton.addEventListener("click", locateBatchLine);
@@ -1164,44 +980,61 @@ export function createPopupController({
     : "message";
   batchKind.value = currentBatchKind;
   updateInputValidation();
-  setSelectionBusy(false);
   setBatchBusy(false);
   clearBatchPresentation();
   hideResult();
-
-  // Auto-load cached page analysis on popup open
-  async function loadCachedAnalysis() {
-    try {
-      await new Promise((resolve) => {
-        chromeApi.runtime.sendMessage(
-          { action: 'getCachedPageContent' },
-          (response) => {
-            if (response?.found && response?.data?.text) {
-              const text = response.data.text;
-              try {
-                const analysis = analyze(text, { mode: 'message' });
-                render(analysis, 'selection', 'Page auto-detected');
-                activeReport = buildDownloadReport(analysis, 'selection', undefined, 'Page auto-detected');
-                downloadReportButton.disabled = false;
-                status.textContent = 'Page automatically analyzed on load.';
-              } catch (e) {
-                // Silent fail - don't show error if analysis fails
-              }
-            }
-            resolve();
-          }
-        );
-      });
-    } catch {
-      // Silent fail for auto-load
+  let pendingProcessed = false;
+  function processPendingSelection(reply) {
+    if (pendingProcessed || !reply) return;
+    if (reply.status === "ok" && typeof reply.text === "string") {
+      pendingProcessed = true;
+      try {
+        const analysis = analyze(reply.text, { mode: "message" });
+        render(analysis, "selection");
+        activeReport = buildDownloadReport(analysis, "selection");
+        downloadReportButton.disabled = false;
+        status.textContent =
+          analysis?.risk === "cannot_analyze"
+            ? "Selected text did not produce a result. It was not copied into the draft."
+            : "Selected text analyzed locally. It was not copied into the draft. No input history is saved.";
+      } catch {
+        invalidateActiveReport();
+        renderAnalysisFailure("Selected text", "selection");
+      }
+    } else if (reply.status === "too_long") {
+      pendingProcessed = true;
+      render(
+        { risk: "cannot_analyze", reasons: [SELECTION_FAILURE_REASONS.too_long] },
+        "selection",
+      );
+      status.textContent = "Selected page text was not analyzed.";
     }
   }
 
-  void loadCachedAnalysis();
+  let pendingSelectionOperation;
+  if (chromeApi?.runtime?.sendMessage) {
+    try {
+      const response = chromeApi.runtime.sendMessage(
+        { type: "fisher-pending-selection" },
+        (reply) => {
+          if (chromeApi.runtime?.lastError) return;
+          processPendingSelection(reply);
+        },
+      );
+      if (response && typeof response.then === "function") {
+        pendingSelectionOperation = response
+          .then((reply) => {
+            processPendingSelection(reply);
+          })
+          .catch(() => {});
+      }
+    } catch {
+      // Ignore error silently
+    }
+  }
 
   return {
     analyzePastedText,
-    analyzeSelection,
     editInput,
     clearResult,
     handleInput,
@@ -1217,6 +1050,7 @@ export function createPopupController({
     locateBatchLine,
     downloadReport,
     downloadBatchReport,
+    pendingSelectionOperation,
   };
 }
 

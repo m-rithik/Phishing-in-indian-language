@@ -205,6 +205,7 @@ class EngineCliTests(unittest.TestCase):
                 self.assertNotIn("INVALID_USAGE", completed.stdout + completed.stderr)
                 self.assertEqual(completed.stderr, "")
 
+    @unittest.skipIf(sys.platform == "win32", "POSIX-only filesystem feature")
     def test_nonregular_fixture_inputs_are_rejected_without_echo(self) -> None:
         with tempfile.TemporaryDirectory(dir=ROOT) as directory:
             temp_root = Path(directory)

@@ -1,6 +1,6 @@
 # Fisher
 
-Fisher v0.5 is a local message and link checking toolkit: a Chrome/Edge
+Fisher v0.6 is a local message and link checking toolkit: a Chrome/Edge
 extension, a shared analysis engine, and a command-line companion. Paste a
 message, inspect a link without opening it, or explicitly analyze selected page
 text. Results explain the detected patterns and suggest what to do next.
@@ -10,7 +10,7 @@ text. Results explain the detected patterns and suggest what to do next.
 1. Open `chrome://extensions` or `edge://extensions`, enable **Developer mode**,
    and **Load unpacked** from the `browser_extension` folder.
 2. Open Fisher. Choose **Message** or **Link check**, paste an input, and analyze.
-   You can also select page text and use the explicit selection button.
+   You can also select page text and use the right-click item "Check selection with Fisher".
 3. Use the same engine from a terminal (Node.js 22+):
 
    ```console
@@ -29,8 +29,8 @@ For more room, choose **Open a roomy workspace** in the popup. The expanded view
 adds side-by-side input and findings, follows your system's light/dark appearance,
 and includes synthetic Hindi, Tamil, Telugu, and everyday-message examples.
 **Save report** downloads generic findings as JSON without your submitted text or
-link addresses. Each workspace starts with an empty draft; page selection stays
-in the toolbar popup.
+link addresses. Each workspace starts with an empty draft; selected-text checks
+run only from the right-click menu.
 
 **Bulk check** accepts pasted inputs or a local UTF-8 `.txt` file, one message or
 link per line. Review up to 100 inputs, filter by result, inspect individual line
@@ -94,21 +94,19 @@ and the 6,000-message confirmatory design are deferred from the immediate path.
 
 ## Browser extension and shared engine
 
-`browser_extension/` is a Manifest V3 Chrome/Edge prototype. Since v0.5.2 it
-automatically scans every HTTP(S) page: it requests `activeTab`, `scripting`,
-`tabs`, and `notifications`, plus host access to `http://*/*` and `https://*/*`.
-A content script on `<all_urls>` sends up to 20,000 characters of visible page
-text and the page URL to a background service worker. The worker analyzes that
-text with its own keyword rules (separate from the shared engine), keeps the
-latest result per tab in memory, sets the toolbar badge, and injects a banner
-for `review` or `high` results. The popup still checks pasted messages, links,
-and explicitly selected text with the shared engine, and it links to the
-`nlp_report.html` page. There is no network, telemetry, or storage API. The
-worker logs page URLs to the extension's console. Its four popup results are
-**High-risk patterns found**, **Worth a closer look**, **No clear pattern
-match**, and **Could not analyze**. No-match is explicitly not a safety result.
+`browser_extension/` is a Manifest V3 Chrome/Edge prototype. The only permission is
+`contextMenus`. It declares no host permissions or content scripts, and reads page text only when you
+right-click selected text and choose "Check selection with Fisher". The right-click path uses the
+browser's selection string, which can include text inside iframes. The right-click item sends only the
+text you selected, held in service-worker memory for about 30 seconds, or until the browser stops the
+extension worker, until the popup reads it, with no automatic scanning. If a workspace tab is opened
+from the menu, it starts with the selected text analyzed but never copied into the draft. The popup
+checks pasted messages, links, and explicitly selected text with the shared engine. There is no network,
+telemetry, or storage API. Its four popup results are **High-risk patterns found**,
+**Worth a closer look**, **No clear pattern match**, and **Could not analyze**. No-match
+is explicitly not a safety result.
 
-The v0.5 shared engine performs bounded structural link inspection for embedded
+The v0.6 shared engine performs bounded structural link inspection for embedded
 credentials, IP addresses, internationalized hosts, unusual ports, defanged
 spelling, and other review cues. It does not decide whether a domain is genuine.
 The CLI emits generic reports or aggregate batch counts, without echoing input
@@ -237,7 +235,9 @@ boundary.
 - `fisher_pilot/cli.py` exposes the `draft` and `ready` validation modes.
 - `browser_extension/` contains the explicit-action paste/selected-text browser
   interface, shared message/link analysis, and dependency-free unit tests.
-- `fisher.mjs` runs that same engine on stdin; batch mode returns counts only.
+- `fisher.mjs` runs that same engine on stdin; batch mode returns counts only,
+  and batch-detail returns per-line JSON. Both batch and batch-detail exit 1 if
+  any line cannot be analyzed.
 - `tests/test_baseline_pipeline.py` covers schema, privacy, Unicode grouping,
   residual routes, leakage, deterministic folds, output safety, and CLI errors.
 - `tests/test_baseline_selection.py` covers nested split isolation, candidate
@@ -276,6 +276,56 @@ CLI, or synthetic research-engine packages.
 
 The source workbook, virtual environment, raw/processed data, model artifacts,
 and generated outputs are ignored by Git.
+
+## Evaluation
+
+The rule detector and an experimental transliteration step can be measured on
+your own labelled messages. No real evaluation data ships with the repository:
+`eval/messages.template.jsonl` holds 8 illustrative **synthetic** lines. Copy
+it to `eval/messages.jsonl` and replace it with your data (target: 30 scam and
+30 benign messages per language). The format and the rules for honest
+`source` labels are in [`eval/README.md`](eval/README.md); `eval/load.py`
+validates the file and rejects duplicate ids and duplicate text.
+
+```console
+cp eval/messages.template.jsonl eval/messages.jsonl   # then edit
+npm run eval:rules
+uv run python scripts/translit_experiment.py
+```
+
+- `npm run eval:rules` runs the shared engine on every message and reports
+  TP, FP, TN, FN, precision, recall, F1 and the false-positive rate on benign
+  messages, overall, per language and per script, for two settings (positive =
+  high or review; positive = high only). It writes
+  `eval/results/rules_metrics.json` and `eval/results/rules_errors.jsonl`
+  (every false positive and false negative with its reasons).
+- `scripts/translit_experiment.py` uses only `romanized` items. It compares the
+  raw text (A), the text plus its top-1 transliteration (B), and the text plus
+  5 transliteration variants aggregated by "any positive" (C-max) or by summed
+  variant weight >= 0.5 (C-weighted). It writes
+  `eval/results/translit_metrics.json` (per condition and language, plus exact
+  McNemar tests for A vs B, B vs C-max and B vs C-weighted) and
+  `eval/results/translit_examples.jsonl` (up to 20 items where the conditions
+  disagree). The detector runs through `node fisher.mjs batch-detail`, which
+  prints one JSON result per input line (batch checks are limited to 500 lines
+  per call, so larger sets are sent in chunks).
+
+The full Python test suite is designed for Linux/WSL; filesystem tests requiring POSIX features (such as `os.mkfifo` and deterministic archive packaging) are skipped on Windows.
+
+### Evaluation limitations
+
+- The detector is rule-based (keyword and pattern signals), not a trained model.
+- The transliteration experiment uses an **oracle language ID**: each item's
+  `language` field picks the target script. A real system must detect the
+  language first, so those results are optimistic.
+- Evaluation data is small or synthetic, so metrics (and p-values) describe
+  that data only. This project makes **no claim of real-world accuracy**.
+
+### Known misses
+
+- Customs-fee messages ("package held at customs, pay a fee") and friend-in-need messages ("I am stuck, send money") are not detected.
+- Promotional spam on UCI almost never reaches high (recall 0.005).
+- Real bank notices and OTP warnings get review.
 
 ## Research boundary and next iteration
 
