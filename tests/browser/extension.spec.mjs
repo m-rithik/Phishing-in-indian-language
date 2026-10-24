@@ -51,6 +51,7 @@ test.afterAll(async () => {
 
 async function popupPage() {
   const page = await context.newPage();
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto(`chrome-extension://${extensionId}/popup.html`);
   await expect(page.locator("#analyze")).toBeVisible();
   return page;
@@ -338,6 +339,7 @@ test("empty and populated states pass automated accessibility checks", async () 
   await page.screenshot({ path: "outputs/browser_extension/v0.5-popup.png", fullPage: true });
   await page.locator("#message").fill("Send OTP immediately");
   await page.locator("#analyze").click();
+  await expect(page.locator("#result")).toBeVisible();
   const populated = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
   expect(populated.violations).toEqual([]);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
@@ -455,15 +457,16 @@ test("multilingual samples are explicit, composition-safe, and private", async (
 
 test("dark workspace and popup preserve contrast and forced-color selection", async () => {
   const page = await popupPage();
-  await page.emulateMedia({ colorScheme: "dark" });
+  await page.emulateMedia({ colorScheme: "dark", reducedMotion: "reduce" });
   expect((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze()).violations).toEqual([]);
   await page.goto(`chrome-extension://${extensionId}/popup.html?view=workspace`);
   await page.setViewportSize({ width: 1440, height: 1100 });
   await page.locator("#example-account").click();
   await page.locator("#analyze").click();
+  await expect(page.locator("#result")).toBeVisible();
   expect((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze()).violations).toEqual([]);
   await page.screenshot({ path: "outputs/browser_extension/workspace-dark.png", fullPage: true });
-  await page.emulateMedia({ forcedColors: "active" });
+  await page.emulateMedia({ forcedColors: "active", reducedMotion: "reduce" });
   expect(await page.locator("#mode-message").evaluate(element => getComputedStyle(element).outlineStyle)).toBe("solid");
   await page.close();
 });
@@ -504,7 +507,7 @@ test("bulk review retains blank lines, filters findings, and shows the chosen li
   await page.locator("#batch-list button").first().click();
   expect((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze()).violations).toEqual([]);
   await page.screenshot({ path: "outputs/browser_extension/bulk-workspace.png", fullPage: true });
-  await page.emulateMedia({ colorScheme: "dark" });
+  await page.emulateMedia({ colorScheme: "dark", reducedMotion: "reduce" });
   expect((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze()).violations).toEqual([]);
   await page.screenshot({ path: "outputs/browser_extension/bulk-workspace-dark.png", fullPage: true });
   await page.setViewportSize({ width: 320, height: 900 });
