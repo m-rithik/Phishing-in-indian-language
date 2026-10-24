@@ -99,8 +99,9 @@ three permissions: `activeTab`, `contextMenus`, and `scripting`. It declares no 
 permissions or content scripts, and reads page text only when you select text and either
 choose "Check selection with Fisher" from the context menu or press **Selection mode** in
 the popup. The right-click item sends only the text you selected (which can include text
-inside iframes), held in memory by the background service worker for at most 30 seconds
-until the popup reads it, with no automatic scanning. The popup checks pasted messages,
+inside iframes), held in memory by the background service worker for about 30 seconds,
+or until the browser stops the extension worker, until the popup reads it, with no
+automatic scanning. The popup checks pasted messages,
 links, and explicitly selected text with the shared engine. There is no network,
 telemetry, or storage API. Its four popup results are **High-risk patterns found**,
 **Worth a closer look**, **No clear pattern match**, and **Could not analyze**. No-match

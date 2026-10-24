@@ -33,6 +33,13 @@ chrome.contextMenus.onClicked.addListener((info) => {
       pending = { status: "ok", text: info.selectionText, timestamp: Date.now() };
     }
 
+    const currentPending = pending;
+    setTimeout(() => {
+      if (pending === currentPending) {
+        pending = null;
+      }
+    }, 30000);
+
     try {
       const openResult = chrome.action.openPopup();
       if (openResult && typeof openResult.catch === "function") {

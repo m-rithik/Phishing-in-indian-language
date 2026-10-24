@@ -127,7 +127,7 @@ Exit `0` means a report was produced for every input, regardless of the risk lev
 
 For the popup's selection button, `activeTab` provides temporary permission associated with the user invoking the extension. The code queries the active tab and injects the selection reader only after the user presses **Selection mode**. Injection is limited to frame `0` (the top frame), so selections inside embedded frames are not read via that button. A bounded preflight reads text data only after a text node is confirmed to intersect the selection and enforces raw code-point and text-node limits. Only then does the reader use the browser-rendered selection string, which preserves block separators and inline word joins. Form-control-only selections are deliberately excluded, and the reader does not access control values, the page URL, title, HTML, or unselected page text.
 
-Users can also right-click any selected text and choose **Check selection with Fisher**. The right-click item sends only the text you selected, held in memory by the background service worker for at most 30 seconds until the popup reads it, with no automatic scanning. This selection can include text inside iframes.
+Users can also right-click any selected text and choose **Check selection with Fisher**. The right-click item sends only the text you selected, held in memory by the background service worker for about 30 seconds, or until the browser stops the extension worker, until the popup reads it, with no automatic scanning. This selection can include text inside iframes.
 
 The manifest requests exactly three permissions: `activeTab`, `contextMenus`, and `scripting`. It declares no host permissions, content scripts, `tabs`, or `notifications`, so Fisher never reads a page unless you select text and either trigger the context menu or press **Selection mode**. There is no automatic page scan and no page-analysis report.
 
@@ -136,7 +136,7 @@ The sections above describe only the explicit selection paths. There are no netw
 ## Architecture
 
 - `popup.html`, `popup.js`, and `styles.css`: accessible user-triggered interface, cancellation of stale selection work, and safe text-only rendering.
-- `background.js`: background service worker registering the context menu and temporarily holding selection text in memory for at most 30 seconds.
+- `background.js`: background service worker registering the context menu and temporarily holding selection text in memory for about 30 seconds, or until the browser stops the extension worker.
 - `icon.svg` and the derived PNG sizes: the Fisher mark used by the installed extension and toolbar.
 - `analyzer.mjs`: versioned report shared with the CLI; combines message-rule results, structural link observations, and next steps.
 - `links.mjs`: canonical bounded local URL extraction and structure checks; locator-shaped and email-shaped spans are masked before message semantic matching so their host, path, and address words do not become message cues. It uses no network or reputation data.
