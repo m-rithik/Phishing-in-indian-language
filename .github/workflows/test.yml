@@ -57,10 +57,10 @@ jobs:
         enable-cache: true
 
     - name: Sync dependencies
-      run: uv sync
+      run: uv sync --locked
 
     - name: Run unit tests
-      run: uv run python -m unittest discover -s tests -p 'test_*.py' -v
+      run: uv run pytest -q
       continue-on-error: false
 
   linting:
@@ -174,7 +174,7 @@ jobs:
     - name: Run Python tests with coverage
       run: |
         uv pip install coverage
-        uv run coverage run -m unittest discover -s tests -p 'test_*.py'
+        uv run coverage run -m pytest -q
         uv run coverage report --fail-under=70
       continue-on-error: true
 

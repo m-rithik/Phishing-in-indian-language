@@ -49,6 +49,7 @@ RUNTIME_FILES = (
     "styles.css",
 )
 ROOT_ENTRIES = frozenset({name for name in SOURCE_FILES if "/" not in name} | {"tests"})
+TEST_ENTRIES = frozenset(name.removeprefix("tests/") for name in SOURCE_FILES if name.startswith("tests/"))
 EXPECTED_CSP = (
     "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; "
     "object-src 'none'; base-uri 'none'; form-action 'none'"
@@ -202,11 +203,7 @@ def _inventory(
         _entries(source_fd),
         _entries(tests_fd),
     )
-    if set(root) != ROOT_ENTRIES or set(tests) != {
-        "analyzer.test.mjs",
-        "detector.test.mjs",
-        "selection.test.mjs",
-    }:
+    if set(root) != ROOT_ENTRIES or set(tests) != TEST_ENTRIES:
         raise PackagingError(message)
     test_dir = root["tests"]
     unsafe_test_dir = (

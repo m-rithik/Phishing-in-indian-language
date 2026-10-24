@@ -259,9 +259,9 @@ tools. Node.js 22+ runs the companion CLI and unit tests. Browser
 testing uses development-only Playwright and axe dependencies:
 
 ```console
-uv sync
+uv sync --locked
 npm ci
-uv run python -m unittest discover -v -s tests -p 'test_*.py'
+uv run pytest -q
 npm test
 npx playwright install chromium
 npm run test:browser

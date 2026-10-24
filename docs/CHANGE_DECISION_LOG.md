@@ -7744,7 +7744,7 @@ None.
 - Branch: `feat/v0.6-cleanup-and-transliteration`
 - Planned commit subject: `Step 5: Update documentation and change log for removal of selection mode`
 - Required trailer: `Luna-ID: LUNA-20261024-012`
-- Commit SHA: Pending
+- Commit SHA: `34cd635` (backfilled 2026-10-24 under LUNA-20261024-013 by matching the commit trailer)
 - Prior commit SHAs in cycle: `bee1911`, `4c22448`, `e8108b8`, `afe9361`, `70d4213`
 - Parent SHA: `70d4213`
 - Affected paths:
@@ -7818,6 +7818,208 @@ Decision: Remove the in-popup "Selection mode" button, associated script injecti
 ### Follow-up action or owner
 
 - Maintainer: Maintain single right-click selection workflow across future releases.
+
+### Correction history
+
+None.
+
+## Record LUNA-20261024-013
+
+- Lifecycle state: Finalized
+- Date/time: 2026-10-24 15:30 IST
+- Branch: `fix/ci-checks` (from `main` at `28284f2`)
+- Planned commit subject: `Update change log for CI check fixes`
+- Required trailer: `Luna-ID: LUNA-20261024-013`
+- Commit SHA: `9ec6e37` (backfilled 2026-10-24 under LUNA-20261024-014 by matching the commit trailer)
+- Prior commit SHAs in cycle: `b6e694f`, `2af42f7`, `3f38a4c`, `44391d4`
+- Parent SHA: `44391d4`
+- Author of record: written by Claude Code in the lead session. No separate `luna` agent was available in this environment; the user explicitly directed this register update and one commit per fix, so the four fix commits carry no `Luna-ID` trailer.
+- Affected paths:
+  - `fisher_extension_package.py`
+  - `tests/test_extension_package.py`
+  - `browser_extension/styles.css`
+  - `tests/browser/extension.spec.mjs`
+  - `.github/workflows/test.yml`
+  - `.github/workflows/quality.yml`
+  - `docs/CHANGE_DECISION_LOG.md`
+
+### Significant changes & decisions
+
+Decision: Fix the real causes of the failing GitHub Actions checks on `main` (runs `40078824451` "Test & Validation" and `40078824416` "Fisher checks") without skipping, deleting or loosening any test.
+
+1. **Packager source inventory (`b6e694f`)**: `_inventory` in `fisher_extension_package.py` compared the extension `tests/` directory with a hard-coded set of three files, while `SOURCE_FILES` and the real directory contain four (`realistic_messages.test.mjs` included). The expected set is now `TEST_ENTRIES`, derived from `SOURCE_FILES`. Added `test_source_inventory_accepts_every_allowlisted_extension_test`, which runs on every platform.
+2. **Banner eyebrow contrast (`2af42f7`)**: removed `opacity: 0.9` from `.banner-top .eyebrow` in `browser_extension/styles.css`; the opacity lowered the result-banner label contrast.
+3. **Accessibility test timing (`3f38a4c`)**: `tests/browser/extension.spec.mjs` now emulates `reducedMotion: "reduce"` and waits for `#result` to be visible before axe runs on populated states. The assertion `violations toEqual []` is unchanged.
+4. **CI Python runner (`44391d4`)**: both workflows now run `uv run pytest -q` instead of `unittest discover`; `test.yml` uses `uv sync --locked`, matching `quality.yml`. An uncommitted change that wrapped the browser step in `xvfb-run -a` was reverted by editing the file back.
+
+### Rationale and labeled evidence
+
+- `[OBSERVED - CI log]` python-tests (3.11) and extension-validation failed with `fisher_extension_package.PackagingError: Extension source inventory is invalid.` from `_inventory` (7 errors, 6 failures in `tests/test_extension_package.py`). The new test failed before the fix and passed after it.
+- `[OBSERVED - CI log]` python-tests (3.12) was cancelled by fail-fast and status-check failed only because python-tests failed; neither had an independent cause.
+- `[OBSERVED - CI log]` verify failed at `tests/browser/extension.spec.mjs:342` with axe `color-contrast` (for example `#757e8d` on `#fcfdfd`, 4.02:1).
+- `[DERIVED]` `--text-secondary` `#4a5568` on white at about 0.76 alpha gives `#757e8d`, so axe measured mid `fadeSlideIn` (170 ms), not the final colours. The eyebrow opacity was a real, separate reduction.
+- `[OBSERVED]` `unittest discover` does not collect module-level pytest functions such as the parametrized tests in `tests/test_transliteration.py`. It predates the pytest dev dependency (`6088564`); no other reason for it was found in history or docs.
+- `[OBSERVED]` `xvfb-run` is unnecessary: the browser suite ran headless on the runner (18 of 19 passed; the one failure was the contrast check above).
+
+### Alternatives considered and why each was not selected
+
+- **Copilot branches `copilot/fix-extension-validation-job` and `copilot/fix-python-tests-job`**: both add `realistic_messages.test.mjs` to the hard-coded set. Not merged: same fix, but it leaves the duplicated list that caused the bug and adds no regression test. They fix nothing this branch does not.
+- **Skip the packaging tests on Linux or add `continue-on-error`**: rejected; it would hide a real packager bug that breaks `python fisher_extension_package.py` on POSIX.
+- **Loosen or tag-filter the axe assertion**: rejected; waiting for the final rendered state keeps the full WCAG 2 A/AA check.
+- **Keep `unittest discover`**: rejected because it silently skips pytest-style tests.
+
+### Compatibility, data, security, privacy, and performance impacts
+
+- Packaging on POSIX works again for the real source tree; the archive contents and allowlists are unchanged.
+- The eyebrow label is fully opaque; no other visual change.
+- The CI runner changed from unittest to pytest. pytest also runs the `unittest.TestCase` suites, so coverage grows and nothing is dropped.
+- No change to the detector, links, transliteration or evaluation code; no dependency, permission or privacy change.
+
+### Verification
+
+- Windows (local): `npm test` 161 pass, 0 fail. `npm run test:browser` 19 passed. `uv run pytest -q` 421 passed, 24 skipped (POSIX-only and Windows file-locking skips).
+- Linux container `node:22-bookworm`, Python 3.11, non-root user: `uv sync --locked`; `uv run pytest -q` 445 passed, 0 skipped. `uv run python tests/test_extension_package.py` ran 30 tests, OK.
+- Linux container `mcr.microsoft.com/playwright:v1.63.0-noble`: `npm ci --ignore-scripts`; `npm test` 161 pass, 0 fail; `npm run test:browser` 19 passed.
+
+### Unrun checks
+
+- No GitHub Actions run on `fix/ci-checks`, because nothing has been pushed.
+- The python-tests (3.12) matrix leg was not reproduced. `setup-python` sets 3.12, but `uv` may select another interpreter, because the job does not set `UV_PYTHON`.
+
+### Remaining risks
+
+- `README.md:264` still documents `unittest discover` as the Python test command; it runs, but it skips the pytest-style tests.
+- The coverage job still uses `unittest` under `continue-on-error: true`, so it cannot fail the run.
+
+### Follow-up action or owner
+
+- Maintainer: push `fix/ci-checks`, open a PR, and confirm all checks pass on the runner. Then close the two Copilot branches.
+
+### Correction history
+
+- 2026-10-24: The remaining risk "`README.md:264` still documents `unittest discover`" was resolved in `f25c8fd` (recorded in LUNA-20261024-014). The original statement above is kept unchanged.
+
+## Record LUNA-20261024-014
+
+- Lifecycle state: Finalized
+- Date/time: 2026-10-24 16:10 IST
+- Branch: `fix/ci-checks`
+- Planned commit subject: `Update change log for documentation and Python 3.12 verification`
+- Required trailer: `Luna-ID: LUNA-20261024-014`
+- Commit SHA: `f7eccb5` (backfilled 2026-10-24 under LUNA-20261024-015 by matching the commit trailer)
+- Prior commit SHAs in cycle: `f25c8fd`
+- Parent SHA: `f25c8fd`
+- Author of record: written by Claude Code in the lead session. No separate `luna` agent is available in this environment; the user directed this register update and one commit per step, so `f25c8fd` carries no `Luna-ID` trailer.
+- Affected paths:
+  - `README.md`
+  - `docs/CHANGE_DECISION_LOG.md`
+
+### Significant changes & decisions
+
+1. **Documented Python test command (`f25c8fd`)**: `README.md` now documents `uv sync --locked` and `uv run pytest -q` in place of `uv sync` and `uv run python -m unittest discover -v -s tests -p 'test_*.py'`, matching CI (LUNA-20261024-013).
+2. **No change needed for the false selection-mode doc lines**: `README.md:13`, `README.md:32-33`, `browser_extension/README.md:142` and `browser_extension/README.md:170` already state the right-click-only behaviour (fixed on `main` in `6b3781a`). `git grep -n -i "selection button\|toolbar popup\|permission bridge\|Selection mode\|activeTab\|scripting"` over `README.md`, `browser_extension/README.md`, `MODEL_CARD.md` and `browser_extension/popup.html` returned no hits.
+3. **No change needed for the transliteration config tests**: `test_default_config` and `test_custom_config` already exist in `tests/test_transliteration.py:20-40` (added in `c89d83a`) and assert exactly the requested defaults (`language "hindi"`, `max_candidates 8`, `min_confidence 0.0`, `include_romanized True`), the `max_candidates=3` bound and the no-romanized case. `fisher_transliteration/` was not changed.
+4. **Python 3.12 matrix leg kept unchanged**: it does run Python 3.12, and the suite passes on it.
+
+### Rationale and labeled evidence
+
+- `[OBSERVED]` The project supports 3.11 and newer: `pyproject.toml` `requires-python = ">=3.11"`, `uv.lock` has resolution markers for `>= '3.12'`, `README.md:257` says "Python 3.11 or newer", and `RELEASE_NOTES.md:160` says "3.11+".
+- `[OBSERVED - CI log]` The python-tests (3.12) job on `main` (run `40047578842`, job `120732712848`, success) logs `Successfully set up CPython (3.12.15)` and `Using CPython 3.12.15 interpreter at: /opt/hostedtoolcache/Python/3.12.15/x64/bin/python3`. The `uv` virtual environment therefore uses 3.12 even though the job does not set `UV_PYTHON`.
+- `[OBSERVED]` In run `40078824451` the 3.12 leg was cancelled by fail-fast after 3.11 failed (LUNA-20261024-013), so it had no failure of its own.
+
+### Alternatives considered and why each was not selected
+
+- **Set `UV_PYTHON` from the matrix value in `test.yml`**: not done, because the log shows 3.12 is already selected, and the user asked for no matrix change unless the leg does not run 3.12.
+- **Rewrite the four selection doc lines**: not done; they were already accurate.
+
+### Compatibility, data, security, privacy, and performance impacts
+
+- Documentation only. No code, dependency, permission or data change.
+
+### Verification
+
+- Windows (local): `npm test` 161 tests, 161 pass, 0 fail, 0 skipped. `uv run pytest -q` 421 passed, 24 skipped, 374 subtests passed.
+- Linux container `node:22-bookworm`, non-root user: `uv sync --locked --python 3.12`; `uv run --python 3.12 python --version` gave `Python 3.12.15`; `uv run --python 3.12 pytest -q` 445 passed, 430 subtests passed, 0 failed.
+
+### Unrun checks
+
+- `npm run test:browser` was not rerun in this cycle (no browser or test file changed since the 19-passed run in LUNA-20261024-013).
+- No GitHub Actions run on `fix/ci-checks`; nothing has been pushed. A cloud ultrareview of `fix/ci-checks` against `main` was started by the user, and its findings were still pending when this entry was written.
+
+### Remaining risks
+
+- The coverage job in `test.yml` still runs `unittest` under `continue-on-error: true`, so it skips the pytest-style tests and cannot fail the run.
+- `test_custom_config` asserts `len(candidates) <= 3`, which an empty result would also satisfy; other tests assert that candidates are non-empty.
+
+### Follow-up action or owner
+
+- Maintainer: review the ultrareview findings, then push `fix/ci-checks` and confirm the checks on the runner.
+
+### Correction history
+
+None.
+
+## Record LUNA-20261024-015
+
+- Lifecycle state: Finalized
+- Date/time: 2026-10-24 17:00 IST
+- Branch: `fix/ci-checks`
+- Planned commit subject: `Update change log for review follow-ups`
+- Required trailer: `Luna-ID: LUNA-20261024-015`
+- Commit SHA: Pending
+- Prior commit SHAs in cycle: `17cfeab`, `8941f9c`, `4f5e820`
+- Parent SHA: `4f5e820`
+- Author of record: written by Claude Code in the lead session (no `luna` agent available); the user directed one commit per fix, so the three fix commits carry no `Luna-ID` trailer.
+- Affected paths:
+  - `docs/CHANGE_DECISION_LOG.md`
+  - `tests/browser/extension.spec.mjs`
+  - `.github/workflows/test.yml`
+
+### Significant changes & decisions
+
+Decision: apply the three cloud-review findings on `fix/ci-checks` without changing any assertion or threshold.
+
+1. **Register correction (`17cfeab`)**: added a dated line under the "Correction history" of LUNA-20261024-013 stating that its README `unittest discover` risk was resolved in `f25c8fd` (LUNA-20261024-014). The finalized text of 013 is unchanged; only its placeholder `None.` was replaced.
+2. **Redundant reduced-motion emulation (`8941f9c`)**: removed `reducedMotion: "reduce"` from three later `page.emulateMedia` calls in `tests/browser/extension.spec.mjs` (dark popup, forced colours, dark bulk workspace). `popupPage()` still sets it, and the separate reduced-motion test at line 231 (from `8e5c25b`) is untouched.
+3. **Coverage job runner (`4f5e820`)**: `.github/workflows/test.yml` coverage step now runs `uv run coverage run -m pytest -q`, so coverage measures the same suite that gates the run. `--fail-under=70` is unchanged.
+
+### Rationale and labeled evidence
+
+- `[OBSERVED]` `page.emulateMedia` keeps options that are omitted from a call; every affected page comes from `popupPage()` (for example `tests/browser/extension.spec.mjs:475`). The browser suite passes after the removal.
+- `[OBSERVED - local]` Coverage under pytest on Windows, measured with `uv run --with coverage` and a temporary `COVERAGE_FILE`: `coverage report -i` TOTAL 84%; 81% with `--omit='tests/*'`. Both are at or above 70. `fisher_extension_package.py` reads 15% on Windows because its POSIX tests are skipped there.
+- `[OBSERVED - local]` A plain `coverage report` exits with `No source for code: '...\Temp\tmp...\outside_probe.py'`, because tests execute temporary scripts that are deleted afterwards; `-i` was needed to print the number.
+- `[OBSERVED - CI log]` The coverage job in run `40078824451` fails at its first command: `uv pip install coverage` reports `error: No virtual environment found; run \`uv venv\` to create an environment...` (exit 2), because the job never runs `uv sync`. `continue-on-error: true` hides this, and Codecov then reports `None of the following appear to exist as files: ./coverage.xml`.
+
+### Alternatives considered and why each was not selected
+
+- **Leave the redundant options in place**: rejected; they suggest each `emulateMedia` call resets reduced motion, which is false.
+- **Lower `--fail-under` or omit files to raise the number**: not needed and not done; measured coverage is above 70.
+- **Also repair the coverage install step**: not done, because it is outside the requested one-line change. It is reported to the user instead.
+
+### Compatibility, data, security, privacy, and performance impacts
+
+- Test-code and CI-configuration only. No product code, dependency, permission or data change.
+
+### Verification
+
+- `npm run test:browser`: 19 passed (after `8941f9c`).
+- `uv run pytest -q`: 421 passed, 24 skipped, 374 subtests passed (after `4f5e820`).
+- Coverage, as described above.
+
+### Unrun checks
+
+- The coverage job was not run on CI or in the Linux container.
+- No GitHub Actions run on `fix/ci-checks`; nothing has been pushed.
+
+### Remaining risks
+
+- The coverage job still cannot produce a result on CI: `uv pip install coverage` fails without a virtual environment, so the pytest change has no effect until that step is fixed (for example `uv sync --locked`, then `uv run --with coverage coverage run -m pytest -q`).
+- Even once it installs, `coverage report --fail-under=70` will probably exit with "No source for code" for deleted temporary scripts unless `-i` or a source/include setting is added.
+- Codecov upload expects `./coverage.xml`, which the job never generates (`coverage xml` is not run).
+
+### Follow-up action or owner
+
+- User: decide whether to repair the coverage job install, report and upload steps.
 
 ### Correction history
 
