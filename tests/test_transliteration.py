@@ -34,6 +34,8 @@ def test_every_candidate_is_a_whole_word(language, word):
     candidates = generate_candidates(word, CandidateConfig(language=language))
     assert candidates
     assert all(len(c.text) > 1 for c in candidates)
+    if language == "hindi":
+        assert not any(c.text.endswith("्") for c in candidates if c.script == "hindi")
 
 
 @pytest.mark.parametrize("language", ["hindi", "tamil", "telugu"])
@@ -189,3 +191,33 @@ def test_mixed_native_and_latin_input_keeps_native_label_on_original():
     original = next(c for c in candidates if c.source_rule == "original")
     assert original.script == "native"
     assert not any(c.script == "romanized" for c in candidates)
+
+def test_min_confidence_filter():
+    """min_confidence config filters low-confidence candidates."""
+    config = CandidateConfig(language="hindi", min_confidence=0.5)
+    candidates = generate_candidates("otp", config)
+    assert candidates
+    high_config = CandidateConfig(language="hindi", min_confidence=5.0)
+    assert generate_candidates("otp", high_config) == []
+
+
+def test_ambiguous_mappings_flagged():
+    """Ambiguous patterns are marked as such."""
+    candidates = generate_candidates("ata", CandidateConfig(language="hindi"))
+    ambiguous = [c for c in candidates if c.ambiguous]
+    assert len(ambiguous) > 0
+    assert any(c.ambiguous for c in candidates if c.script == "hindi")
+
+
+@pytest.mark.parametrize(
+    ("word", "expected"),
+    [
+        ("jaldi", "जल्दी"),
+        ("turant", "तुरंत"),
+        ("bhejo", "भेजो"),
+        ("password", "पासवर्ड"),
+    ],
+)
+def test_scam_words_return_native_first(word, expected):
+    candidates = generate_candidates(word, CandidateConfig(language="hindi"))
+    assert candidates[0].text == expected

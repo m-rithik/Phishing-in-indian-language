@@ -112,7 +112,7 @@ HINDI = LanguageRules(
         "udane": "उडने", "ventane": "वेंटने", "anuppunga": "अनुप्पुंगा", "pampandi": "पंपंडि",
     },
     anusvara="ं",
-    p_virama_final=0.4,
+    p_virama_final=0.02,
 )
 
 TAMIL = LanguageRules(

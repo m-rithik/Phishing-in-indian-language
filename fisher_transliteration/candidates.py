@@ -103,6 +103,8 @@ class CandidateGenerator:
         for composed_text, score, source, ambiguous in self._transliterate(normalized):
             if self.config.include_romanized and composed_text == normalized:
                 continue  # nothing was transliterated; the original already covers it
+            if language == "hindi" and composed_text.endswith(self.rules.virama):
+                continue
             scored.append(Candidate(composed_text, language, score, source, ambiguous))
 
         scored = [c for c in scored if c.confidence >= self.config.min_confidence]
