@@ -17,7 +17,6 @@
 1. **detector.mjs**: Message pattern rules (6 categories: credential, urgency, action, impersonation, money, defang)
 2. **links.mjs**: URL parsing and structural inspection (credentials, HTTP, IP addresses, punycode, shorteners)
 3. **analyzer.mjs**: Public API combining detector + link results
-4. **selection.mjs**: Page text extraction (in-browser)
 
 **Analysis Pipeline**:
 ```
@@ -193,6 +192,7 @@ Blind annotation by 3 independent reviewers; phishing vs. benign labels.
 - **Bias risk**: Rules may over-flag legitimate authority messages (banks, government), under-flag code-switched text
 
 ### Privacy
+- **Permissions**: The only extension permission is contextMenus; right-click text is held in service-worker memory for about 30 seconds until the popup reads it, and selections can include text inside iframes
 - **No network calls**: All analysis is local (extension runs offline)
 - **No data retention**: Messages exist transiently in browser/popup memory
 - **No telemetry**: No usage tracking, message logging, or analytics

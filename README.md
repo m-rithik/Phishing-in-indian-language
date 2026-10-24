@@ -94,18 +94,14 @@ and the 6,000-message confirmatory design are deferred from the immediate path.
 
 ## Browser extension and shared engine
 
-`browser_extension/` is a Manifest V3 Chrome/Edge prototype. It requests exactly
-three permissions: `activeTab`, `contextMenus`, and `scripting`. It declares no host
-permissions or content scripts, and reads page text only when you select text and either
-choose "Check selection with Fisher" from the context menu or press **Selection mode** in
-the popup. While the popup button reads only frame 0 (so selections inside embedded frames
-are not read via that button), the right-click path uses the browser's selection string,
-which can include text inside iframes. The right-click item sends only the text you selected,
-held in memory by the background service worker for about 30 seconds, or until the browser
-stops the extension worker, until the popup reads it, with no automatic scanning. If a workspace
-tab is opened from the menu, it starts with the selected text analyzed but never copied into the draft.
-The popup checks pasted messages,
-links, and explicitly selected text with the shared engine. There is no network,
+`browser_extension/` is a Manifest V3 Chrome/Edge prototype. The only permission is
+`contextMenus`. It declares no host permissions or content scripts, and reads page text only when you
+right-click selected text and choose "Check selection with Fisher". The right-click path uses the
+browser's selection string, which can include text inside iframes. The right-click item sends only the
+text you selected, held in service-worker memory for about 30 seconds, or until the browser stops the
+extension worker, until the popup reads it, with no automatic scanning. If a workspace tab is opened
+from the menu, it starts with the selected text analyzed but never copied into the draft. The popup
+checks pasted messages, links, and explicitly selected text with the shared engine. There is no network,
 telemetry, or storage API. Its four popup results are **High-risk patterns found**,
 **Worth a closer look**, **No clear pattern match**, and **Could not analyze**. No-match
 is explicitly not a safety result.

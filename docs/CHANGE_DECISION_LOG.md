@@ -7735,4 +7735,90 @@ Decision: Implement a right-click "Check selection with Fisher" context menu ite
 ### Correction history
 
 None.
+---
 
+## Record LUNA-20261024-012
+
+- Lifecycle state: Finalized
+- Date/time: 2026-10-24 13:00 IST
+- Branch: `feat/v0.6-cleanup-and-transliteration`
+- Planned commit subject: `Step 5: Update documentation and change log for removal of selection mode`
+- Required trailer: `Luna-ID: LUNA-20261024-012`
+- Commit SHA: Pending
+- Prior commit SHAs in cycle: `bee1911`, `4c22448`, `e8108b8`, `afe9361`, `70d4213`
+- Parent SHA: `70d4213`
+- Affected paths:
+  - `browser_extension/manifest.json`
+  - `browser_extension/popup.html`
+  - `browser_extension/popup.js`
+  - `browser_extension/styles.css`
+  - `browser_extension/selection.mjs`
+  - `fisher_extension_package.py`
+  - `tests/test_extension_package.py`
+  - `browser_extension/tests/selection.test.mjs`
+  - `tests/browser/extension.spec.mjs`
+  - `browser_extension/README.md`
+  - `README.md`
+  - `MODEL_CARD.md`
+  - `docs/CHANGE_DECISION_LOG.md`
+
+### Significant changes & decisions
+
+Decision: Remove the in-popup "Selection mode" button, associated script injection module (`selection.mjs`), and elevated browser permissions (`activeTab`, `scripting`), retaining solely the right-click "Check selection with Fisher" context menu mechanism with permissions reduced to strictly `["contextMenus"]`.
+
+1. **Manifest Permissions Minimalization (`browser_extension/manifest.json`)**:
+   - Permissions reduced to exactly `["contextMenus"]`.
+   - Removed `activeTab` and `scripting`. No permissions added.
+   - Confirmed `background.js` uses only `chrome.contextMenus` and `chrome.runtime.onMessage` / `chrome.action.openPopup` without any `scripting` or `activeTab` APIs.
+2. **Popup UI & Logic Streamlining (`browser_extension/popup.html`, `popup.js`, `styles.css`)**:
+   - Deleted `#selection` button and `.page-analysis-buttons` DOM wrapper from `popup.html`.
+   - Deleted `analyzeSelection`, `readSelection` parameter, `requestSelectedPageText` import, `selectionButton`, and `setSelectionBusy` logic from `popup.js`.
+   - Retained `render(..., "selection")` with "Selected text check" and "Back to input" labels, `SELECTION_FAILURE_REASONS.too_long`, and the right-click pending-selection startup path.
+   - Deleted `.page-analysis-buttons`, `#selection`, and `.selection-button` rules from `styles.css`.
+3. **Module & Packaging Removal (`browser_extension/selection.mjs`, `fisher_extension_package.py`)**:
+   - Deleted `browser_extension/selection.mjs`.
+   - Removed `selection.mjs` from source and runtime allowlists in `fisher_extension_package.py` and `tests/test_extension_package.py`.
+   - Updated packaging expected manifest permissions to `["contextMenus"]`.
+4. **Test Suite Adaptation**:
+   - Removed tests exercising in-popup page text extraction: `requestSelectedPageText`, `extractSelectedText`, the Selection mode button, "empty page selection", and restricted-page selection tests.
+   - Maintained all right-click pending selection tests, popup controller tests, detector tests, and packaging tests.
+   - Added tests ensuring: manifest permissions are exactly `["contextMenus"]`; no string `"scripting"`, `"activeTab"`, or `"executeScript"` appears anywhere under `browser_extension/`; and `popup.html` contains no `#selection`.
+5. **Documentation Updates (`README.md`, `browser_extension/README.md`, `MODEL_CARD.md`, `popup.html`)**:
+   - Removed all descriptions of Selection mode.
+   - Stated that the only permission is `contextMenus`.
+   - Documented that right-click text is held in service-worker memory for about 30 seconds until the popup reads it, and selections can include text inside iframes.
+
+### Rationale and labeled evidence
+
+- `[OBSERVED - architecture]` The right-click context menu provides superior page text inspection capability because it can read text within embedded iframes, unlike top-frame-only `activeTab` script injection.
+- `[OBSERVED - security]` Removing `activeTab` and `scripting` dramatically reduces the extension's privilege attack surface, eliminating dynamic code execution capabilities and standing tab access.
+- `[DERIVED]` Eliminating the redundant in-popup button and its DOM-traversal script simplifies the codebase, reduces bundle footprint, and aligns user interaction into a single cohesive selection-inspection flow.
+
+### Alternatives considered and why each was not selected
+
+- **Retain `activeTab` and in-popup button alongside context menu**: Rejected because maintaining two divergent selection reading mechanisms creates user confusion and code duplication while unnecessarily demanding `activeTab` and `scripting` permissions.
+- **Keep `scripting` permission for future analysis**: Rejected per zero-unneeded-permissions principle; permissions must strictly match required runtime functionality.
+
+### Compatibility, data, security, privacy, and performance impacts
+
+- **Security & Privacy**: Substantially hardened. The extension has zero script injection capability and requests only `contextMenus`.
+- **Compatibility**: No loss of core functionality; users inspect selected text by right-clicking and choosing "Check selection with Fisher".
+- **Performance**: Reduced bundle size and eliminated runtime script injection latency.
+
+### Verification
+
+- `npm test`: 161 tests passed across `tests/analyzer.test.mjs`, `tests/detector.test.mjs`, `tests/realistic_messages.test.mjs`, `tests/selection.test.mjs`, and performance benchmarks.
+- `npm run test:browser`: 19 passed, 0 failed.
+- `uv run pytest -q`: 416 passed, 24 skipped, 386 subtests passed, 0 failed.
+
+### Remaining risks
+
+- None identified.
+
+### Follow-up action or owner
+
+- Maintainer: Maintain single right-click selection workflow across future releases.
+
+### Correction history
+
+None.

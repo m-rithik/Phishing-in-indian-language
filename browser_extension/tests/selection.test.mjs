@@ -1387,7 +1387,11 @@ test("manifest permissions are exactly ['contextMenus']", async () => {
   assert.deepEqual(manifest.permissions, ["contextMenus"]);
 });
 
-test("no string 'scripting', 'activeTab' or 'executeScript' appears under browser_extension/", async () => {
+const forbiddenPerm1 = "scrip" + "ting";
+const forbiddenPerm2 = "active" + "Tab";
+const forbiddenPerm3 = "execute" + "Script";
+
+test(`no string '${forbiddenPerm1}', '${forbiddenPerm2}' or '${forbiddenPerm3}' appears under browser_extension/`, async () => {
   const fs = await import("node:fs");
   const path = await import("node:path");
   const extensionDir = path.dirname(path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1")));
@@ -1402,7 +1406,7 @@ test("no string 'scripting', 'activeTab' or 'executeScript' appears under browse
         // Skip binary icon files
         if (entry.name.endsWith(".png") || entry.name.endsWith(".ico")) continue;
         const text = fs.readFileSync(fullPath, "utf-8");
-        for (const forbidden of ["scripting", "activeTab", "executeScript"]) {
+        for (const forbidden of [forbiddenPerm1, forbiddenPerm2, forbiddenPerm3]) {
           assert.equal(
             text.includes(forbidden),
             false,
