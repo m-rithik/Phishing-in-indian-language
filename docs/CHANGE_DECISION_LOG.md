@@ -7830,7 +7830,7 @@ None.
 - Branch: `fix/ci-checks` (from `main` at `28284f2`)
 - Planned commit subject: `Update change log for CI check fixes`
 - Required trailer: `Luna-ID: LUNA-20261024-013`
-- Commit SHA: Pending
+- Commit SHA: `9ec6e37` (backfilled 2026-10-24 under LUNA-20261024-014 by matching the commit trailer)
 - Prior commit SHAs in cycle: `b6e694f`, `2af42f7`, `3f38a4c`, `44391d4`
 - Parent SHA: `44391d4`
 - Author of record: written by Claude Code in the lead session. No separate `luna` agent was available in this environment; the user explicitly directed this register update and one commit per fix, so the four fix commits carry no `Luna-ID` trailer.
@@ -7894,6 +7894,66 @@ Decision: Fix the real causes of the failing GitHub Actions checks on `main` (ru
 ### Follow-up action or owner
 
 - Maintainer: push `fix/ci-checks`, open a PR, and confirm all checks pass on the runner. Then close the two Copilot branches.
+
+### Correction history
+
+None.
+
+## Record LUNA-20261024-014
+
+- Lifecycle state: Finalized
+- Date/time: 2026-10-24 16:10 IST
+- Branch: `fix/ci-checks`
+- Planned commit subject: `Update change log for documentation and Python 3.12 verification`
+- Required trailer: `Luna-ID: LUNA-20261024-014`
+- Commit SHA: Pending
+- Prior commit SHAs in cycle: `f25c8fd`
+- Parent SHA: `f25c8fd`
+- Author of record: written by Claude Code in the lead session. No separate `luna` agent is available in this environment; the user directed this register update and one commit per step, so `f25c8fd` carries no `Luna-ID` trailer.
+- Affected paths:
+  - `README.md`
+  - `docs/CHANGE_DECISION_LOG.md`
+
+### Significant changes & decisions
+
+1. **Documented Python test command (`f25c8fd`)**: `README.md` now documents `uv sync --locked` and `uv run pytest -q` in place of `uv sync` and `uv run python -m unittest discover -v -s tests -p 'test_*.py'`, matching CI (LUNA-20261024-013).
+2. **No change needed for the false selection-mode doc lines**: `README.md:13`, `README.md:32-33`, `browser_extension/README.md:142` and `browser_extension/README.md:170` already state the right-click-only behaviour (fixed on `main` in `6b3781a`). `git grep -n -i "selection button\|toolbar popup\|permission bridge\|Selection mode\|activeTab\|scripting"` over `README.md`, `browser_extension/README.md`, `MODEL_CARD.md` and `browser_extension/popup.html` returned no hits.
+3. **No change needed for the transliteration config tests**: `test_default_config` and `test_custom_config` already exist in `tests/test_transliteration.py:20-40` (added in `c89d83a`) and assert exactly the requested defaults (`language "hindi"`, `max_candidates 8`, `min_confidence 0.0`, `include_romanized True`), the `max_candidates=3` bound and the no-romanized case. `fisher_transliteration/` was not changed.
+4. **Python 3.12 matrix leg kept unchanged**: it does run Python 3.12, and the suite passes on it.
+
+### Rationale and labeled evidence
+
+- `[OBSERVED]` The project supports 3.11 and newer: `pyproject.toml` `requires-python = ">=3.11"`, `uv.lock` has resolution markers for `>= '3.12'`, `README.md:257` says "Python 3.11 or newer", and `RELEASE_NOTES.md:160` says "3.11+".
+- `[OBSERVED - CI log]` The python-tests (3.12) job on `main` (run `40047578842`, job `120732712848`, success) logs `Successfully set up CPython (3.12.15)` and `Using CPython 3.12.15 interpreter at: /opt/hostedtoolcache/Python/3.12.15/x64/bin/python3`. The `uv` virtual environment therefore uses 3.12 even though the job does not set `UV_PYTHON`.
+- `[OBSERVED]` In run `40078824451` the 3.12 leg was cancelled by fail-fast after 3.11 failed (LUNA-20261024-013), so it had no failure of its own.
+
+### Alternatives considered and why each was not selected
+
+- **Set `UV_PYTHON` from the matrix value in `test.yml`**: not done, because the log shows 3.12 is already selected, and the user asked for no matrix change unless the leg does not run 3.12.
+- **Rewrite the four selection doc lines**: not done; they were already accurate.
+
+### Compatibility, data, security, privacy, and performance impacts
+
+- Documentation only. No code, dependency, permission or data change.
+
+### Verification
+
+- Windows (local): `npm test` 161 tests, 161 pass, 0 fail, 0 skipped. `uv run pytest -q` 421 passed, 24 skipped, 374 subtests passed.
+- Linux container `node:22-bookworm`, non-root user: `uv sync --locked --python 3.12`; `uv run --python 3.12 python --version` gave `Python 3.12.15`; `uv run --python 3.12 pytest -q` 445 passed, 430 subtests passed, 0 failed.
+
+### Unrun checks
+
+- `npm run test:browser` was not rerun in this cycle (no browser or test file changed since the 19-passed run in LUNA-20261024-013).
+- No GitHub Actions run on `fix/ci-checks`; nothing has been pushed. A cloud ultrareview of `fix/ci-checks` against `main` was started by the user, and its findings were still pending when this entry was written.
+
+### Remaining risks
+
+- The coverage job in `test.yml` still runs `unittest` under `continue-on-error: true`, so it skips the pytest-style tests and cannot fail the run.
+- `test_custom_config` asserts `len(candidates) <= 3`, which an empty result would also satisfy; other tests assert that candidates are non-empty.
+
+### Follow-up action or owner
+
+- Maintainer: review the ultrareview findings, then push `fix/ci-checks` and confirm the checks on the runner.
 
 ### Correction history
 
