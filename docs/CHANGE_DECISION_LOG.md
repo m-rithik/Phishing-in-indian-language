@@ -7475,4 +7475,68 @@ Decision: Ingest public benchmark datasets (UCI SMS Spam Collection, Dakshina le
 
 None.
 
+---
+
+## Record LUNA-20261024-008
+
+- Lifecycle state: Finalized
+- Date/time: 2026-10-24 10:15 IST
+- Branch: `feat/v0.6-cleanup-and-transliteration`
+- Planned commit subject: `Separate source-group metrics and evaluate uncapped public benchmark`
+- Required trailer: `Luna-ID: LUNA-20261024-008`
+- Commit SHA: Pending
+- Prior commit SHAs in cycle: `c4be692`, `19fb269`, `d22fd31`
+- Parent SHA: `d22fd31`
+- Affected paths:
+  - `docs/CHANGE_DECISION_LOG.md`
+  - `eval/results/rules_errors.jsonl`
+  - `eval/results/rules_metrics.json`
+  - `eval/results/translit_examples.jsonl`
+  - `eval/results/translit_metrics.json`
+
+### Significant changes & decisions
+
+Decision: Remove the 3:1 public benign cap, decouple evaluation reporting by source group ("public UCI", "public Dakshina", "synthetic") to prevent misleading headline F1 merging disparate distributions, untrack generated `eval/messages.jsonl`, and evaluate scaled benchmarks (400 UCI, 450 Dakshina sentences).
+
+1. **Step 1 ("Remove 3:1 benign cap in eval set builder")**: Modified `scripts/build_eval_set.py` to include all imported public benign messages by default (`public_benign_cap_ratio: Optional[float] = None`). Added test `test_build_eval_set_default_uncapped` in `tests/test_build_eval_set.py`.
+2. **Step 2 ("Evaluate rules per source group without headline F1")**: Updated `scripts/evaluate_rules.mjs` to group and display metrics strictly per source group:
+   - "public UCI" (spam vs ham): precision, recall, F1, FPR, N
+   - "public Dakshina" (benign only): FPR, N
+   - "synthetic": precision, recall, F1, FPR, N
+   Eliminated single overall merged headline F1 to ensure clean provenance separation.
+3. **Step 3 ("Untrack eval/messages.jsonl and add to .gitignore")**: Added `eval/messages.jsonl` to `.gitignore` and removed from git index via `git rm --cached eval/messages.jsonl`.
+4. **Step 4 ("Scale evaluation and run transliteration experiment")**:
+   - Re-imported UCI (200 benign, 200 scam) and Dakshina (150 per language for hi, ta, te).
+   - Built full dataset: 858 messages (654 benign, 204 scam).
+   - Evaluated rule detector per source group:
+     - Public UCI (High or Review): N=400, TP=80, FP=5, TN=195, FN=120, Prec=0.9412, Rec=0.4000, F1=0.5614, FPR=0.0250 (High Only: Prec=1.0, Rec=0.0050, F1=0.0100, FPR=0.0000).
+     - Public Dakshina (High or Review): N=450, FP=3, TN=447, FPR=0.0067 (High Only: FP=0, TN=450, FPR=0.0000).
+     - Synthetic (High or Review): N=8, TP=4, FP=0, TN=4, FN=0, Prec=1.0, Rec=1.0, F1=1.0, FPR=0.0000.
+   - Evaluated transliteration experiment on 454 romanized messages:
+     - A (raw): Prec=0.5000, Rec=1.0, F1=0.6667 (TP=3, FP=3, TN=448, FN=0)
+     - B (top-1): Prec=0.3750, Rec=1.0, F1=0.5455 (TP=3, FP=5, TN=446, FN=0)
+     - C-max: Prec=0.3750, Rec=1.0, F1=0.5455 (TP=3, FP=5, TN=446, FN=0)
+     - C-weighted: Prec=0.3750, Rec=1.0, F1=0.5455 (TP=3, FP=5, TN=446, FN=0)
+     - D (C-all): Prec=0.3750, Rec=1.0, F1=0.5455 (TP=3, FP=5, TN=446, FN=0)
+     - McNemar p-values (N=454): A vs B p=0.5, B vs C-max p=1.0, B vs C-weighted p=1.0, B vs D p=1.0, C-max vs D p=1.0.
+   - Tested KBC lottery lure message: classified as `high` risk.
+5. **Step 5 ("Verification and change log update")**: Verified test suites and updated change log.
+
+### Verification
+
+- `npm test`: 168 passed, 0 failed.
+- `uv run pytest -q`: 407 passed, 24 skipped, 365 subtests passed, 0 failed.
+- `npm run eval:rules`: 858 messages evaluated with per-source metrics.
+- `uv run python scripts/translit_experiment.py`: 454 romanized messages evaluated across conditions A, B, C-max, C-weighted, D.
+
+### Remaining risks
+
+- English SMS specificity: UCI messages originate from 2000s UK/Singapore SMS data with idiosyncratic abbreviations; Indic Romanized SMS texts have separate orthography and dialectal features.
+- Rule coverage on non-financial spam: generic marketing spam without financial or credential demands correctly remains unflagged by phishing-focused rules.
+
+### Correction history
+
+None.
+
+
 
