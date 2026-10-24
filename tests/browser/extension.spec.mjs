@@ -457,7 +457,7 @@ test("multilingual samples are explicit, composition-safe, and private", async (
 
 test("dark workspace and popup preserve contrast and forced-color selection", async () => {
   const page = await popupPage();
-  await page.emulateMedia({ colorScheme: "dark", reducedMotion: "reduce" });
+  await page.emulateMedia({ colorScheme: "dark" });
   expect((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze()).violations).toEqual([]);
   await page.goto(`chrome-extension://${extensionId}/popup.html?view=workspace`);
   await page.setViewportSize({ width: 1440, height: 1100 });
@@ -466,7 +466,7 @@ test("dark workspace and popup preserve contrast and forced-color selection", as
   await expect(page.locator("#result")).toBeVisible();
   expect((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze()).violations).toEqual([]);
   await page.screenshot({ path: "outputs/browser_extension/workspace-dark.png", fullPage: true });
-  await page.emulateMedia({ forcedColors: "active", reducedMotion: "reduce" });
+  await page.emulateMedia({ forcedColors: "active" });
   expect(await page.locator("#mode-message").evaluate(element => getComputedStyle(element).outlineStyle)).toBe("solid");
   await page.close();
 });
@@ -507,7 +507,7 @@ test("bulk review retains blank lines, filters findings, and shows the chosen li
   await page.locator("#batch-list button").first().click();
   expect((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze()).violations).toEqual([]);
   await page.screenshot({ path: "outputs/browser_extension/bulk-workspace.png", fullPage: true });
-  await page.emulateMedia({ colorScheme: "dark", reducedMotion: "reduce" });
+  await page.emulateMedia({ colorScheme: "dark" });
   expect((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze()).violations).toEqual([]);
   await page.screenshot({ path: "outputs/browser_extension/bulk-workspace-dark.png", fullPage: true });
   await page.setViewportSize({ width: 320, height: 900 });
