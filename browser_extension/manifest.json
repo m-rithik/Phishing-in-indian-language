@@ -4,9 +4,7 @@
   "version": "0.6.0",
   "description": "Locally checks pasted messages, links, and explicitly selected text for scam signals.",
   "permissions": [
-    "activeTab",
-    "contextMenus",
-    "scripting"
+    "contextMenus"
   ],
   "background": {
     "service_worker": "background.js"
