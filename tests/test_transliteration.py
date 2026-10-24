@@ -17,6 +17,29 @@ def _texts(candidates, limit=None):
     return [c.text for c in candidates[:limit]]
 
 
+def test_default_config():
+    config = CandidateConfig()
+    assert config.language == "hindi"
+    assert config.max_candidates == 8
+    assert config.min_confidence == 0.0
+    assert config.include_romanized is True
+
+
+def test_custom_config():
+    config = CandidateConfig(language="tamil", max_candidates=3)
+    candidates = generate_candidates("jaldi", config)
+    assert len(candidates) <= 3
+
+    config_no_roman = CandidateConfig(language="tamil", include_romanized=False)
+    candidates_no_roman = generate_candidates("jaldi", config_no_roman)
+    assert not any(c.script == "romanized" for c in candidates_no_roman)
+
+    config_combined = CandidateConfig(language="tamil", max_candidates=3, include_romanized=False)
+    candidates_combined = generate_candidates("jaldi", config_combined)
+    assert len(candidates_combined) <= 3
+    assert not any(c.script == "romanized" for c in candidates_combined)
+
+
 def test_jaldi_hindi_top5_contains_whole_word():
     candidates = generate_candidates("jaldi", CandidateConfig(language="hindi"))
     assert "जल्दी" in _texts(candidates, 5)
