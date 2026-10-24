@@ -7906,7 +7906,7 @@ Decision: Fix the real causes of the failing GitHub Actions checks on `main` (ru
 - Branch: `fix/ci-checks`
 - Planned commit subject: `Update change log for documentation and Python 3.12 verification`
 - Required trailer: `Luna-ID: LUNA-20261024-014`
-- Commit SHA: Pending
+- Commit SHA: `f7eccb5` (backfilled 2026-10-24 under LUNA-20261024-015 by matching the commit trailer)
 - Prior commit SHAs in cycle: `f25c8fd`
 - Parent SHA: `f25c8fd`
 - Author of record: written by Claude Code in the lead session. No separate `luna` agent is available in this environment; the user directed this register update and one commit per step, so `f25c8fd` carries no `Luna-ID` trailer.
@@ -7954,6 +7954,72 @@ Decision: Fix the real causes of the failing GitHub Actions checks on `main` (ru
 ### Follow-up action or owner
 
 - Maintainer: review the ultrareview findings, then push `fix/ci-checks` and confirm the checks on the runner.
+
+### Correction history
+
+None.
+
+## Record LUNA-20261024-015
+
+- Lifecycle state: Finalized
+- Date/time: 2026-10-24 17:00 IST
+- Branch: `fix/ci-checks`
+- Planned commit subject: `Update change log for review follow-ups`
+- Required trailer: `Luna-ID: LUNA-20261024-015`
+- Commit SHA: Pending
+- Prior commit SHAs in cycle: `17cfeab`, `8941f9c`, `4f5e820`
+- Parent SHA: `4f5e820`
+- Author of record: written by Claude Code in the lead session (no `luna` agent available); the user directed one commit per fix, so the three fix commits carry no `Luna-ID` trailer.
+- Affected paths:
+  - `docs/CHANGE_DECISION_LOG.md`
+  - `tests/browser/extension.spec.mjs`
+  - `.github/workflows/test.yml`
+
+### Significant changes & decisions
+
+Decision: apply the three cloud-review findings on `fix/ci-checks` without changing any assertion or threshold.
+
+1. **Register correction (`17cfeab`)**: added a dated line under the "Correction history" of LUNA-20261024-013 stating that its README `unittest discover` risk was resolved in `f25c8fd` (LUNA-20261024-014). The finalized text of 013 is unchanged; only its placeholder `None.` was replaced.
+2. **Redundant reduced-motion emulation (`8941f9c`)**: removed `reducedMotion: "reduce"` from three later `page.emulateMedia` calls in `tests/browser/extension.spec.mjs` (dark popup, forced colours, dark bulk workspace). `popupPage()` still sets it, and the separate reduced-motion test at line 231 (from `8e5c25b`) is untouched.
+3. **Coverage job runner (`4f5e820`)**: `.github/workflows/test.yml` coverage step now runs `uv run coverage run -m pytest -q`, so coverage measures the same suite that gates the run. `--fail-under=70` is unchanged.
+
+### Rationale and labeled evidence
+
+- `[OBSERVED]` `page.emulateMedia` keeps options that are omitted from a call; every affected page comes from `popupPage()` (for example `tests/browser/extension.spec.mjs:475`). The browser suite passes after the removal.
+- `[OBSERVED - local]` Coverage under pytest on Windows, measured with `uv run --with coverage` and a temporary `COVERAGE_FILE`: `coverage report -i` TOTAL 84%; 81% with `--omit='tests/*'`. Both are at or above 70. `fisher_extension_package.py` reads 15% on Windows because its POSIX tests are skipped there.
+- `[OBSERVED - local]` A plain `coverage report` exits with `No source for code: '...\Temp\tmp...\outside_probe.py'`, because tests execute temporary scripts that are deleted afterwards; `-i` was needed to print the number.
+- `[OBSERVED - CI log]` The coverage job in run `40078824451` fails at its first command: `uv pip install coverage` reports `error: No virtual environment found; run \`uv venv\` to create an environment...` (exit 2), because the job never runs `uv sync`. `continue-on-error: true` hides this, and Codecov then reports `None of the following appear to exist as files: ./coverage.xml`.
+
+### Alternatives considered and why each was not selected
+
+- **Leave the redundant options in place**: rejected; they suggest each `emulateMedia` call resets reduced motion, which is false.
+- **Lower `--fail-under` or omit files to raise the number**: not needed and not done; measured coverage is above 70.
+- **Also repair the coverage install step**: not done, because it is outside the requested one-line change. It is reported to the user instead.
+
+### Compatibility, data, security, privacy, and performance impacts
+
+- Test-code and CI-configuration only. No product code, dependency, permission or data change.
+
+### Verification
+
+- `npm run test:browser`: 19 passed (after `8941f9c`).
+- `uv run pytest -q`: 421 passed, 24 skipped, 374 subtests passed (after `4f5e820`).
+- Coverage, as described above.
+
+### Unrun checks
+
+- The coverage job was not run on CI or in the Linux container.
+- No GitHub Actions run on `fix/ci-checks`; nothing has been pushed.
+
+### Remaining risks
+
+- The coverage job still cannot produce a result on CI: `uv pip install coverage` fails without a virtual environment, so the pytest change has no effect until that step is fixed (for example `uv sync --locked`, then `uv run --with coverage coverage run -m pytest -q`).
+- Even once it installs, `coverage report --fail-under=70` will probably exit with "No source for code" for deleted temporary scripts unless `-i` or a source/include setting is added.
+- Codecov upload expects `./coverage.xml`, which the job never generates (`coverage xml` is not run).
+
+### Follow-up action or owner
+
+- User: decide whether to repair the coverage job install, report and upload steps.
 
 ### Correction history
 
