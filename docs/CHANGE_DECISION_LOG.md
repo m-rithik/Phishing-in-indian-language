@@ -7611,7 +7611,7 @@ None.
 - Branch: `feat/v0.6-cleanup-and-transliteration`
 - Planned commit subject: `Implement modern UI layout and responsive stylesheet with Indic typography`
 - Required trailer: `Luna-ID: LUNA-20261024-010`
-- Commit SHA: Pending
+- Commit SHA: `3124ba4c81a2958f2762b322a45be216260a92f0`
 - Prior commit SHAs in cycle: `ecf6dfd`
 - Parent SHA: `ecf6dfd`
 - Affected paths:
@@ -7659,7 +7659,7 @@ None.
 - Branch: `feat/v0.6-cleanup-and-transliteration`
 - Planned commit subject: `Add right-click context menu selection checking with background service worker`
 - Required trailer: `Luna-ID: LUNA-20261024-011`
-- Commit SHA: Pending
+- Commit SHA: `b22f9e9602acf8a484ada62ae8216c5355a8a57d`
 - Prior commit SHAs in cycle: `3124ba4`, `16a6c80`, `8ca3527`, `eee4ef6`, `497fc58`
 - Parent SHA: `497fc58`
 - Affected paths:
@@ -7696,15 +7696,41 @@ Decision: Implement a right-click "Check selection with Fisher" context menu ite
 5. **Documentation Synchronization**:
    - Updated `README.md`, `browser_extension/README.md`, and About disclosure in `browser_extension/popup.html` to document the context menu, 30s memory limit, iframe selection capability, and exact three permissions.
 
+### Rationale and labeled evidence
+
+- `[OBSERVED - requirements]` Users need to check text selections via right-click without granting broad host permissions or persistent content scripts.
+- `[OBSERVED - Chromium MV3 specification]` Context menu items for selected text pass `info.selectionText` directly to the background service worker in the `onClicked` event, enabling text inspection even from inside iframes where `activeTab` top-frame script injection cannot reach.
+- `[DERIVED]` Storing selected text exclusively in worker memory with a 30s TTL allows the popup to consume it immediately upon opening without requiring persistent storage APIs or writing user data to disk.
+
+### Alternatives considered and why each was not selected
+
+- **Content script selection listener**: Rejected because injecting persistent content scripts across all tabs violates Fisher's local-only, zero-ambient-scanning architecture and requires broad host permissions (`<all_urls>`).
+- **`chrome.storage.session` or `chrome.storage.local`**: Rejected to maintain the zero-storage guarantee, avoiding the `storage` permission and ensuring unanalyzed text cannot persist across browser restarts.
+- **Dynamic menu title with selected text snippet (`%s`)**: Rejected to prevent echoing user text into the context menu UI.
+
+### Compatibility, data, security, privacy, and performance impacts
+
+- **Security & Privacy**: `[OBSERVED]` Zero network requests, zero storage APIs, zero content scripts. Selected text is held in memory for about 30 seconds or until the worker terminates, and cleared immediately after popup consumption. Raw text is never echoed into the draft textarea or persisted.
+- **Compatibility**: Requires Chromium browsers supporting Manifest V3 service workers and `chrome.contextMenus`. Fallback tab navigation (`popup.html?view=workspace&from=menu`) handles environments where `chrome.action.openPopup()` is restricted.
+- **Performance**: Zero continuous memory footprint; the service worker is spawned on demand for context menu clicks and shut down by the browser when idle.
+
 ### Verification
 
 - `npm test`: 180 passed, 0 failed.
 - `npm run test:browser`: 23 passed, 0 failed.
 - `uv run pytest -q`: 416 passed, 24 skipped, 383 subtests passed, 0 failed.
 
+### Unrun checks
+
+- Manual deployment testing in the Chrome Web Store production environment (unreleased development build).
+
 ### Remaining risks
 
 - `chrome.action.openPopup()` behavior: programmatic opening of extension popups is subject to browser user-gesture requirements; the background script includes automated fallback to `popup.html?view=workspace&from=menu`.
+
+### Follow-up action or owner
+
+- Maintainer: Monitor Chromium platform changes regarding `chrome.action.openPopup()` support and background worker lifecycle behavior.
 
 ### Correction history
 
