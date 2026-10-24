@@ -77,9 +77,6 @@ textarea[aria-invalid="true"] { border-color: var(--warning); }
 .page-analysis-buttons button { width: 100%; min-height: 42px; border-radius: 10px; font-size: .77rem; font-weight: 650; display: flex; align-items: center; justify-content: center; gap: 8px; transition: transform 140ms ease, box-shadow 140ms ease, filter 140ms ease; }
 .page-analysis-buttons #selection { border: 1.5px solid var(--accent); color: var(--accent); background: transparent; }
 .page-analysis-buttons #selection:hover { background: var(--wash); transform: translateY(-1px); }
-.page-analysis-buttons #page-content { border: 0; color: var(--accent-ink); background: var(--accent); box-shadow: 0 2px 8px rgba(49, 91, 214, 0.3); }
-.page-analysis-buttons #page-content:hover { filter: brightness(1.08); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(49, 91, 214, 0.4); }
-.page-analysis-buttons #page-content:active { transform: translateY(0); }
 button:disabled { cursor: wait; opacity: .6; }
 button:focus-visible, textarea:focus-visible, select:focus-visible, .result:focus-visible, .batch-results:focus-visible, summary:focus-visible, a:focus-visible { outline: 2px solid #fff; outline-offset: 2px; box-shadow: 0 0 0 5px #075985; }
 .mode-button.active:focus-visible { box-shadow: 0 0 0 5px #075985; }

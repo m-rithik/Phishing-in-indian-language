@@ -94,19 +94,14 @@ and the 6,000-message confirmatory design are deferred from the immediate path.
 
 ## Browser extension and shared engine
 
-`browser_extension/` is a Manifest V3 Chrome/Edge prototype. Since v0.5.2 it
-automatically scans every HTTP(S) page: it requests `activeTab`, `scripting`,
-`tabs`, and `notifications`, plus host access to `http://*/*` and `https://*/*`.
-A content script on `<all_urls>` sends up to 20,000 characters of visible page
-text and the page URL to a background service worker. The worker analyzes that
-text with its own keyword rules (separate from the shared engine), keeps the
-latest result per tab in memory, sets the toolbar badge, and injects a banner
-for `review` or `high` results. The popup still checks pasted messages, links,
-and explicitly selected text with the shared engine, and it links to the
-`nlp_report.html` page. There is no network, telemetry, or storage API. The
-worker logs page URLs to the extension's console. Its four popup results are
-**High-risk patterns found**, **Worth a closer look**, **No clear pattern
-match**, and **Could not analyze**. No-match is explicitly not a safety result.
+`browser_extension/` is a Manifest V3 Chrome/Edge prototype. It requests only
+`activeTab` and `scripting`, declares no host permissions, content scripts or
+background worker, and reads page text only when the user selects it and presses
+**Selection mode**. The popup checks pasted messages, links, and explicitly
+selected text with the shared engine. There is no network, telemetry, or storage
+API. Its four popup results are **High-risk patterns found**, **Worth a closer
+look**, **No clear pattern match**, and **Could not analyze**. No-match is
+explicitly not a safety result.
 
 The v0.5 shared engine performs bounded structural link inspection for embedded
 credentials, IP addresses, internationalized hosts, unusual ports, defanged

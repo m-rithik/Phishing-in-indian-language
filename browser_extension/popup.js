@@ -246,7 +246,6 @@ export function createPopupController({
   const analyzeButton = documentApi.querySelector("#analyze");
   const analyzeLabel = documentApi.querySelector("#analyze-label");
   const selectionButton = documentApi.querySelector("#selection");
-  const pageContentButton = documentApi.querySelector("#page-content");
   const clearButton = documentApi.querySelector("#clear");
   const messageModeButton = documentApi.querySelector("#mode-message");
   const linkModeButton = documentApi.querySelector("#mode-link");
@@ -342,11 +341,6 @@ export function createPopupController({
     selectionButton.disabled = busy || unavailableInMode;
     selectionButton.hidden = unavailableInMode;
     selectionButton.setAttribute("aria-busy", busy ? "true" : "false");
-    if (pageContentButton) {
-      pageContentButton.disabled = busy || unavailableInMode;
-      pageContentButton.hidden = unavailableInMode;
-      pageContentButton.setAttribute("aria-busy", busy ? "true" : "false");
-    }
   }
 
   function setEmptyState(visible) {
@@ -903,92 +897,6 @@ export function createPopupController({
     status.textContent = "Selected page text was not analyzed.";
   }
 
-  async function analyzePageContent() {
-    if (expandedWorkspace) {
-      supersede();
-      hideResult();
-      status.textContent = "Page analysis is unavailable in the expanded workspace.";
-      return;
-    }
-    if (currentMode !== "message") {
-      supersede();
-      render({
-        risk: "cannot_analyze",
-        reasons: ["Page analysis is available only in Message mode."],
-        nextSteps: ["Switch to Message mode, or paste content above."],
-      }, "selection");
-      status.textContent = "Page content was not analyzed in Link mode.";
-      return;
-    }
-
-    const requestGeneration = supersede();
-    hideResult();
-    setSelectionBusy(true);
-    status.textContent = "Scanning page content…";
-
-    try {
-      const tabs = await chromeApi.tabs.query({ active: true, currentWindow: true });
-      if (!Array.isArray(tabs) || tabs.length === 0) {
-        throw new Error("No active tab");
-      }
-
-      const tabId = tabs[0].id;
-
-      // Directly execute script to extract text
-      const results = await chromeApi.scripting.executeScript({
-        target: { tabId },
-        func: () => {
-          // Extract all text from page
-          const walker = document.createTreeWalker(
-            document.body,
-            NodeFilter.SHOW_TEXT,
-            null
-          );
-          let text = '';
-          let node;
-          let count = 0;
-          while ((node = walker.nextNode()) && count < 5000) {
-            const nodeText = node.textContent?.trim();
-            if (nodeText && nodeText.length > 0) {
-              text += (text.length > 0 ? ' ' : '') + nodeText;
-              if (text.length > 20000) {
-                text = text.substring(0, 20000);
-                break;
-              }
-            }
-            count++;
-          }
-          return text.trim();
-        }
-      });
-
-      if (requestGeneration !== generation) return;
-      setSelectionBusy(false);
-
-      const text = results?.[0]?.result;
-      if (text && text.length > 10) {
-        try {
-          const analysis = analyze(text, { mode: "message" });
-          render(analysis, "selection", "🔍 Auto-scan Result");
-          activeReport = buildDownloadReport(analysis, "selection", undefined, "Auto-scan Result");
-          downloadReportButton.disabled = false;
-          status.textContent = "✓ Page scanned and analyzed locally. No data uploaded.";
-        } catch (error) {
-          invalidateActiveReport();
-          renderAnalysisFailure("Page content", "selection");
-        }
-      } else {
-        render({ risk: "cannot_analyze", reasons: ["Could not extract enough text from this page."] }, "selection");
-        status.textContent = "Could not analyze - page has no readable text.";
-      }
-    } catch (error) {
-      if (requestGeneration !== generation) return;
-      setSelectionBusy(false);
-      render({ risk: "cannot_analyze", reasons: ["Could not access this page. Some pages may be restricted."] }, "selection");
-      status.textContent = "Could not analyze this page.";
-    }
-  }
-
   function handleInput() {
     drafts[currentMode] = message.value;
     supersede();
@@ -1106,12 +1014,6 @@ export function createPopupController({
   selectionButton.addEventListener("click", () => {
     void analyzeSelection();
   });
-  if (pageContentButton) {
-    pageContentButton.addEventListener("click", () => {
-      void analyzePageContent();
-    });
-  }
-
   clearButton.addEventListener("click", clearResult);
   editInputButton.addEventListener("click", editInput);
   locateBatchLineButton.addEventListener("click", locateBatchLine);
