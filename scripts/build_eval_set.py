@@ -32,15 +32,21 @@ def build_evaluation_set(
     - Validates output with eval.load.load_messages.
     - Prints summary breakdown per language, script, label, and source.
     """
-    # 1. Ensure handwritten file exists
-    if not handwritten_path.is_file():
-        if template_path.is_file():
+    # 1. Load handwritten file if present and non-empty, or fallback to template
+    handwritten_records: List[Dict[str, Any]] = []
+    if handwritten_path and Path(handwritten_path).is_file():
+        p = Path(handwritten_path)
+        if p.stat().st_size > 0:
+            lines = [line.strip() for line in p.read_text(encoding="utf-8").splitlines() if line.strip()]
+            if lines:
+                handwritten_records = load_messages(p)
+    elif template_path and Path(template_path).is_file():
+        if handwritten_path:
             shutil.copyfile(template_path, handwritten_path)
             print(f"Created {handwritten_path} from {template_path}")
+            handwritten_records = load_messages(handwritten_path)
         else:
-            raise FileNotFoundError(f"Neither {handwritten_path} nor {template_path} exists.")
-
-    handwritten_records = load_messages(handwritten_path)
+            handwritten_records = load_messages(template_path)
 
     # 2. Count handwritten scam messages per language
     hw_scam_counts: Dict[str, int] = Counter()

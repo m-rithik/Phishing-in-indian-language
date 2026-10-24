@@ -1,8 +1,0 @@
-{"id": "en-001", "text": "Dear customer, your bank account is suspended. Click here to verify: sbi-kyc-update.xyz", "label": "scam", "language": "english", "script": "latin_english", "source": "synthetic"}
-{"id": "en-002", "text": "Please remember to submit your weekly status report by end of day today.", "label": "benign", "language": "english", "script": "latin_english", "source": "synthetic"}
-{"id": "hi-001", "text": "Aapka khata band ho jayega, turant OTP bhejo", "label": "scam", "language": "hindi", "script": "romanized", "source": "synthetic"}
-{"id": "hi-002", "text": "Kal shaam ko milte hain, ghar pe chai peete hain", "label": "benign", "language": "hindi", "script": "romanized", "source": "synthetic"}
-{"id": "ta-001", "text": "Unga account blocked, udane OTP anuppunga", "label": "scam", "language": "tamil", "script": "romanized", "source": "synthetic"}
-{"id": "ta-002", "text": "நாளை மாலை சந்திக்கலாம்", "label": "benign", "language": "tamil", "script": "native", "source": "synthetic"}
-{"id": "te-001", "text": "Mee account blocked, ventane OTP pampandi", "label": "scam", "language": "telugu", "script": "romanized", "source": "synthetic"}
-{"id": "te-002", "text": "రేపు సాయంత్రం కలుద్దాం", "label": "benign", "language": "telugu", "script": "native", "source": "synthetic"}

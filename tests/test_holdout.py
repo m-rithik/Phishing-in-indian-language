@@ -67,7 +67,7 @@ class HoldoutEvaluationTests(unittest.TestCase):
     def test_reports_all_approaches_and_excludes_ablation_from_selection(self) -> None:
         self.assertEqual(
             set(self.result["approaches"]),
-            {"rules_v0_5", "char_logreg", "word_char_linear_svc", ABLATION},
+            {"rules_v0_6", "char_logreg", "word_char_linear_svc", ABLATION},
         )
         self.assertIn(self.result["selected_model"], {"char_logreg", "word_char_linear_svc"})
         self.assertTrue(all(ABLATION not in key for key in self.result["paired_bootstrap"]))

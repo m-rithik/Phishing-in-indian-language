@@ -1,6 +1,6 @@
 # Fisher
 
-Fisher v0.5 is a local message and link checking toolkit: a Chrome/Edge
+Fisher v0.6 is a local message and link checking toolkit: a Chrome/Edge
 extension, a shared analysis engine, and a command-line companion. Paste a
 message, inspect a link without opening it, or explicitly analyze selected page
 text. Results explain the detected patterns and suggest what to do next.
@@ -103,7 +103,7 @@ API. Its four popup results are **High-risk patterns found**, **Worth a closer
 look**, **No clear pattern match**, and **Could not analyze**. No-match is
 explicitly not a safety result.
 
-The v0.5 shared engine performs bounded structural link inspection for embedded
+The v0.6 shared engine performs bounded structural link inspection for embedded
 credentials, IP addresses, internationalized hosts, unusual ports, defanged
 spelling, and other review cues. It does not decide whether a domain is genuine.
 The CLI emits generic reports or aggregate batch counts, without echoing input

@@ -116,3 +116,45 @@ def test_build_eval_set_default_uncapped(tmp_path: Path):
     assert len(scam_recs) == 1
     assert len(records) == 11
 
+def test_build_eval_set_accepts_empty_handwritten(tmp_path: Path):
+    empty_hw = tmp_path / "empty_hw.jsonl"
+    empty_hw.touch()
+    pub_file = tmp_path / "public_uci.jsonl"
+    pub_data = [
+        {"id": "pub-001", "text": "Win free money claim now", "label": "scam", "language": "english", "script": "latin_english", "source": "public:UCI"},
+    ]
+    with open(pub_file, "w", encoding="utf-8") as f:
+        for r in pub_data:
+            f.write(json.dumps(r) + "\n")
+
+    out_path = tmp_path / "out_empty_hw.jsonl"
+    records = build_evaluation_set(
+        handwritten_path=empty_hw,
+        template_path=tmp_path / "nonexistent_template.jsonl",
+        public_glob_pattern=str(tmp_path / "public_*.jsonl"),
+        output_path=out_path,
+    )
+    assert len(records) == 1
+    assert records[0]["id"] == "pub-001"
+
+
+def test_build_eval_set_accepts_missing_handwritten(tmp_path: Path):
+    missing_hw = tmp_path / "missing_hw.jsonl"
+    pub_file = tmp_path / "public_uci.jsonl"
+    pub_data = [
+        {"id": "pub-002", "text": "Call me later tonight", "label": "benign", "language": "english", "script": "latin_english", "source": "public:UCI"},
+    ]
+    with open(pub_file, "w", encoding="utf-8") as f:
+        for r in pub_data:
+            f.write(json.dumps(r) + "\n")
+
+    out_path = tmp_path / "out_missing_hw.jsonl"
+    records = build_evaluation_set(
+        handwritten_path=missing_hw,
+        template_path=tmp_path / "nonexistent_template.jsonl",
+        public_glob_pattern=str(tmp_path / "public_*.jsonl"),
+        output_path=out_path,
+    )
+    assert len(records) == 1
+    assert records[0]["id"] == "pub-002"
+

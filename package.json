@@ -6,7 +6,7 @@
   "description": "Local Fisher message and link checks, browser extension, and companion CLI",
   "engines": { "node": ">=22" },
   "scripts": {
-    "test": "node --test browser_extension/tests/*.test.mjs tests/test_fisher_cli.mjs",
+    "test": "node --test browser_extension/tests/*.test.mjs tests/test_fisher_cli.mjs tests/test_performance.mjs",
     "test:browser": "playwright test",
     "analyze": "node fisher.mjs analyze",
     "batch": "node fisher.mjs batch",

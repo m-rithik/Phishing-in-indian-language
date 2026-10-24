@@ -57,7 +57,7 @@ def normalize_model_input(text: str) -> str:
 
 
 def rule_engine_scores(texts: list[str]) -> np.ndarray:
-    """Score texts with the shipped v0.5 engine: 0 no match, 1 review, 2 high."""
+    """Score texts with the shipped v0.6 engine: 0 no match, 1 review, 2 high."""
     if not _ANALYZER.is_file():
         raise EvaluationError("the browser-extension rule engine is not available")
     script = _NODE_SCRIPT % json.dumps(_ANALYZER.as_uri())
@@ -235,7 +235,7 @@ def holdout_evaluate_prepared(
 
     rule_test = rule_engine_scores(test_texts)
     rule_prediction = (rule_test >= 1).astype(np.int8)
-    approaches["rules_v0_5"] = {
+    approaches["rules_v0_6"] = {
         "role": "baseline: shipped transparent rule engine, untrained",
         "operating_point": "risk in {review, high}",
         "test_at_operating_point": _operating_metrics(y_test, rule_prediction, rule_test),
@@ -243,8 +243,8 @@ def holdout_evaluate_prepared(
         "test_roc_auc": float(roc_auc_score(y_test, rule_test)),
         "test_slices": _slice_metrics(test_frame, y_test, rule_prediction),
     }
-    test_predictions["rules_v0_5"] = rule_prediction
-    predictors["rules_v0_5"] = (lambda batch: rule_engine_scores(list(batch)), 1.0)
+    test_predictions["rules_v0_6"] = rule_prediction
+    predictors["rules_v0_6"] = (lambda batch: rule_engine_scores(list(batch)), 1.0)
 
     for name in (*ML_MODELS, ABLATION):
         model_name = "word_char_linear_svc" if name == ABLATION else name

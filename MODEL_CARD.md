@@ -68,7 +68,7 @@ Output Report (risk, reasons, checks, next steps)
 ## Model Performance
 
 ### Training Data
-**None.** Fisher v0.5 uses curated rules, not trained ML models.
+**None.** Fisher v0.6 uses curated rules, not trained ML models.
 
 ### Auxiliary Baseline Results
 (Development-only spam/ham evaluation on public Dravidian dataset; **not phishing**; **not Fisher validation**):

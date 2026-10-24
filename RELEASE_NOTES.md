@@ -55,7 +55,7 @@ Fisher v0.6 adds multi-candidate Indic transliteration, expanded native-script d
 
 ## Breaking Changes
 
-**None.** v0.5 is compatible with v0.4 API (new features are additive).
+**None.** v0.6 is compatible with v0.5 API (new features are additive).
 
 ---
 
@@ -63,7 +63,7 @@ Fisher v0.6 adds multi-candidate Indic transliteration, expanded native-script d
 
 ### Current Limitations
 1. **No authentic phishing evaluation**: Rules are transparent heuristics; no trained model
-2. **Romanization ambiguity**: Cannot resolve "otp" → English vs. Hindi ओटीपी (deferred to v0.6)
+2. **Romanization ambiguity**: Romanized candidate generation added in v0.6; multi-candidate aggregation in progress
 3. **Single-interpretation**: Uses top-1 transliteration candidate (multi-candidate deferred)
 4. **No reputation data**: URL legitimacy checks disabled (no DNS resolution, no IP reputation lookups)
 5. **False positives**: Legitimate bank messages ("verify account", "account suspended") may trigger review
@@ -81,13 +81,7 @@ Fisher v0.6 adds multi-candidate Indic transliteration, expanded native-script d
 
 ## Roadmap
 
-### v0.5.1 (Minor, Q4 2026)
-- Accessibility audit + fixes (WCAG 2.1 Level AA)
-- Performance profiling & optimization
-- Browser automation test execution
-- Defang edge-case hardening
-
-### v0.6.0 (Major, Q1 2027)
+### Future Work (Phase 2)
 - Multi-candidate transliteration aggregation
 - Multilingual encoder (XLS-R or mBERT) integration
 - Phishing classifier (trained on Fisher pilot data)
