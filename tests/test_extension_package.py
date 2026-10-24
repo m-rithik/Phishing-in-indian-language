@@ -128,7 +128,7 @@ class ExtensionPackageTests(unittest.TestCase):
         manifest = json.loads((EXTENSION / "manifest.json").read_text(encoding="utf-8"))
         self.assertEqual(manifest["manifest_version"], 3)
         self.assertEqual(manifest["version"], "0.6.0")
-        self.assertEqual(manifest["permissions"], ["activeTab", "contextMenus", "scripting"])
+        self.assertEqual(manifest["permissions"], ["contextMenus"])
         self.assertEqual(manifest["background"], {"service_worker": "background.js"})
         self.assertNotIn("host_permissions", manifest)
         self.assertNotIn("optional_host_permissions", manifest)
@@ -248,8 +248,8 @@ class ExtensionPackageTests(unittest.TestCase):
         self.assertIn("Pattern checks can miss scams", html)
         self.assertIn('type="module"', html)
         self.assertIn('id="analyze"', html)
-        self.assertIn('id="selection"', html)
-        self.assertIn("Selection mode", html)
+        self.assertNotIn('id="selection"', html)
+        self.assertNotIn("Selection mode", html)
         self.assertIn('role="region"', html)
         self.assertIn('aria-labelledby="risk"', html)
         self.assertIn('aria-atomic="true"', html)
@@ -270,23 +270,26 @@ class ExtensionPackageTests(unittest.TestCase):
         self.assertIn('id="mode-link"', html)
         self.assertIn('id="next-steps"', html)
 
-    def test_selection_access_is_explicit_bounded_and_top_frame_only(self) -> None:
-        popup = (EXTENSION / "popup.js").read_text(encoding="utf-8")
-        selection = (EXTENSION / "selection.mjs").read_text(encoding="utf-8")
-        self.assertIn('addEventListener("click"', popup)
-        self.assertIn("requestSelectedPageText", popup)
-        self.assertNotIn("message.value = selected", popup)
-        self.assertNotIn("console.", popup + selection)
-        self.assertIn("MAX_SELECTION_CODE_POINTS = 20_000", selection)
-        self.assertIn("MAX_VISITED_TEXT_NODES = 10_000", selection)
-        self.assertIn("{ active: true, currentWindow: true }", selection)
-        self.assertIn("target: { tabId: tabs[0].id, frameIds: [0] }", selection)
-        self.assertIn('world: "ISOLATED"', selection)
-        self.assertNotIn("allFrames", selection)
-        self.assertNotIn("tab.url", selection)
-        self.assertNotIn("document.title", selection)
-        self.assertNotIn("document.documentElement", selection)
-        self.assertNotIn("querySelector", selection)
+    def test_manifest_permissions_are_exactly_context_menus(self) -> None:
+        manifest = json.loads((EXTENSION / "manifest.json").read_text(encoding="utf-8"))
+        self.assertEqual(manifest["permissions"], ["contextMenus"])
+
+    def test_no_scripting_active_tab_or_execute_script_under_browser_extension(self) -> None:
+        for path in EXTENSION.rglob("*"):
+            if path.is_file() and not path.name.endswith((".png", ".ico")):
+                text = path.read_text(encoding="utf-8")
+                for forbidden in ("scripting", "activeTab", "executeScript"):
+                    self.assertNotIn(
+                        forbidden,
+                        text,
+                        f"Forbidden string '{forbidden}' found in {path.relative_to(EXTENSION)}",
+                    )
+
+    def test_popup_html_contains_no_selection_element(self) -> None:
+        html = (EXTENSION / "popup.html").read_text(encoding="utf-8")
+        self.assertNotIn('id="selection"', html)
+        self.assertNotIn("id='selection'", html)
+        self.assertNotIn("#selection", html)
 
 
 @unittest.skipIf(sys.platform == "win32", "POSIX-only filesystem feature")
@@ -442,15 +445,15 @@ class DeterministicDistributionTests(unittest.TestCase):
             "name": lambda manifest: manifest.update(name="Other"),
             "description": lambda manifest: manifest.update(description="Other"),
             "permissions": lambda manifest: manifest.update(permissions=[]),
-            "permissions_reordered": lambda manifest: manifest.update(
-                permissions=["scripting", "contextMenus", "activeTab"]
+            "permissions_extra": lambda manifest: manifest.update(
+                permissions=["contextMenus", "extra"]
             ),
             "icons": lambda manifest: manifest.pop("icons"),
             "tabs_permission": lambda manifest: manifest.update(
-                permissions=["activeTab", "contextMenus", "scripting", "tabs"]
+                permissions=["contextMenus", "tabs"]
             ),
             "storage_permission": lambda manifest: manifest.update(
-                permissions=["activeTab", "contextMenus", "scripting", "storage"]
+                permissions=["contextMenus", "storage"]
             ),
             "host_permissions": lambda manifest: manifest.update(
                 host_permissions=["<all_urls>"]

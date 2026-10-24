@@ -163,10 +163,16 @@ test("installed popup analyzes, explains, clears, and makes no network request",
   await page.close();
 });
 
+test("popup.html contains no #selection", async () => {
+  const page = await popupPage();
+  await expect(page.locator("#selection")).toHaveCount(0);
+  await page.close();
+});
+
 test("link mode, keyboard shortcut, and edits keep results current", async () => {
   const page = await popupPage();
   await page.locator("#mode-link").click();
-  await expect(page.locator("#selection")).toBeHidden();
+  await expect(page.locator("#selection")).toHaveCount(0);
   await page.locator("#message").fill("http://user:private@127.0.0.1:8080/private");
   await page.locator("#message").press("Control+Enter");
   await expect(page.locator("#result")).toBeVisible();
@@ -324,98 +330,6 @@ test("examples wait for an explicit check and oversized message is rejected whol
   await page.close();
 });
 
-test("real toolbar action grants only explicit selected-text access", async () => {
-  const fixture = await context.newPage();
-  await fixture.goto(fixtureUrl);
-  await fixture.evaluate(() => {
-    const range = document.createRange();
-    range.selectNodeContents(document.querySelector("#selected"));
-    getSelection().removeAllRanges();
-    getSelection().addRange(range);
-  });
-  const { evaluate, targetId } = await openToolbarPopup(fixture);
-  await expect.poll(() => evaluate("Boolean(document.querySelector('#selection'))")).toBe(true);
-  // The tab-only shrinking rule must not apply to the real toolbar popup.
-  await expect.poll(() => evaluate("document.body.getBoundingClientRect().width")).toBe(404);
-  expect(await evaluate("document.querySelector('#result').hidden")).toBe(true);
-  await evaluate(`(() => {
-    const input = document.querySelector('#message');
-    input.value = 'Existing message draft';
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-  })()`);
-  await evaluate("document.querySelector('#selection').click()");
-  await expect.poll(() => evaluate("document.querySelector('#risk').textContent")).toContain("No clear");
-  expect(await evaluate("document.querySelector('#result-context').textContent")).toBe("Selected text check");
-  expect(await evaluate("document.querySelector('#message').value")).toBe("Existing message draft");
-  expect(await evaluate("document.querySelector('#edit-input').textContent")).toBe("Back to input");
-  expect(await evaluate("document.body.textContent.includes('Lunch at noon')")).toBe(false);
-  expect(await evaluate("document.body.textContent.includes('UNSELECTED_CANARY')")).toBe(false);
-  await evaluate("document.querySelector('#edit-input').click()");
-  expect(await evaluate("document.querySelector('#result').hidden")).toBe(true);
-  expect(await evaluate("document.querySelector('#message').value")).toBe("Existing message draft");
-  expect(await evaluate("document.activeElement === document.querySelector('#message')")).toBe(true);
-  expect(await evaluate("document.querySelector('#status').textContent")).toBe(
-    "Message input ready. Selected page text was not copied.",
-  );
-  expect(await evaluate("document.querySelector('#edit-input').textContent")).toBe("Edit input");
-  await control.send("Target.closeTarget", { targetId });
-  await fixture.close();
-});
-
-test("selected block analysis matches the browser-rendered text and excludes canaries", async () => {
-  const fixture = await context.newPage();
-  await fixture.goto(fixtureUrl);
-  const renderedSelection = await selectFixtureContents(fixture, "#block-selection");
-  expect(renderedSelection).toBe("Send\nOTP immediately at bad.example");
-  const pastedSnapshot = await pastedAnalysisSnapshot(renderedSelection);
-
-  const { evaluate, targetId } = await openToolbarPopup(fixture);
-  await evaluate("document.querySelector('#selection').click()");
-  await expect.poll(() => evaluate("document.querySelector('#result').hidden")).toBe(false);
-  const selectedSnapshot = await evaluate(resultSnapshotExpression);
-  const popupText = await evaluate("document.body.textContent");
-  expect(popupText).not.toContain("UNSELECTED_CANARY");
-  expect(popupText).not.toContain("HIDDEN_CANARY");
-  expect(popupText).not.toContain("FORM_VALUE_CANARY");
-  expect(selectedSnapshot).toEqual(pastedSnapshot);
-
-  await control.send("Target.closeTarget", { targetId });
-  await fixture.close();
-});
-
-test("inline split selection remains one rendered word", async () => {
-  const fixture = await context.newPage();
-  await fixture.goto(fixtureUrl);
-  const renderedSelection = await selectFixtureContents(fixture, "#inline-selection");
-  expect(renderedSelection).toBe("password");
-  const pastedSnapshot = await pastedAnalysisSnapshot("password");
-
-  const { evaluate, targetId } = await openToolbarPopup(fixture);
-  await evaluate("document.querySelector('#selection').click()");
-  await expect.poll(() => evaluate("document.querySelector('#result').hidden")).toBe(false);
-  const selectedSnapshot = await evaluate(resultSnapshotExpression);
-  expect(selectedSnapshot).toEqual(pastedSnapshot);
-  expect(await evaluate("document.body.textContent")).not.toContain("UNSELECTED_CANARY");
-
-  await control.send("Target.closeTarget", { targetId });
-  await fixture.close();
-});
-
-for (const restricted of [false, true]) {
-  test(restricted ? "restricted browser page fails with a generic result" : "empty page selection produces no safety result", async () => {
-    const fixture = await context.newPage();
-    await fixture.goto(restricted ? "chrome://version/" : fixtureUrl);
-    const { evaluate, targetId } = await openToolbarPopup(fixture);
-    await evaluate("document.querySelector('#selection').click()");
-    await expect.poll(() => evaluate("document.querySelector('#risk').textContent")).toBe("Could not analyze");
-    const reasons = await evaluate("document.querySelector('#reasons').textContent");
-    expect(reasons).toContain(restricted ? "could not be accessed" : "No selected page text");
-    expect(await evaluate("document.querySelector('#message').value")).toBe("");
-    await control.send("Target.closeTarget", { targetId });
-    await fixture.close();
-  });
-}
-
 test("empty and populated states pass automated accessibility checks", async () => {
   const page = await popupPage();
   expect(await page.locator("body").evaluate((element) => element.getBoundingClientRect().width)).toBe(404);
@@ -459,7 +373,7 @@ test("expanded workspace opens empty, stays local, and adapts to narrow screens"
   await expect(page.locator("html")).toHaveAttribute("data-view", "workspace");
   await expect(page.locator("#message")).toHaveValue("");
   await expect(page.locator("body")).not.toContainText("PRIVATE_DRAFT_CANARY");
-  await expect(page.locator("#selection")).toBeHidden();
+  await expect(page.locator("#selection")).toHaveCount(0);
   await expect(page.locator("#open-workspace")).toBeHidden();
   expect(await page.evaluate(() => window.opener === null)).toBe(true);
   const requests = [];
