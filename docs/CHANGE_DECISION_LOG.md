@@ -7897,7 +7897,7 @@ Decision: Fix the real causes of the failing GitHub Actions checks on `main` (ru
 
 ### Correction history
 
-None.
+- 2026-10-24: The remaining risk "`README.md:264` still documents `unittest discover`" was resolved in `f25c8fd` (recorded in LUNA-20261024-014). The original statement above is kept unchanged.
 
 ## Record LUNA-20261024-014
 
