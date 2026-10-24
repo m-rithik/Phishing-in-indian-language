@@ -38,7 +38,6 @@ EXPECTED_FILES = {
     "manifest.json",
     "popup.html",
     "popup.js",
-    "selection.mjs",
     "styles.css",
     "tests/analyzer.test.mjs",
     "tests/detector.test.mjs",
@@ -57,7 +56,6 @@ RUNTIME_FILES = {
     "manifest.json",
     "popup.html",
     "popup.js",
-    "selection.mjs",
     "styles.css",
 }
 ICON_FILES = {
@@ -171,7 +169,7 @@ class ExtensionPackageTests(unittest.TestCase):
         imports = re.findall(r'from\s+"\.\/([^"?]+)"', javascript)
         self.assertEqual(
             imports,
-            ["analyzer.mjs", "detector.mjs", "links.mjs", "selection.mjs"],
+            ["analyzer.mjs", "detector.mjs", "links.mjs"],
         )
         for reference in imports:
             self.assertTrue((EXTENSION / reference).is_file())

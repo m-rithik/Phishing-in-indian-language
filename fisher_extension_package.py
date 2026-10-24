@@ -28,7 +28,6 @@ SOURCE_FILES = (
     "manifest.json",
     "popup.html",
     "popup.js",
-    "selection.mjs",
     "styles.css",
     "tests/analyzer.test.mjs",
     "tests/detector.test.mjs",
@@ -47,7 +46,6 @@ RUNTIME_FILES = (
     "manifest.json",
     "popup.html",
     "popup.js",
-    "selection.mjs",
     "styles.css",
 )
 ROOT_ENTRIES = frozenset({name for name in SOURCE_FILES if "/" not in name} | {"tests"})
@@ -60,7 +58,7 @@ EXPECTED_MANIFEST = {
     "name": "Fisher Scam Signal Prototype",
     "version": "0.6.0",
     "description": "Locally checks pasted messages, links, and explicitly selected text for scam signals.",
-    "permissions": ["activeTab", "contextMenus", "scripting"],
+    "permissions": ["contextMenus"],
     "background": {"service_worker": "background.js"},
     "icons": {
         "16": "icon-16.png",
