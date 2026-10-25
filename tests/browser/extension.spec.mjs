@@ -187,7 +187,7 @@ test("link mode, keyboard shortcut, and edits keep results current", async () =>
   await expect(page.locator("#link-summary")).toContainText(
     "does not establish that the checked address is safe",
   );
-  await expect(page.locator("#link-summary")).toHaveCSS("background-color", "rgb(237, 240, 245)");
+  await expect(page.locator("#link-summary")).toHaveCSS("background-color", "rgb(135, 206, 235)");
   await page.close();
 });
 
