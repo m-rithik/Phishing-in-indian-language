@@ -8024,3 +8024,290 @@ Decision: apply the three cloud-review findings on `fix/ci-checks` without chang
 ### Correction history
 
 None.
+
+## Decision record - LUNA-20261025-001
+
+### Neobrutalist extension UI restyle checkpoint
+
+- Lifecycle: `IMPLEMENTED_LOCAL_UNCOMMITTED`; working tree uncommitted; no staging, commit, push, pull request, or publication requested or approved
+- Recorded: 25 October 2026; responsible agent: luna; branch: `feat/neobrutalism-ui`
+- Planned commit subject: none — no commit requested yet
+- Required trailer: a future commit, if approved, needs its own commit-preparation Luna record and trailer
+- Commit SHA: Not applicable — no commit planned
+- Parent SHA: `01783491548ec813d8a3f6fc8d78d1dc72fba40a` [OBSERVED - Luna: `HEAD`, `main`, and `origin/main` all resolve to it; it is "Merge pull request #5 from m-rithik/fix/ci-checks"]
+- Affected paths: `browser_extension/styles.css`, `tests/browser/extension.spec.mjs`, and this register
+- Generated evidence (ignored, not tracked): `outputs/browser_extension/v0.5-popup.png`, `v0.5-result.png`, `workspace-light.png`, `workspace-dark.png`, `workspace-mobile.png` [OBSERVED - Luna: all five exist, modified 25 October 22:57; Luna did not view them]
+
+### ID and decision-number allocation
+
+Register state, inspected by Luna on disk at `0178349`:
+
+- [OBSERVED - Luna] No `LUNA-20261025-*` ID exists in the register or in any commit message, so this record uses `LUNA-20261025-001`.
+- [OBSERVED - Luna] The highest 24 October ID is `LUNA-20261024-015`.
+- [OBSERVED - Luna] The highest decision number in the register is `D-232`. The upstream `## Record LUNA-20261024-006` to `-015` entries do not use `D-` numbers.
+
+IDs allocated earlier but never committed:
+
+- [OBSERVED - Luna `git stash list` and the stash diff] Stash `ef9ff72a0f8acd18fa633e6a31d9e4c4f7db5d7c` (`claude-lint-cleanup-luna-006-20261025`, not applied) contains a dated revision of LUNA-20261024-005, a `## Decision record - LUNA-20261024-006`, and `D-233`.
+- [OBSERVED - parent-supplied] A record `LUNA-20261024-007` with `D-234` to `D-237`, written in the since-deleted `port-wt` worktree, was never committed and is lost.
+- [OBSERVED - Luna] Upstream now uses both `LUNA-20261024-006` (`7062351`, "Update change log") and `LUNA-20261024-007` (`e0a2885`, "Update change log and evaluation results") for different records. The stashed 006 and the lost 007 therefore collide with upstream and must not be restored under those IDs; they would need new IDs.
+- [DERIVED] `D-233` to `D-237` are unused in the register but were allocated to those uncommitted records. This record skips them and starts at `D-238`, so that restoring the stash later cannot create a duplicate decision number.
+
+ID collisions already in the register:
+
+- [OBSERVED - Luna] The register now contains two different records each for `LUNA-20261024-001` and `LUNA-20261024-002`: `## Record LUNA-20261024-001/002` (lines 6708 and 6750, the upstream branch's format) and `## Decision record - LUNA-20261024-001/002` (lines 6798 and 6922, the held-out evaluation and extension checkpoints).
+- [OBSERVED - Luna] The commit trailers `LUNA-20261024-001` (`f508821`) and `LUNA-20261024-002` (`efb9355`) belong to the `## Record` entries. The `## Decision record` 001 and 002 entries are commit-free checkpoints.
+- This record does not resolve those collisions.
+
+### Pending commit-SHA backfill by trailer match
+
+[OBSERVED - Luna `git log main --format='%H %(trailers:key=Luna-ID,valueonly)'`] These commits on `main` carry `Luna-ID` trailers. They are recorded here as the trailer-to-SHA backfill for records whose commit SHA reads Pending. The finalized records themselves are not edited.
+
+| Luna-ID | Commit SHA | Subject |
+| --- | --- | --- |
+| `LUNA-20261024-001` (the `## Record` entry) | `f5088210623c3df01524e30ccfa92b709aa761bb` | Final fixes: test expectations, packaging script, LF fixtures, Windows skips, docs |
+| `LUNA-20261024-002` (the `## Record` entry) | `efb93558b46b564f1986ecb416279ca0f92e447f` | Update change log |
+| `LUNA-20261024-005` | `0a5c75126c2dfff7796fd652d8525735df2d1a06` | feat: held-out model evaluation and v0.5.2 extension fixes |
+| `LUNA-20261024-006` | `7062351b0c5f862866f04140af1a1703b724d710` | Update change log |
+| `LUNA-20261024-007` | `e0a2885b5e99f6cf998f67771c3b585c696b3624` | Update change log and evaluation results |
+| `LUNA-20261024-008` | `3e985ea64c10dcc8caea0bd3a99a787eaac3e268` | Separate source-group metrics and evaluate uncapped public benchmark |
+| `LUNA-20261024-009` | `ecf6dfdaeca4d6655d9e0de1c4e6d9b4f5d8ab17` | Update change decision log for v0.6 cleanup and transliteration validation |
+| `LUNA-20261024-012` | `34cd635a3aa1cad2a62ce5b5c34a0071d7a4bb12` | Step 5: Update documentation and change log for removal of selection mode |
+| `LUNA-20261024-013` | `9ec6e379db2be2aa11ad51850e7a61a5dafc965e` | Update change log for CI check fixes |
+| `LUNA-20261024-014` | `f7eccb5e747766b060fb385288b866b91f4cb221` | Update change log for documentation and Python 3.12 verification |
+| `LUNA-20261024-015` | `5250ce2c4adb17515cef7d450a4ddbe184c21031` | Update change log for review follow-ups |
+
+Gaps:
+
+- [OBSERVED - Luna] No commit on `main` carries `LUNA-20261024-010`, `LUNA-20261024-011`, or `LUNA-20261014-001`, so those stay unmatched.
+- [OBSERVED - Luna] The `LUNA-20261024-005` entry on `main` still reads `COMMIT_PREPARED_PENDING_APPROVAL` / SHA Pending, because its publication revision exists only in the stash. [OBSERVED - recorded in that stash] It was approved, pushed, and opened as PR #1. [OBSERVED - parent-supplied] It has since been merged.
+
+### Objective
+
+[OBSERVED - parent-supplied user request] "can you make a neobrutalism ui". The user pasted two things:
+
+- a neubrutalist draft stylesheet: tokens `--bg-canvas`, `--border-ink`, `--shadow-*`, and risk tokens including a "Zero Green" note;
+- a "NeoBrutalism Design System" spec: 3px `#0A0A0A` borders, radius at most 4px, flat 5px offset shadows, `#FFFEF0` paper, at most 3 accents, uppercase display headings, press-down buttons, section-tag pills, no blur or gradients, a 4px grid, hover only on pointer devices, and never colour alone for state.
+
+### Change inventory
+
+[OBSERVED - Luna `git diff --stat`, `git diff`, and greps of `browser_extension/styles.css`] Two paths changed: 577 insertions and 527 deletions.
+
+`browser_extension/styles.css`, rewritten:
+
+- **Tokens.**
+  - Light: `--bg-canvas: #fffef0`, `--bg-surface: #ffffff`, `--text-primary` and `--border-ink: #0a0a0a`, `--border-w: 3px` (thin 2px), `--radius: 4px`, `--radius-tag: 2px`.
+  - Shadows are hard offsets with no blur: `--shadow-xs` 2px, `-sm` 3px, `-md` 5px, `-lg` 8px.
+  - Accents: yellow `--accent: #ffe600`, cyan `--info: #87ceeb` (stripe `#00c2cb`), and magenta `--danger: #ff3ea5` (pastel `#ffc0cb`).
+- **Risk panels.**
+  - Colours: high `#ffc0cb`/`#ff3ea5`, review `#ffdb58`/`#ffe600`, neutral (no-match) `#87ceeb`/`#00c2cb`, and cannot-analyze white with an ink stripe; text is `--risk-ink: #0a0a0a`.
+  - A comment states "No green — no match is not safe".
+  - [OBSERVED - Luna grep] No `blur(`, `gradient`, or green colour value remains. The only "green" match is that comment.
+- **Interaction.**
+  - Every `transition:` declaration animates only `transform` and/or `box-shadow`.
+  - Hover effects sit in `@media (hover: hover)` blocks.
+  - Next-steps markers use `content: "→ "`.
+  - 32 declarations set `text-transform: uppercase` or `font-weight: 900`.
+- **Kept from `main`.**
+  - The 404px `html`/`body`/`.shell` toolbar sizing and the `:root[data-host="tab"]` shrink rule (`max-width: 404px`).
+  - The workspace layout and breakpoints.
+  - The focus ring (`outline: 2px solid #fff` plus `box-shadow: 0 0 0 5px #075985`).
+  - A `forced-colors: active` block.
+- **Dark mode:** canvas `#2a2a26`, surface `#3a3a34`, paper-coloured text and borders (`#fffef0`), and shadow colour `#0a0a0a`.
+- **Font:** `"Space Grotesk"` heads the font stack, with a comment that it cannot load under the extension CSP. Indic system fallbacks follow.
+- **Reduced motion:** `prefers-reduced-motion: reduce` now sets `animation: none !important; transition: none !important` (previously `0.01ms` durations at `HEAD`).
+- **Workspace eyebrows:** `:root[data-view="workspace"] .eyebrow.workspace-only` is forced to `display: inline-block !important`.
+
+`tests/browser/extension.spec.mjs`: one assertion changed. The `#link-summary` background-color is now `rgb(135, 206, 235)`, previously `rgb(237, 240, 245)`, matching `--info: #87ceeb`. No other test line changed.
+
+### Decisions
+
+#### Decision D-238 - Implement the pasted design-system spec, not the pasted draft stylesheet
+
+Decision: Restyle the extension to the design-system spec's non-negotiable rules, using its token vocabulary, while preserving the existing sizing, layout, focus, and forced-colours contracts.
+
+Rationale: [OBSERVED - parent-supplied] The pasted draft used 2px borders, 6–12px radii, rgba hover fills, and colour transitions, which break the spec's rules. Its tab-host rule set the body width to 100%, which breaks the 404px popup test. [DERIVED] Following the spec rather than the draft satisfies both the user's design intent and the existing tested contracts.
+
+Alternatives not selected:
+
+- Adopt the pasted draft verbatim: rejected for the reasons above.
+- Hover lift on non-interactive cards: rejected because in a tool UI it implies interactivity.
+
+Deviation: [OBSERVED - Luna] Two decorative elements, `.orbit` and a small indicator dot, keep `border-radius: 50%` (circles). `HEAD` already had 3 such rules. This departs from the spec's at-most-4px radius for decorative shapes only.
+
+#### Decision D-239 - No green for any risk state
+
+Decision: No-match uses cyan with an icon and heading. Green is not used anywhere.
+
+Rationale: [OBSERVED - project rule, README] No-match is explicitly not a safety result. [DERIVED] A green "success" colour would present it as safe.
+
+Alternatives not selected:
+
+- Use the spec's green "success" colour for no-match: rejected because of the project rule.
+
+#### Decision D-240 - Disable transitions entirely under reduced motion
+
+Decision: Replace `0.01ms` durations with `transition: none` and `animation: none` under `prefers-reduced-motion: reduce`.
+
+Rationale: [OBSERVED - parent-supplied] With `0.01ms` transitions, the box-shadow focus change lagged one frame. `getComputedStyle` returned the old 3px offset shadow immediately after Tab and the correct focus ring 300ms later, failing the focus-ring test. [DERIVED] Disabling transitions removes that frame lag and fully honours the reduced-motion preference.
+
+Alternatives not selected: [UNKNOWN] No alternative was supplied.
+
+#### Decision D-241 - Do not bundle Space Grotesk
+
+Decision: List Space Grotesk first in the stack without shipping the font file.
+
+Rationale: [OBSERVED - comment and parent-supplied] The extension CSP blocks remote fonts. Bundling would add a font asset and need a licence review. [DERIVED] In practice the system and Indic fallback stack renders.
+
+Alternatives not selected:
+
+- Bundle Space Grotesk: deferred pending asset and licence review.
+
+### Impacts
+
+- User-facing: [OBSERVED - diff] The whole popup and workspace appearance changes in light and dark mode. Toolbar width (404px), tab shrink behaviour, layout breakpoints, the focus ring, and forced-colours handling are retained.
+- Accessibility: [OBSERVED - parent-supplied] axe WCAG 2.1 AA passes in light and dark mode. State is never conveyed by colour alone, because icons and headings accompany the risk colours.
+- Permissions, data flow, dependencies, engine: [OBSERVED - diff] No change; only CSS and one test expectation.
+- Tests: [OBSERVED - diff] One expected colour value is updated to the new token. No assertion was loosened.
+
+### Verification
+
+[OBSERVED - parent-supplied; run on this working tree]
+
+- `npm run test:browser` — 19 passed, 0 failed, three consecutive runs. This covers axe WCAG 2.1 AA light and dark, no horizontal overflow at 320px, real toolbar popup width 404px, forced-colours outline, and focus ring.
+  - [OBSERVED - parent-supplied] The two dark-mode contrast tests that failed intermittently on `main` `0178349` earlier on 25 October passed in all runs.
+  - [DERIVED - parent-supplied] The probable cause is that no colour transitions remain.
+- `npm test` — 161 pass, 0 fail.
+- `uv run python -m pytest -q tests` — 445 passed. [OBSERVED - parent-supplied] A bare `uv run pytest` errors locally because macOS/iCloud re-sets the hidden flag on the virtual environment's `.pth` file. This is an environment issue, not a code issue.
+- `git diff --check` clean.
+- Visual review of the five screenshots listed in the header.
+
+[OBSERVED - Luna]
+
+- `git status --short`, `git diff --stat`, and `git diff` for the test file.
+- Greps of `styles.css` for tokens, transitions, hover media queries, blur/gradient/green, radius values, reduced motion, forced colours, the focus ring, the 404px and tab-host rules, and the font stack.
+- `git diff --check` passed.
+
+Not run:
+
+- A headed-browser or real toolbar check by a human.
+- Independent design review.
+
+### Remaining risks and follow-up
+
+- [OBSERVED - parent-supplied] Dark-mode offset shadows (`#0a0a0a` on `#2a2a26`) are low-visibility, so dark mode reads mostly as bordered boxes.
+- [OBSERVED - parent-supplied] Pastel risk panels are bright in dark mode.
+- [OBSERVED] Space Grotesk is not actually loaded.
+- [OBSERVED - parent-supplied] The spec's 16–18px body size is not used in the 404px popup (14px base kept); the workspace uses 16px.
+- [OBSERVED - Luna] Two decorative `border-radius: 50%` circles deviate from the radius rule.
+- [UNKNOWN] Rendering in a headed Chrome/Edge toolbar is not verified.
+- Register follow-ups (owner: project owner):
+  - Resolve the duplicate `LUNA-20261024-001/002` IDs.
+  - Re-ID the stashed 006 record if it is ever restored; it now collides with upstream `LUNA-20261024-006`.
+  - Decide whether the lost port record needs rewriting under a new ID. [OBSERVED - Luna `git log main`] No commit on `main` has the planned port subject. The merged PR #2 is `feat/v0.6-cleanup-and-transliteration`, and `4e2651c` merged `origin/main` into `feat/phase1-privacy-and-phase2-eval`. [UNKNOWN] Whether the port commit was ever created, or whether the source branch's work reached `main` by another route.
+  - Optionally add dated revisions to the records whose SHAs are backfilled above.
+- Next action: on request, prepare a commit record with a new ID and the `Luna-ID` trailer, and obtain explicit user approval before committing.
+
+### Correction history
+
+None. This is an append-only checkpoint record; no commit SHA applies.
+
+## Decision record - LUNA-20261025-002
+
+### NeoBrutalism restyle commit-preparation checkpoint
+
+- Lifecycle: `COMMIT_PREPARED`; approved by the user, staged, not yet committed; no push or pull request performed yet
+- Recorded: 25 October 2026; responsible agent: luna; branch: `feat/neobrutalism-ui`
+- Planned commit subject: `feat: NeoBrutalism restyle of the extension popup and workspace`
+- Required trailer: `Luna-ID: LUNA-20261025-002`
+- Co-author and AI attribution: none. The commit message must not contain a `Co-Authored-By` trailer, and neither the commit nor the pull request body may carry an AI-attribution footer, per the user.
+- Commit SHA: Pending — commit has not been created
+- Parent SHA: `01783491548ec813d8a3f6fc8d78d1dc72fba40a` [OBSERVED - Luna: equal to `HEAD` and `origin/main`; parent-supplied: verified after a fresh `git fetch`]
+- Intended publication: push `feat/neobrutalism-ui` to `origin` (`https://github.com/m-rithik/Phishing-in-indian-language.git`, private), then open a pull request into `main` with screenshots and test results
+- Approval: [OBSERVED - parent-supplied, user's words verbatim] "Prepare the commit for the NeoBrutalism UI with a Luna commit record (no Co-Authored-By, no AI footer), then push feat/neobrutalism-ui and open a PR into main with screenshots and test results." This approves exactly this commit, the push of `feat/neobrutalism-ui` to `origin`, and one pull request into `main`. It does not cover any later commit or push.
+
+### Staged change inventory
+
+[OBSERVED - Luna `git diff --cached --stat` and `--name-status`] The index holds exactly 7 non-register paths: 577 insertions and 527 deletions of text, plus 5 binary files. The register is the only unstaged path and will be staged after this update.
+
+- `browser_extension/styles.css` (modified; +577/−527 combined with the test file, as recorded in LUNA-20261025-001)
+- `tests/browser/extension.spec.mjs` (modified; one expected colour, as recorded in LUNA-20261025-001)
+- `docs/screenshots/neobrutalism/v0.5-popup.png` (added; 54,162 bytes; 440×967)
+- `docs/screenshots/neobrutalism/v0.5-result.png` (added; 135,095 bytes; 440×1978)
+- `docs/screenshots/neobrutalism/workspace-dark.png` (added; 239,585 bytes; 1440×1603)
+- `docs/screenshots/neobrutalism/workspace-light.png` (added; 195,208 bytes; 1440×1558)
+- `docs/screenshots/neobrutalism/workspace-mobile.png` (added; 194,259 bytes; 320×3376)
+
+Checks on the screenshots:
+
+- [OBSERVED - Luna] The PNGs total 818,309 bytes.
+- [OBSERVED - Luna] Each is byte-identical to the same-named Git-ignored file in `outputs/browser_extension/`.
+- [OBSERVED - Luna] Each contains only `IHDR`, `IDAT`, and `IEND` chunks, so there is no embedded text or path metadata.
+- [OBSERVED - Luna] The `docs/screenshots/` path is not Git-ignored.
+- [OBSERVED - Luna, viewed `v0.5-result.png`] It shows only synthetic example content (`Send OTP immediately at bank.example`, a high-risk result).
+- [OBSERVED - parent-supplied] The parent viewed `workspace-light.png` and confirmed it reflects the final CSS, with the workspace-only eyebrow inline.
+- [OBSERVED - parent-supplied] All five are Playwright outputs from the final verified runs and contain synthetic example content only.
+
+`git diff --cached --check` passed.
+
+### Findings and decisions
+
+[OBSERVED] The CSS and test changes are those recorded in LUNA-20261025-001. Its decisions D-238 to D-241 (spec over draft, no green, reduced-motion `none`, Space Grotesk not bundled) are not restated here. [OBSERVED - parent-supplied] No code changed after that record. The screenshots were copied after the test runs.
+
+#### Decision D-242 - Commit the verification screenshots under docs/screenshots/neobrutalism/
+
+Decision: Add the five Playwright screenshots to the repository so the private repository's pull request description can embed them through blob `?raw=true` links.
+
+Rationale: [OBSERVED - parent-supplied] The user asked for screenshots in the pull request. [DERIVED] In a private repository, committed files are viewable by authorized reviewers through blob links, while the `outputs/` copies are Git-ignored and cannot be linked.
+
+Alternatives not selected:
+
+- GitHub drag-and-drop attachments: rejected because they are not available through the `gh` CLI.
+- Leaving screenshots out: rejected because the user asked for them.
+
+### Impacts and claim boundary
+
+- [OBSERVED - Luna] The commit adds about 818 KB of binary files to Git history permanently.
+- [DERIVED] The screenshots show the UI at this commit (manifest version `0.6.0` [OBSERVED - Luna]; the file names keep the test suite's `v0.5-` prefix) and go stale if the UI changes again.
+- [OBSERVED] There are no product-behaviour, permission, data-flow, or dependency changes beyond LUNA-20261025-001.
+- Privacy: [OBSERVED - Luna] The screenshots carry no metadata chunks. The viewed result shows synthetic content only.
+- [OBSERVED - parent-supplied] The destination repository is private; no public publication claim is made.
+
+### Verification
+
+[OBSERVED - parent-supplied; unchanged since LUNA-20261025-001 because no code changed afterwards]
+
+- `npm run test:browser` — 19 passed, three runs.
+- `npm test` — 161 pass.
+- `uv run python -m pytest -q tests` — 445 passed.
+- `git diff --check` clean.
+
+[OBSERVED - Luna]
+
+- `HEAD` equals `origin/main`, and `git diff --cached --check` passed.
+- Staged inventory, screenshot byte sizes and dimensions, byte equality with the `outputs/` copies, and PNG chunk types.
+- Visual check of `v0.5-result.png`.
+
+Not run or not established:
+
+- The commit, the push, and the pull request.
+- CI on the new branch.
+- A headed-browser human check.
+- Luna has not viewed `v0.5-popup.png`, `workspace-dark.png`, or `workspace-mobile.png`.
+
+### Remaining risks and follow-up
+
+- [DERIVED] The binary screenshots grow the repository and will need replacing or removal if the UI changes again.
+- [OBSERVED] The UI risks carried from LUNA-20261025-001 remain:
+  - low-visibility dark-mode shadows;
+  - bright pastel panels in dark mode;
+  - Space Grotesk not loaded;
+  - 14px popup body text;
+  - two decorative 50% radii;
+  - no headed-browser check.
+- [OBSERVED] Register follow-ups from LUNA-20261025-001 remain open: the duplicate `LUNA-20261024-001/002` IDs, re-IDing stash `ef9ff72`, and the unmatched trailers for 010, 011, and `20261014-001`.
+- Next owner and action: the parent stages `docs/CHANGE_DECISION_LOG.md` and commits the exact 8-path set (7 paths plus the register) with subject `feat: NeoBrutalism restyle of the extension popup and workspace` and trailer `Luna-ID: LUNA-20261025-002`, with no `Co-Authored-By` and no AI footer. The parent then pushes `feat/neobrutalism-ui` to `origin` and opens one pull request into `main` whose body has no AI attribution. A later Luna update backfills the SHA by matching the trailer.
+
+### Correction history
+
+None. This is an append-only commit-preparation record; the commit SHA remains Pending until a later substantive Luna update can match the trailer and backfill it.
