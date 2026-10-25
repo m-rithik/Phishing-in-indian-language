@@ -187,7 +187,7 @@ test("link mode, keyboard shortcut, and edits keep results current", async () =>
   await expect(page.locator("#link-summary")).toContainText(
     "does not establish that the checked address is safe",
   );
-  await expect(page.locator("#link-summary")).toHaveCSS("background-color", "rgb(135, 206, 235)");
+  await expect(page.locator("#link-summary")).toHaveCSS("background-color", "rgb(235, 239, 245)");
   await page.close();
 });
 
@@ -208,8 +208,8 @@ test("active and inactive mode buttons retain an opaque keyboard focus ring", as
   await page.keyboard.press("Tab");
   await expect(page.locator("#mode-message")).toBeFocused();
   expect(await focusStyle("#mode-message")).toEqual({
-    boxShadow: "rgb(7, 89, 133) 0px 0px 0px 5px",
-    outlineColor: "rgb(255, 255, 255)",
+    boxShadow: "rgb(244, 246, 249) 0px 0px 0px 4px",
+    outlineColor: "rgb(31, 58, 95)",
     outlineStyle: "solid",
     outlineWidth: "2px",
   });
@@ -217,14 +217,14 @@ test("active and inactive mode buttons retain an opaque keyboard focus ring", as
   await page.keyboard.press("Tab");
   await expect(page.locator("#mode-link")).toBeFocused();
   expect((await focusStyle("#mode-link")).boxShadow).toBe(
-    "rgb(7, 89, 133) 0px 0px 0px 5px",
+    "rgb(244, 246, 249) 0px 0px 0px 4px",
   );
   await page.keyboard.press("Space");
   await expect(page.locator("#mode-link")).toHaveAttribute("aria-pressed", "true");
   await expect(page.locator("#mode-link")).toHaveClass(/active/);
   expect(await focusStyle("#mode-link")).toEqual({
-    boxShadow: "rgb(7, 89, 133) 0px 0px 0px 5px",
-    outlineColor: "rgb(255, 255, 255)",
+    boxShadow: "rgb(244, 246, 249) 0px 0px 0px 4px",
+    outlineColor: "rgb(31, 58, 95)",
     outlineStyle: "solid",
     outlineWidth: "2px",
   });

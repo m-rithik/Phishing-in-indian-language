@@ -8310,4 +8310,49 @@ Not run or not established:
 
 ### Correction history
 
-None. This is an append-only commit-preparation record; the commit SHA remains Pending until a later substantive Luna update can match the trailer and backfill it.
+None. This is an append-only commit-preparation record; commit SHA `fd7c286b42c2fac970b44d58a2a4823301c8c056` (merged into `main` at `4bd4ed9c91b2af291fc87ba85353032e9e1ad7c6` via PR #6) was backfilled by LUNA-20261025-003.
+
+## Decision record - LUNA-20261025-003
+
+### Cool navy-slate theme implementation and test update
+
+- Lifecycle: `COMMIT_PREPARED`; staged, verified, pending user approval to commit and push
+- Recorded: 25 October 2026; responsible agent: luna; branch: `main`
+- Planned commit subject: `style: apply cool navy-slate neubrutalist theme to extension`
+- Required trailer: `Luna-ID: LUNA-20261025-003`
+- Commit SHA: Pending — commit has not been created
+- Parent SHA: `4bd4ed9c91b2af291fc87ba85353032e9e1ad7c6` [OBSERVED - Luna: equal to `HEAD` and `origin/main`]
+- Intended publication: push `main` to `origin` (`https://github.com/m-rithik/Phishing-in-indian-language.git`)
+- Approval: Pending user explicit approval for commit and push
+
+### Staged change inventory
+
+[OBSERVED - Luna `git diff --cached --stat`] The index holds exactly 2 non-register paths:
+- `browser_extension/styles.css`: Updated design system tokens to cool slate canvas (`#f4f6f9`), surface (`#ffffff`), navy blue accent (`#1f3a5f`), dark mode variants, Indic-friendly typography, 2px/3px ink borders, flat offset shadows (`2px` to `6px`), and rounded corners (`6px` to `18px`).
+- `tests/browser/extension.spec.mjs`: Updated test assertion expectations to align with the new theme tokens (`#link-summary` background `#ebeff5` / `rgb(235, 239, 245)` and mode button focus ring outline `#1f3a5f` / `rgb(31, 58, 95)` with `box-shadow: 0 0 0 4px var(--bg-canvas)`).
+
+### Findings and decisions
+
+#### Decision D-243 - Adopt cool navy-slate neubrutalist palette with accessible focus rings
+
+Decision: Apply the user-specified cool navy-slate neubrutalist design system to the browser extension stylesheet and ensure active mode buttons maintain identical accessible focus rings (`box-shadow: 0 0 0 4px var(--bg-canvas)` with `outline: 2px solid var(--focus-ring)`). Keep tab-hosted popup container max-width at 404px to preserve compact toolbar and tab consistency.
+
+Rationale: [OBSERVED] User requested exact `:root` design token schema and aesthetic rules. [DERIVED] Maintaining 404px max-width on tab-hosted popups and matching active button focus rings ensures accessibility compliance without breaking layout or automated Playwright suites.
+
+Alternatives not selected:
+- Keep the previous yellow/cyan palette: rejected because the user explicitly provided the navy-slate palette.
+- Let active mode button lose focus-ring box-shadow: rejected because keyboard navigation accessibility requires consistent visible focus states across all buttons.
+
+### Verification
+
+[OBSERVED - Luna]
+- `npm test`: 161 passed (100% test pass rate across unit checks, CLI tests, and performance benchmarks).
+- `npm run test:browser`: 19 passed (100% Playwright browser and Axe accessibility tests pass).
+- `pytest tests/test_extension_package.py tests/test_governance.py`: 43 passed, 18 skipped, 58 subtests passed.
+- `git diff --check`: clean (no whitespace or trailing errors).
+
+### Remaining risks and follow-up
+
+- No headed visual inspection performed; all checks verified in headless Chromium via Playwright.
+- Staged register update must be committed with `Luna-ID: LUNA-20261025-003` trailer upon user approval.
+
